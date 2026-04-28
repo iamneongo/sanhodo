@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>San Ho Do Ho Tram</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Great+Vibes&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header" id="top">
+    <div class="container header-inner">
+      <a class="brand" href="#top" aria-label="San Ho Do Ho Tram">
+        <span class="brand-mark" aria-hidden="true">
+          <img src="assets/logo-coral.png" alt="">
+        </span>
+        <span class="brand-copy">
+          <strong>San Ho Do</strong>
+          <span>Ho Tram</span>
+        </span>
+      </a>
+
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav-list">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="site-nav" aria-label="Điều hướng chính">
+        <ul id="nav-list">
+          <li><a href="#top" class="is-active">Trang chủ</a></li>
+          <li><a href="#about">Giới thiệu</a></li>
+          <li><a href="#menu">Thực đơn</a></li>
+          <li><a href="#space">Không gian</a></li>
+          <li><a href="#news">Tin tức</a></li>
+          <li><a href="#contact">Liên hệ</a></li>
+        </ul>
+      </nav>
+
+      <a class="button button-primary header-cta" href="#contact">Đặt bàn</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-scene" aria-hidden="true"></div>
+      <div class="hero-overlay"></div>
+      <img class="hero-coral hero-coral-left" src="assets/coral-pattern.png" alt="">
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <p class="eyebrow">Nhà hàng</p>
+          <h1>San Hô Đỏ<br>Hồ Tràm</h1>
+          <p class="hero-text">
+            Không gian ẩm thực sang trọng - Dấu ấn riêng tinh tế<br>
+            Trải nghiệm đáng nhớ trong từng bữa tiệc sum vầy
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#contact">Đặt bàn ngay</a>
+            <a class="button button-secondary" href="#menu">Xem video</a>
+          </div>
+          <div class="hero-scroll">
+            <span>Scroll</span>
+            <span class="hero-scroll-line" aria-hidden="true"></span>
+          </div>
+        </div>
+      </div>
+      <img class="hero-wave" src="assets/wave-divider.svg" alt="">
+    </section>
+
+    <section class="about section" id="about">
+      <div class="container about-grid">
+        <div class="about-copy reveal">
+          <p class="section-kicker">Về chúng tôi</p>
+          <h2>Không gian chỉn chu cho những buổi gặp gỡ đáng nhớ</h2>
+          <p>
+            San Hô Đỏ mang đến trải nghiệm ẩm thực trọn vẹn với mặt tiền nổi bật, sảnh đón tiếp
+            sang trọng và không gian bài trí chỉn chu cho những bữa ăn gia đình, tiếp khách hay hội họp.
+          </p>
+          <p>
+            Từ khu vực bàn tiệc rộng rãi đến phòng riêng ấm cúng, từng góc nhỏ đều được chăm chút
+            để tạo cảm giác thoải mái, lịch sự và dễ lưu lại ấn tượng tốt với thực khách.
+          </p>
+          <a class="button button-primary" href="#space">Khám phá thêm</a>
+        </div>
+
+        <div class="about-card about-card-drive reveal">
+          <img src="assets/drive-about-facade.jpg" alt="Mặt tiền nhà hàng San Hô Đỏ">
+          <div class="about-card-badge">
+            <strong>Mặt tiền</strong>
+            <span>ấn tượng và sang trọng</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="container feature-strip reveal">
+        <article class="feature-item">
+          <span class="feature-icon">✺</span>
+          <div>
+            <h3>Hải sản tươi sống</h3>
+            <p>Nguồn hải sản tươi sống mỗi ngày từ biển Hồ Tràm.</p>
+          </div>
+        </article>
+        <article class="feature-item">
+          <span class="feature-icon">⌘</span>
+          <div>
+            <h3>Đầu bếp chuyên nghiệp</h3>
+            <p>Đội ngũ đầu bếp giàu kinh nghiệm, chế biến tinh tế.</p>
+          </div>
+        </article>
+        <article class="feature-item">
+          <span class="feature-icon">◌</span>
+          <div>
+            <h3>Không gian tuyệt đẹp</h3>
+            <p>Không gian sang trọng, nhiều khu vực phù hợp tiếp khách và gia đình.</p>
+          </div>
+        </article>
+        <article class="feature-item">
+          <span class="feature-icon">♡</span>
+          <div>
+            <h3>Phục vụ tận tâm</h3>
+            <p>Đội ngũ nhân viên nhiệt tình, chu đáo, chuyên nghiệp.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="menu section" id="menu">
+      <div class="menu-backdrop" aria-hidden="true"></div>
+      <div class="container menu-layout">
+        <div class="menu-copy reveal">
+          <p class="section-kicker">Thực đơn</p>
+          <h2>Thực đơn nổi bật cho bàn tiệc trọn vị</h2>
+          <p>
+            Kết hợp cùng không gian nhà hàng thực tế, thực đơn được trình bày như một điểm nhấn để
+            hoàn thiện trải nghiệm ẩm thực, phù hợp cho những bữa ăn gia đình và những buổi gặp gỡ thân mật.
+          </p>
+          <div class="menu-controls">
+            <button class="slider-button" type="button" data-direction="prev" aria-label="Món trước">&#8592;</button>
+            <button class="slider-button" type="button" data-direction="next" aria-label="Món tiếp">&#8594;</button>
+          </div>
+        </div>
+
+        <div class="menu-slider reveal">
+          <div class="menu-track">
+            <article class="dish-card is-current">
+              <img src="assets/dish-king-crab.png" alt="Món cua huỳnh đế sốt đậm vị">
+              <div class="dish-card-body">
+                <h3>Cua huỳnh đế</h3>
+              </div>
+            </article>
+            <article class="dish-card">
+              <img src="assets/dish-lobster.png" alt="Món tôm hùm nướng">
+              <div class="dish-card-body">
+                <h3>Tôm hùm nướng</h3>
+              </div>
+            </article>
+            <article class="dish-card">
+              <img src="assets/dish-sashimi.png" alt="Món sashimi tổng hợp">
+              <div class="dish-card-body">
+                <h3>Sashimi tổng hợp</h3>
+              </div>
+            </article>
+            <article class="dish-card">
+              <img src="assets/dish-snails.png" alt="Món ốc hương hấp sả">
+              <div class="dish-card-body">
+                <h3>Ốc hương hấp sả</h3>
+              </div>
+            </article>
+          </div>
+          <div class="slider-dots" aria-label="Chọn món">
+            <button class="dot is-active" type="button" data-index="0" aria-label="Món 1"></button>
+            <button class="dot" type="button" data-index="1" aria-label="Món 2"></button>
+            <button class="dot" type="button" data-index="2" aria-label="Món 3"></button>
+            <button class="dot" type="button" data-index="3" aria-label="Món 4"></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="space section" id="space">
+      <img class="space-coral" src="assets/coral-pattern.png" alt="">
+      <div class="container">
+        <div class="section-heading reveal">
+          <p class="section-kicker">Không gian</p>
+          <h2>Đa dạng khu vực, linh hoạt cho mọi nhu cầu dùng bữa</h2>
+        </div>
+        <div class="space-grid">
+          <article class="space-card reveal">
+            <img src="assets/drive-space-dining-1.jpg" alt="Khu vực bàn tiệc lớn với tủ rượu phía sau">
+          </article>
+          <article class="space-card reveal">
+            <img src="assets/drive-space-dining-2.jpg" alt="Khu vực bàn tròn sang trọng trong nhà hàng">
+          </article>
+          <article class="space-card reveal">
+            <img src="assets/drive-space-lobby.jpg" alt="Sảnh đón khách và khu trưng bày">
+          </article>
+          <article class="space-card reveal">
+            <img src="assets/drive-space-private.jpg" alt="Phòng riêng ấm cúng cho nhóm nhỏ">
+          </article>
+        </div>
+        <div class="section-action reveal">
+          <a class="button button-secondary" href="#contact">Xem thêm hình ảnh</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="news section" id="news">
+      <div class="container">
+        <div class="section-heading align-left reveal">
+          <p class="section-kicker">Tin tức &amp; Ưu đãi</p>
+          <h2>Những góc ấn tượng từ không gian thực tế của nhà hàng</h2>
+        </div>
+
+        <div class="news-grid">
+          <article class="news-card news-card-drive reveal">
+            <img src="assets/drive-news-winewall.jpg" alt="Tủ rượu và khu vực bàn tiệc sang trọng">
+            <div class="news-body">
+              <span class="news-tag">Không gian</span>
+              <h3>Tủ rượu lớn tạo điểm nhấn cho khu vực dùng bữa</h3>
+              <p>Khu vực trung tâm được bố trí hệ tủ rượu sang trọng, phù hợp cho những buổi gặp gỡ cần sự chỉn chu.</p>
+              <span class="news-date">Bộ ảnh thực tế</span>
+            </div>
+          </article>
+          <article class="news-card news-card-drive reveal">
+            <img src="assets/drive-news-table-close.jpg" alt="Cận cảnh bàn ăn được chuẩn bị sẵn">
+            <div class="news-body">
+              <span class="news-tag news-tag-alt">Chi tiết</span>
+              <h3>Bàn tiệc được chuẩn bị gọn gàng và đồng bộ</h3>
+              <p>Từ ly tách, khăn bàn đến cách đặt món đều được chuẩn bị kỹ để nâng trải nghiệm của thực khách.</p>
+              <span class="news-date">Bộ ảnh thực tế</span>
+            </div>
+          </article>
+          <article class="news-card news-card-drive reveal">
+            <img src="assets/drive-news-place-setting.jpg" alt="Không gian bàn riêng với cách bày trí tinh tế">
+            <div class="news-body">
+              <span class="news-tag">Riêng tư</span>
+              <h3>Không gian riêng phù hợp cho nhóm nhỏ và tiếp khách</h3>
+              <p>Một lựa chọn phù hợp cho bữa tối thân mật, gặp gỡ đối tác hoặc những buổi sum họp cần sự riêng tư.</p>
+              <span class="news-date">Bộ ảnh thực tế</span>
+            </div>
+          </article>
+        </div>
+        <div class="section-action reveal">
+          <a class="button button-secondary" href="#news">Xem tất cả tin tức</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" id="contact">
+    <img class="footer-coral" src="assets/coral-pattern.png" alt="">
+    <div class="container footer-grid">
+      <div>
+        <a class="brand footer-brand" href="#top">
+          <span class="brand-mark" aria-hidden="true">
+            <img src="assets/logo-coral.png" alt="">
+          </span>
+          <span class="brand-copy">
+            <strong>San Ho Do</strong>
+            <span>Ho Tram</span>
+          </span>
+        </a>
+        <p class="footer-text">
+          Bộ ảnh thực tế cho thấy một không gian chỉn chu, sang trọng và phù hợp cho nhiều nhu cầu
+          dùng bữa, từ họp mặt gia đình đến tiếp khách và tổ chức tiệc nhỏ.
+        </p>
+      </div>
+
+      <div>
+        <h3>Liên kết nhanh</h3>
+        <ul class="footer-links">
+          <li><a href="#top">Trang chủ</a></li>
+          <li><a href="#about">Giới thiệu</a></li>
+          <li><a href="#menu">Thực đơn</a></li>
+          <li><a href="#space">Không gian</a></li>
+          <li><a href="#news">Tin tức</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Thông tin liên hệ</h3>
+        <ul class="footer-meta">
+          <li>Đường ven biển, Ấp Hồ Tràm, Xã Phước Thuận, H. Xuyên Mộc, Bà Rịa - Vũng Tàu</li>
+          <li>0901 234 567</li>
+          <li>info@sanhodohotram.vn</li>
+          <li>10:00 - 22:00 (Thứ 2 - Chủ nhật)</li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Đăng ký nhận ưu đãi</h3>
+        <form class="subscribe-form">
+          <input type="email" placeholder="Nhập email của bạn" aria-label="Email">
+          <button class="button button-primary" type="submit">Đăng ký</button>
+        </form>
+      </div>
+    </div>
+    <div class="footer-bar">
+      <div class="container footer-bar-inner">
+        <span>&copy; 2024 Nhà hàng San Hô Đỏ Hồ Tràm. All rights reserved.</span>
+        <span>Thiết kế bởi Web Designer</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
