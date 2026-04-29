@@ -3,3 +3,8 @@ tmp-test.jpg
 tmp-test-thumb.jpg
 drive-folder.html
 drive-images.csv
+node_modules/
+.next/
+out/
+next-dev.log
+data/

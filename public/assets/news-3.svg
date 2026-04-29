@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 520" fill="none">
+  <defs>
+    <linearGradient id="n3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5b321b"/>
+      <stop offset=".46" stop-color="#8a562d"/>
+      <stop offset="1" stop-color="#1b2430"/>
+    </linearGradient>
+  </defs>
+  <rect width="620" height="520" rx="30" fill="url(#n3)"/>
+  <path d="M62 138h495v18L62 198v-60Z" fill="#2a170f"/>
+  <path d="M62 138h495l-32 33H92l-30-33Z" fill="#583520"/>
+  <rect x="89" y="198" width="440" height="245" rx="12" fill="#704426"/>
+  <g fill="#f9cb73">
+    <circle cx="127" cy="191" r="18"/>
+    <circle cx="212" cy="177" r="18"/>
+    <circle cx="308" cy="166" r="18"/>
+    <circle cx="399" cy="173" r="18"/>
+    <circle cx="489" cy="190" r="18"/>
+  </g>
+  <g fill="#845731">
+    <rect x="177" y="320" width="260" height="17" rx="8"/>
+    <rect x="204" y="286" width="208" height="17" rx="8"/>
+    <rect x="249" y="240" width="17" height="45" rx="8"/>
+    <rect x="347" y="240" width="17" height="45" rx="8"/>
+  </g>
+  <circle cx="311" cy="303" r="18" fill="#fff0da"/>
+</svg>

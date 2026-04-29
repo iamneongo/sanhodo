@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 690" fill="none">
+  <defs>
+    <linearGradient id="a" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8f78a2"/>
+      <stop offset=".45" stop-color="#f0a080"/>
+      <stop offset="1" stop-color="#213b52"/>
+    </linearGradient>
+    <linearGradient id="b" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#35536d"/>
+      <stop offset="1" stop-color="#12273a"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="690" rx="42" fill="url(#a)"/>
+  <path d="M0 439c78 30 157 39 235 30 112-14 164-67 275-75 130-10 223 46 450 16v280H0V439Z" fill="url(#b)"/>
+  <path d="M174 493h532v127H174z" fill="#0d1620" fill-opacity=".36"/>
+  <path d="M293 271h357l87 89H218l75-89Z" fill="#3c2318"/>
+  <rect x="246" y="360" width="461" height="212" rx="8" fill="#50311f"/>
+  <rect x="291" y="390" width="116" height="133" rx="8" fill="#7d532d"/>
+  <rect x="430" y="390" width="116" height="133" rx="8" fill="#7d532d"/>
+  <rect x="569" y="390" width="97" height="133" rx="8" fill="#7d532d"/>
+  <g fill="#ffb35e">
+    <circle cx="338" cy="432" r="12"/>
+    <circle cx="480" cy="432" r="12"/>
+    <circle cx="617" cy="432" r="12"/>
+    <circle cx="282" cy="360" r="10"/>
+    <circle cx="399" cy="353" r="10"/>
+    <circle cx="519" cy="354" r="10"/>
+    <circle cx="639" cy="361" r="10"/>
+  </g>
+  <rect x="112" y="470" width="214" height="102" rx="18" fill="#6b7c63" fill-opacity=".85"/>
+  <text x="152" y="526" fill="#ff6949" font-family="Georgia, serif" font-size="42" font-weight="700">SAN HO DO</text>
+  <text x="210" y="558" fill="#ff9f6b" font-family="Arial, sans-serif" font-size="24" font-weight="700">HO TRAM</text>
+  <path d="M757 199l26-98 50 76-76 22ZM842 200l44-126 66 126h-110Z" fill="#27160f"/>
+  <path d="M113 342c70-22 121-41 176-84M780 351c25-56 43-123 36-193" stroke="#1a1d22" stroke-width="6" stroke-linecap="round"/>
+</svg>

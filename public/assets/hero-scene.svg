@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 980" fill="none">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f9d0aa"/>
+      <stop offset=".45" stop-color="#ffe7ca"/>
+      <stop offset=".82" stop-color="#f6c29d"/>
+      <stop offset="1" stop-color="#d48a60"/>
+    </linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7ea6b8"/>
+      <stop offset=".5" stop-color="#587f95"/>
+      <stop offset="1" stop-color="#335c73"/>
+    </linearGradient>
+    <linearGradient id="deck" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#53311c"/>
+      <stop offset="1" stop-color="#1e120d"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(220 244) rotate(30) scale(240 240)">
+      <stop stop-color="#fff7dd"/>
+      <stop offset="1" stop-color="#fff7dd" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="980" fill="url(#sky)"/>
+  <rect y="450" width="1600" height="225" fill="url(#sun)"/>
+  <circle cx="208" cy="238" r="216" fill="url(#sun)"/>
+  <rect y="538" width="1600" height="195" fill="url(#sea)"/>
+  <path d="M0 620c79 18 157 19 234 1 59-13 116-17 173-11 59 6 120 26 183 24 62-1 111-23 172-30 63-7 130 14 194 20 73 6 125-11 194-25 48-10 105-11 170 4 58 14 129 32 280 0v43H0v-26Z" fill="#7ca2b4" fill-opacity=".7"/>
+  <path d="M0 670c92 11 169 3 251-11 67-11 132-15 194-8 76 8 111 28 194 28 91 0 132-30 224-31 74-1 154 25 230 33 98 11 172 3 307-20v72H0v-63Z" fill="#c6d8df" fill-opacity=".72"/>
+  <path d="M0 728c79-23 145-30 228-22 95 9 123 36 214 46 90 11 164-14 256-21 86-7 147 10 221 17 92 8 164 3 259-18 73-16 138-34 222-42v208H0V728Z" fill="#f1d4b8"/>
+  <path d="M713 412h22l7 27-17 9-18-12 6-24Z" fill="#22120c"/>
+  <path d="M713 440v104" stroke="#3b2416" stroke-width="4"/>
+  <path d="M639 426h20l7 24-14 11-20-8 7-27ZM788 439h19l6 25-15 9-18-9 8-25Z" fill="#29160f"/>
+  <path d="M648 450v75M799 463v78" stroke="#3b2416" stroke-width="4"/>
+  <g stroke="#4c2f1f" stroke-width="4">
+    <path d="M784 412l141 33 143 14 181-18"/>
+    <path d="M637 425l83 10 76-4"/>
+  </g>
+  <g fill="#ffd183">
+    <circle cx="713" cy="549" r="8"/>
+    <circle cx="649" cy="526" r="8"/>
+    <circle cx="799" cy="540" r="8"/>
+    <circle cx="886" cy="440" r="8"/>
+    <circle cx="967" cy="454" r="8"/>
+    <circle cx="1043" cy="462" r="8"/>
+    <circle cx="1124" cy="454" r="8"/>
+    <circle cx="1207" cy="445" r="8"/>
+  </g>
+  <path d="M1050 232h474v599h-43V512l-31-20-37 21v318H941V278l109 5Z" fill="url(#deck)"/>
+  <path d="M954 273h560l-63 93h-462L954 273Z" fill="#311d14"/>
+  <path d="M1020 244h491l-61 81-276 6-154-87Z" fill="#4d2e1c"/>
+  <path d="M971 272l69-95h460l-92 95H971Z" fill="#22120d"/>
+  <path d="M1106 175l34-68 45 53-79 15ZM1460 175l52-96 51 96h-103Z" fill="#2b170f"/>
+  <path d="M1380 173l31-77 52 77h-83ZM1267 173l19-56 38 56h-57Z" fill="#351d12"/>
+  <rect x="1090" y="482" width="112" height="194" rx="6" fill="#654226"/>
+  <rect x="1231" y="482" width="112" height="194" rx="6" fill="#654226"/>
+  <rect x="1370" y="482" width="112" height="194" rx="6" fill="#654226"/>
+  <path d="M1026 650h89v74h-89zM1172 650h89v74h-89zM1317 650h89v74h-89z" fill="#3b2416"/>
+  <rect x="1135" y="335" width="244" height="112" rx="12" fill="#29150e"/>
+  <text x="1170" y="386" fill="#ff5a3d" font-family="Georgia, serif" font-size="44" font-weight="700">SAN HO DO</text>
+  <text x="1211" y="424" fill="#ff7e56" font-family="Arial, sans-serif" font-size="36" font-weight="700">HO TRAM</text>
+  <g fill="#fbd48b">
+    <circle cx="1087" cy="274" r="11"/>
+    <circle cx="1218" cy="279" r="11"/>
+    <circle cx="1353" cy="276" r="11"/>
+    <circle cx="1484" cy="267" r="11"/>
+    <circle cx="1532" cy="154" r="16"/>
+  </g>
+  <g fill="#7a4b25">
+    <rect x="1007" y="738" width="144" height="23" rx="8"/>
+    <rect x="1169" y="739" width="140" height="23" rx="8"/>
+    <rect x="1331" y="738" width="145" height="23" rx="8"/>
+    <rect x="1060" y="685" width="38" height="56" rx="12"/>
+    <rect x="1218" y="686" width="38" height="56" rx="12"/>
+    <rect x="1383" y="686" width="38" height="56" rx="12"/>
+  </g>
+  <g fill="#462918">
+    <rect x="943" y="794" width="429" height="17" rx="8"/>
+    <rect x="965" y="768" width="130" height="18" rx="8"/>
+    <rect x="1108" y="768" width="129" height="18" rx="8"/>
+    <rect x="1250" y="768" width="129" height="18" rx="8"/>
+  </g>
+  <g fill="#ffd79b">
+    <circle cx="1012" cy="791" r="14"/>
+    <circle cx="1137" cy="764" r="11"/>
+    <circle cx="1281" cy="765" r="11"/>
+    <circle cx="1370" cy="792" r="14"/>
+  </g>
+  <g stroke="#5d432e" stroke-width="5" stroke-linecap="round">
+    <path d="M973 754l-23 114M1117 754l-23 114M1261 754l-23 114M1404 754l-23 114"/>
+  </g>
+</svg>
