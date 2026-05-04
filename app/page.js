@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-const hotline = "0901234567";
-const hotlineDisplay = "0901 234 567";
+const hotline = "0814645999";
+const hotlineDisplay = "0814 645 999";
+const secondaryHotline = "0522282229";
+const secondaryHotlineDisplay = "0522 282 229";
 const zaloLink = `https://zalo.me/${hotline}`;
 
 const featuredDishes = [
@@ -897,6 +899,7 @@ export default function Page() {
             <ul className="footer-meta">
               <li>Đường ven biển, Ấp Hồ Tràm, Xã Phước Thuận, H. Xuyên Mộc, Bà Rịa - Vũng Tàu</li>
               <li>{hotlineDisplay}</li>
+              <li>{secondaryHotlineDisplay}</li>
               <li>info@sanhodohotram.vn</li>
               <li>10:00 - 22:00 (Thứ 2 - Chủ nhật)</li>
             </ul>
