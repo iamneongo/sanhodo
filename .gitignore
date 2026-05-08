@@ -7,4 +7,5 @@ node_modules/
 .next/
 out/
 next-dev.log
+next-admin-dev.log
 data/
