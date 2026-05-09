@@ -1,24 +1,18 @@
 import { NextResponse } from "next/server";
-import { requireAdminApi } from "../../../../lib/admin-guard";
-import {
-  readLeads,
-  reservationsToCsv,
-  vouchersToCsv,
-  RESERVATIONS_FILE,
-  VOUCHERS_FILE
-} from "../../../../lib/lead-store";
+import { requireAdminApi, unauthorizedResponse } from "../../../../lib/supabase/auth";
+import { listReservations, listVoucherLeads, reservationsToCsv, vouchersToCsv } from "../../../../lib/restaurant-db";
 
 export async function GET(request) {
-  const isAllowed = await requireAdminApi();
-  if (!isAllowed) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const context = await requireAdminApi();
+  if (!context) {
+    return unauthorizedResponse();
   }
 
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type") || "reservations";
 
   if (type === "vouchers") {
-    const vouchers = await readLeads(VOUCHERS_FILE, "voucher");
+    const vouchers = await listVoucherLeads(context.supabase);
     const csv = vouchersToCsv(vouchers);
     return new NextResponse(csv, {
       headers: {
@@ -28,7 +22,7 @@ export async function GET(request) {
     });
   }
 
-  const reservations = await readLeads(RESERVATIONS_FILE, "reservation");
+  const reservations = await listReservations(context.supabase);
   const csv = reservationsToCsv(reservations);
 
   return new NextResponse(csv, {

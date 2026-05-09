@@ -1,22 +1,21 @@
 import { NextResponse } from "next/server";
-import { requireAdminApi } from "../../../../lib/admin-guard";
-import { appendLead, readLeads, RESERVATIONS_FILE } from "../../../../lib/lead-store";
+import { requireAdminApi, unauthorizedResponse } from "../../../../lib/supabase/auth";
+import { createReservation, listReservations } from "../../../../lib/restaurant-db";
 
 export async function GET() {
-  const isAllowed = await requireAdminApi();
-  if (!isAllowed) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const context = await requireAdminApi();
+  if (!context) {
+    return unauthorizedResponse();
   }
 
-  const items = await readLeads(RESERVATIONS_FILE, "reservation");
-  items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const items = await listReservations(context.supabase);
   return NextResponse.json({ ok: true, data: items });
 }
 
 export async function POST(request) {
-  const isAllowed = await requireAdminApi();
-  if (!isAllowed) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const context = await requireAdminApi();
+  if (!context) {
+    return unauthorizedResponse();
   }
 
   try {
@@ -32,16 +31,16 @@ export async function POST(request) {
       notes: body.notes || "",
       assignedTo: body.assignedTo || "",
       lastContactAt: body.lastContactAt || "",
-      tags: Array.isArray(body.tags) ? body.tags : []
+      tableId: body.tableId || ""
     };
 
     if (!payload.name || !payload.phone || !payload.guests || !payload.datetime) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const saved = await appendLead(RESERVATIONS_FILE, payload, "reservation");
+    const saved = await createReservation(context.supabase, payload);
     return NextResponse.json({ ok: true, data: saved });
-  } catch {
-    return NextResponse.json({ error: "Không thể tạo đặt bàn" }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ error: error.message || "Không thể tạo đặt bàn" }, { status: 500 });
   }
 }

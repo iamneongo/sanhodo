@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { requireAdminApi } from "../../../../lib/admin-guard";
-import { getIntegrationSettings } from "../../../../lib/integrations-store";
+import { requireAdminApi, unauthorizedResponse } from "../../../../lib/supabase/auth";
+import { listIntegrationSettings } from "../../../../lib/restaurant-db";
 
 export async function GET() {
-  const isAllowed = await requireAdminApi();
-  if (!isAllowed) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const context = await requireAdminApi();
+  if (!context) {
+    return unauthorizedResponse();
   }
 
-  const items = await getIntegrationSettings();
+  const items = await listIntegrationSettings(context.supabase);
   return NextResponse.json({ ok: true, data: items });
 }

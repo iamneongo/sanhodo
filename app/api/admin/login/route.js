@@ -1,27 +1,49 @@
 import { NextResponse } from "next/server";
-import { ADMIN_COOKIE_NAME, createAdminSessionToken, validateAdminCredentials } from "../../../../lib/admin-auth";
+import { createClient } from "../../../../lib/supabase/server";
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    const username = body.username?.trim() || "";
+    const email = body.email?.trim() || "";
     const password = body.password?.trim() || "";
 
-    if (!validateAdminCredentials(username, password)) {
-      return NextResponse.json({ error: "Thông tin đăng nhập không đúng" }, { status: 401 });
+    if (!email || !password) {
+      return NextResponse.json({ error: "Email và mật khẩu là bắt buộc" }, { status: 400 });
     }
 
-    const response = NextResponse.json({ ok: true });
-    response.cookies.set(ADMIN_COOKIE_NAME, createAdminSessionToken(), {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 12
-    });
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error
+    } = await supabase.auth.signInWithPassword({ email, password });
 
-    return response;
-  } catch {
-    return NextResponse.json({ error: "Không thể đăng nhập" }, { status: 500 });
+    if (error || !user) {
+      return NextResponse.json({ error: error?.message || "Đăng nhập thất bại" }, { status: 401 });
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      return NextResponse.json({ error: profileError.message }, { status: 500 });
+    }
+
+    if (!profile || !["admin", "manager"].includes(profile.role)) {
+      await supabase.auth.signOut();
+      return NextResponse.json(
+        { error: "Tài khoản này chưa có quyền truy cập dashboard admin" },
+        { status: 403 }
+      );
+    }
+
+    return NextResponse.json({ ok: true, user: { id: user.id, email: user.email } });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error.message || "Không thể đăng nhập với Supabase" },
+      { status: 500 }
+    );
   }
 }

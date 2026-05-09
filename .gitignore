@@ -8,4 +8,8 @@ node_modules/
 out/
 next-dev.log
 next-admin-dev.log
+next-supabase-dev.log
+next-supabase-dev.err.log
 data/
+.env.local
+.env.*.local

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../lib/supabase/server";
-import { createReservation, forwardToWebhooks } from "../../../lib/restaurant-db";
+import { createPublicOrder, forwardToWebhooks } from "../../../lib/restaurant-db";
 
 export async function POST(request) {
   try {
@@ -8,24 +8,20 @@ export async function POST(request) {
     const supabase = await createClient();
 
     const payload = {
-      name: body.name?.trim() || "",
-      phone: body.phone?.trim() || "",
-      guests: body.guests || "",
-      datetime: body.datetime || "",
-      selectedOffer: body.selectedOffer || "",
-      status: "new",
-      source: "landing-page",
+      customerName: body.customerName?.trim() || "",
+      customerPhone: body.customerPhone?.trim() || "",
       notes: body.notes || "",
-      assignedTo: "",
-      lastContactAt: "",
-      tableId: body.tableId || ""
+      reservationId: body.reservationId || "",
+      tableId: body.tableId || "",
+      orderChannel: "website",
+      items: Array.isArray(body.items) ? body.items : []
     };
 
-    if (!payload.name || !payload.phone || !payload.guests || !payload.datetime) {
+    if (!payload.customerName || !payload.customerPhone || !payload.items.length) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const saved = await createReservation(supabase, payload);
+    const saved = await createPublicOrder(supabase, payload);
 
     await forwardToWebhooks(saved, [
       process.env.CRM_WEBHOOK_URL,
@@ -36,7 +32,7 @@ export async function POST(request) {
     return NextResponse.json({ ok: true, data: saved });
   } catch (error) {
     return NextResponse.json(
-      { error: error.message || "Không thể tạo yêu cầu đặt bàn" },
+      { error: error.message || "Không thể tạo order từ landing page" },
       { status: 500 }
     );
   }

@@ -4,11 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./admin.module.css";
 
-export default function AdminLoginForm() {
+export default function AdminLoginForm({ initialError = "" }) {
   const router = useRouter();
-  const [form, setForm] = useState({ username: "", password: "" });
+  const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(initialError);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -22,8 +22,8 @@ export default function AdminLoginForm() {
         body: JSON.stringify(form)
       });
 
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
         throw new Error(data.error || "Đăng nhập thất bại");
       }
 
@@ -41,17 +41,20 @@ export default function AdminLoginForm() {
       <div className={styles.loginCard}>
         <div className={styles.loginHeading}>
           <span className={styles.kicker}>San Hô Đỏ Admin</span>
-          <h1>Đăng nhập dashboard quản lý đặt bàn</h1>
-          <p>Quản lý lead đặt bàn, voucher, ghi chú CSKH, trạng thái xử lý và xuất dữ liệu.</p>
+          <h1>Đăng nhập dashboard nhà hàng</h1>
+          <p>
+            Đăng nhập bằng tài khoản Supabase Auth để quản lý đặt bàn, món ăn, đơn món, bàn,
+            voucher và cấu hình tích hợp.
+          </p>
         </div>
 
         <form className={styles.loginForm} onSubmit={handleSubmit}>
           <label>
-            <span>Tài khoản</span>
+            <span>Email admin</span>
             <input
-              type="text"
-              value={form.username}
-              onChange={(event) => setForm((prev) => ({ ...prev, username: event.target.value }))}
+              type="email"
+              value={form.email}
+              onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
               required
             />
           </label>

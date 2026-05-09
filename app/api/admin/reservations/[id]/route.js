@@ -1,39 +1,38 @@
 import { NextResponse } from "next/server";
-import { requireAdminApi } from "../../../../../lib/admin-guard";
-import { deleteLead, RESERVATIONS_FILE, updateLead } from "../../../../../lib/lead-store";
+import { requireAdminApi, unauthorizedResponse } from "../../../../../lib/supabase/auth";
+import { deleteReservation, updateReservation } from "../../../../../lib/restaurant-db";
 
 export async function PATCH(request, { params }) {
-  const isAllowed = await requireAdminApi();
-  if (!isAllowed) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const context = await requireAdminApi();
+  if (!context) {
+    return unauthorizedResponse();
   }
 
   try {
     const body = await request.json();
     const { id } = await params;
-    const updated = await updateLead(RESERVATIONS_FILE, "reservation", id, body);
+    const updated = await updateReservation(context.supabase, id, body);
 
     if (!updated) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
     return NextResponse.json({ ok: true, data: updated });
-  } catch {
-    return NextResponse.json({ error: "Không thể cập nhật đặt bàn" }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error.message || "Không thể cập nhật đặt bàn" },
+      { status: 500 }
+    );
   }
 }
 
 export async function DELETE(_request, { params }) {
-  const isAllowed = await requireAdminApi();
-  if (!isAllowed) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const context = await requireAdminApi();
+  if (!context) {
+    return unauthorizedResponse();
   }
 
   const { id } = await params;
-  const deleted = await deleteLead(RESERVATIONS_FILE, "reservation", id);
-  if (!deleted) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-
+  await deleteReservation(context.supabase, id);
   return NextResponse.json({ ok: true });
 }

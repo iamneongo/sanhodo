@@ -1,35 +1,27 @@
-import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import AdminDashboard from "../../components/admin-dashboard";
-import { ADMIN_COOKIE_NAME, getAdminCredentials, isAdminAuthenticated } from "../../lib/admin-auth";
-import { readLeads, RESERVATIONS_FILE, VOUCHERS_FILE } from "../../lib/lead-store";
-import { getIntegrationSettings, getSyncLogs } from "../../lib/integrations-store";
+import { requireAdminPage } from "../../lib/supabase/auth";
+import { getAdminDashboardData } from "../../lib/restaurant-db";
 
 export const metadata = {
   title: "Admin Dashboard | San Hô Đỏ"
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminPage() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
-
-  if (!isAdminAuthenticated(session)) {
-    redirect("/admin/login");
-  }
-
-  const reservations = await readLeads(RESERVATIONS_FILE, "reservation");
-  const vouchers = await readLeads(VOUCHERS_FILE, "voucher");
-  const integrations = await getIntegrationSettings();
-  const syncLogs = await getSyncLogs();
-  const { username } = getAdminCredentials();
+  const { supabase, profile } = await requireAdminPage();
+  const dashboardData = await getAdminDashboardData(supabase);
 
   return (
     <AdminDashboard
-      initialReservations={reservations}
-      initialVouchers={vouchers}
-      initialIntegrations={integrations}
-      initialSyncLogs={syncLogs}
-      adminUsername={username}
+      initialReservations={dashboardData.reservations}
+      initialVouchers={dashboardData.vouchers}
+      initialIntegrations={dashboardData.integrations}
+      initialSyncLogs={dashboardData.syncLogs}
+      initialMenuItems={dashboardData.menuItems}
+      initialTables={dashboardData.restaurantTables}
+      initialOrders={dashboardData.orders}
+      adminProfile={profile}
     />
   );
 }

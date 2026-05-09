@@ -1,21 +1,24 @@
 import { NextResponse } from "next/server";
-import { appendLead, forwardToWebhooks, VOUCHERS_FILE } from "../../../lib/lead-store";
+import { createClient } from "../../../lib/supabase/server";
+import { createVoucherLead, forwardToWebhooks } from "../../../lib/restaurant-db";
 
 export async function POST(request) {
   try {
     const body = await request.json();
+    const supabase = await createClient();
+
     const payload = {
       phone: body.phone?.trim() || "",
       status: "new",
-      source: "landing-page",
-      notes: ""
+      source: body.source || "landing-page",
+      notes: body.notes || ""
     };
 
     if (!payload.phone) {
-      return NextResponse.json({ error: "Phone is required" }, { status: 400 });
+      return NextResponse.json({ error: "Missing phone" }, { status: 400 });
     }
 
-    const saved = await appendLead(VOUCHERS_FILE, payload, "voucher");
+    const saved = await createVoucherLead(supabase, payload);
 
     await forwardToWebhooks(saved, [
       process.env.CRM_WEBHOOK_URL,
@@ -24,7 +27,10 @@ export async function POST(request) {
     ]);
 
     return NextResponse.json({ ok: true, data: saved });
-  } catch {
-    return NextResponse.json({ error: "Unable to process voucher" }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error.message || "Không thể lưu lead voucher" },
+      { status: 500 }
+    );
   }
 }

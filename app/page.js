@@ -8,7 +8,7 @@ const secondaryHotline = "0522282229";
 const secondaryHotlineDisplay = "0522 282 229";
 const zaloLink = `https://zalo.me/${hotline}`;
 
-const featuredDishes = [
+const fallbackFeaturedDishes = [
   {
     name: "Cua huỳnh đế",
     price: "1.290.000đ",
@@ -101,7 +101,12 @@ function getChatReply(input) {
   return "Mình có thể hỗ trợ nhanh về menu, giá, đặt bàn, đường đi hoặc gợi ý combo phù hợp số người. Bạn cứ nhắn ngắn gọn là được.";
 }
 
+function parseMoneyToNumber(value) {
+  return Number(String(value || "0").replace(/[^\d]/g, "")) || 0;
+}
+
 export default function Page() {
+  const [featuredDishes, setFeaturedDishes] = useState(fallbackFeaturedDishes);
   const [reservationForm, setReservationForm] = useState({
     name: "",
     phone: "",
@@ -111,8 +116,16 @@ export default function Page() {
   const [voucherPhone, setVoucherPhone] = useState("");
   const [reservationStatus, setReservationStatus] = useState("");
   const [voucherStatus, setVoucherStatus] = useState("");
+  const [orderForm, setOrderForm] = useState({
+    customerName: "",
+    customerPhone: "",
+    notes: "",
+    items: []
+  });
   const [reservationLoading, setReservationLoading] = useState(false);
   const [voucherLoading, setVoucherLoading] = useState(false);
+  const [orderLoading, setOrderLoading] = useState(false);
+  const [orderStatus, setOrderStatus] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatMessages, setChatMessages] = useState([
@@ -130,6 +143,28 @@ export default function Page() {
   );
 
   useEffect(() => {
+    let ignore = false;
+
+    fetch("/api/menu")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload) => {
+        if (ignore || !payload?.data?.length) {
+          return;
+        }
+
+        setFeaturedDishes(
+          payload.data.map((item) => ({
+            id: item.id,
+            name: item.name,
+            price: `${new Intl.NumberFormat("vi-VN").format(item.price || 0)}đ`,
+            description: item.description || "Món nổi bật đang được phục vụ tại nhà hàng.",
+            image: item.imageUrl || "/assets/dish-king-crab.png",
+            offer: `Chọn ${item.name} và đội ngũ sẽ hỗ trợ ghép combo phù hợp hơn cho bàn của bạn.`
+          }))
+        );
+      })
+      .catch(() => {});
+
     const header = document.querySelector(".site-header");
     const toggle = document.querySelector(".menu-toggle");
     const nav = document.querySelector(".site-nav");
@@ -265,6 +300,7 @@ export default function Page() {
     renderSlider();
 
     return () => {
+      ignore = true;
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("scroll", updateActiveLink);
       window.removeEventListener("resize", renderSlider);
@@ -352,6 +388,70 @@ export default function Page() {
       setVoucherStatus("Chưa nhận được ưu đãi. Vui lòng thử lại sau.");
     } finally {
       setVoucherLoading(false);
+    }
+  };
+
+  const toggleOrderItem = (dish) => {
+    setOrderForm((prev) => {
+      const exists = prev.items.find((item) => item.menuItemId === dish.id || item.itemName === dish.name);
+      if (exists) {
+        return {
+          ...prev,
+          items: prev.items.filter((item) => item.menuItemId !== dish.id && item.itemName !== dish.name)
+        };
+      }
+
+      return {
+        ...prev,
+        items: [
+          ...prev.items,
+          {
+            menuItemId: dish.id || "",
+            itemName: dish.name,
+            unitPrice: parseMoneyToNumber(dish.price),
+            quantity: 1
+          }
+        ]
+      };
+    });
+  };
+
+  const updateOrderQuantity = (dishName, quantity) => {
+    setOrderForm((prev) => ({
+      ...prev,
+      items: prev.items.map((item) =>
+        item.itemName === dishName ? { ...item, quantity: Math.max(1, Number(quantity) || 1) } : item
+      )
+    }));
+  };
+
+  const handleOrderSubmit = async (event) => {
+    event.preventDefault();
+    setOrderLoading(true);
+    setOrderStatus("");
+
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderForm)
+      });
+
+      if (!response.ok) {
+        throw new Error("order_failed");
+      }
+
+      setOrderStatus("Yêu cầu đặt món đã được ghi nhận. Admin có thể xử lý trực tiếp trong tab Orders.");
+      setOrderForm({
+        customerName: "",
+        customerPhone: "",
+        notes: "",
+        items: []
+      });
+    } catch {
+      setOrderStatus("Chưa gửi được yêu cầu đặt món. Vui lòng thử lại hoặc gọi hotline để xác nhận nhanh.");
+    } finally {
+      setOrderLoading(false);
     }
   };
 
@@ -756,6 +856,104 @@ export default function Page() {
                 Xem thêm hình ảnh
               </a>
             </div>
+          </div>
+        </section>
+
+        <section className="order-online section" id="order-online">
+          <div className="container order-online-grid">
+            <div className="order-online-copy reveal">
+              <p className="section-kicker">Đặt món nhanh</p>
+              <h2>Chọn món trước, admin nhận order trực tiếp trong dashboard</h2>
+              <p>
+                Khách có thể chọn trước các món nổi bật và gửi yêu cầu đặt món. Dữ liệu sẽ đi vào
+                Supabase thật và xuất hiện trong tab `Orders` của admin để đội ngũ xử lý.
+              </p>
+            </div>
+
+            <form className="order-online-form reveal" onSubmit={handleOrderSubmit}>
+              <div className="order-selection-grid">
+                {featuredDishes.map((dish) => {
+                  const selected = orderForm.items.some(
+                    (item) => item.menuItemId === dish.id || item.itemName === dish.name
+                  );
+
+                  return (
+                    <label
+                      key={dish.name}
+                      className={`order-pick-card${selected ? " is-selected" : ""}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={() => toggleOrderItem(dish)}
+                      />
+                      <div>
+                        <strong>{dish.name}</strong>
+                        <span>{dish.price}</span>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+
+              {orderForm.items.length ? (
+                <div className="order-selected-list">
+                  {orderForm.items.map((item) => (
+                    <div className="order-selected-row" key={item.itemName}>
+                      <span>{item.itemName}</span>
+                      <input
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(event) => updateOrderQuantity(item.itemName, event.target.value)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              <label>
+                <span>Tên khách</span>
+                <input
+                  type="text"
+                  value={orderForm.customerName}
+                  onChange={(event) =>
+                    setOrderForm((prev) => ({ ...prev, customerName: event.target.value }))
+                  }
+                  required
+                />
+              </label>
+              <label>
+                <span>SĐT</span>
+                <input
+                  type="tel"
+                  value={orderForm.customerPhone}
+                  onChange={(event) =>
+                    setOrderForm((prev) => ({ ...prev, customerPhone: event.target.value }))
+                  }
+                  required
+                />
+              </label>
+              <label>
+                <span>Ghi chú thêm</span>
+                <textarea
+                  rows={4}
+                  value={orderForm.notes}
+                  onChange={(event) =>
+                    setOrderForm((prev) => ({ ...prev, notes: event.target.value }))
+                  }
+                  placeholder="Ví dụ: giao trước món khai vị, không cay..."
+                />
+              </label>
+              <button
+                className="button button-primary"
+                type="submit"
+                disabled={orderLoading || !orderForm.items.length}
+              >
+                {orderLoading ? "Đang gửi..." : "Gửi yêu cầu đặt món"}
+              </button>
+              {orderStatus ? <p className="form-status">{orderStatus}</p> : null}
+            </form>
           </div>
         </section>
 

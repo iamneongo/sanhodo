@@ -1,19 +1,20 @@
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import AdminLoginForm from "../../../components/admin-login-form";
-import { ADMIN_COOKIE_NAME, isAdminAuthenticated } from "../../../lib/admin-auth";
+import { getCurrentSession } from "../../../lib/supabase/auth";
 
 export const metadata = {
   title: "Đăng nhập Admin | San Hô Đỏ"
 };
 
-export default async function AdminLoginPage() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
+export const dynamic = "force-dynamic";
 
-  if (isAdminAuthenticated(session)) {
+export default async function AdminLoginPage({ searchParams }) {
+  const context = await getCurrentSession();
+  const params = (await searchParams) || {};
+
+  if (context.user && context.profile && ["admin", "manager"].includes(context.profile.role)) {
     redirect("/admin");
   }
 
-  return <AdminLoginForm />;
+  return <AdminLoginForm initialError={params.error === "forbidden" ? "Tài khoản này chưa có quyền vào admin." : ""} />;
 }
