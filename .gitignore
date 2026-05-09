@@ -10,6 +10,9 @@ next-dev.log
 next-admin-dev.log
 next-supabase-dev.log
 next-supabase-dev.err.log
+.next-dev.out.log
+.next-dev.err.log
+.tmp-shots/
 data/
 .env.local
 .env.*.local

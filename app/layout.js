@@ -24,6 +24,12 @@ export const metadata = {
   description: "Landing page cho nhà hàng San Hô Đỏ Hồ Tràm"
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover"
+};
+
 export default function RootLayout({ children }) {
   return (
     <html

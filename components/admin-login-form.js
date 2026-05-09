@@ -46,6 +46,11 @@ export default function AdminLoginForm({ initialError = "" }) {
             Đăng nhập bằng tài khoản Supabase Auth để quản lý đặt bàn, món ăn, đơn món, bàn,
             voucher và cấu hình tích hợp.
           </p>
+          {process.env.NEXT_PUBLIC_LOCAL_ADMIN_HINT ? (
+            <p>
+              Tài khoản local dev: <strong>{process.env.NEXT_PUBLIC_LOCAL_ADMIN_HINT}</strong>
+            </p>
+          ) : null}
         </div>
 
         <form className={styles.loginForm} onSubmit={handleSubmit}>

@@ -1,4 +1,12 @@
 import { NextResponse } from "next/server";
+import {
+  createLocalAdminCookieValue,
+  getLocalAdminCookieOptions,
+  getLocalAdminProfile,
+  isLocalAdminEnabled,
+  matchesLocalAdminCredentials,
+  LOCAL_ADMIN_COOKIE
+} from "../../../../lib/local-admin";
 import { createClient } from "../../../../lib/supabase/server";
 
 export async function POST(request) {
@@ -9,6 +17,16 @@ export async function POST(request) {
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email và mật khẩu là bắt buộc" }, { status: 400 });
+    }
+
+    if (isLocalAdminEnabled() && matchesLocalAdminCredentials(email, password)) {
+      const response = NextResponse.json({
+        ok: true,
+        user: getLocalAdminProfile().user,
+        localFallback: true
+      });
+      response.cookies.set(LOCAL_ADMIN_COOKIE, createLocalAdminCookieValue(), getLocalAdminCookieOptions());
+      return response;
     }
 
     const supabase = await createClient();
