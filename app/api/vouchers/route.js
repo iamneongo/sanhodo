@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../lib/supabase/server";
-import { createVoucherLead, forwardToWebhooks } from "../../../lib/restaurant-db";
+import {
+  createVoucherLead,
+  forwardToWebhooks,
+  isSupabaseSchemaMissingError
+} from "../../../lib/restaurant-db";
 
 export async function POST(request) {
   try {
@@ -28,6 +32,16 @@ export async function POST(request) {
 
     return NextResponse.json({ ok: true, data: saved });
   } catch (error) {
+    if (isSupabaseSchemaMissingError(error)) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          setupRequired: true
+        },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       { error: error.message || "Không thể lưu lead voucher" },
       { status: 500 }

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../lib/supabase/server";
-import { createPublicOrder, forwardToWebhooks } from "../../../lib/restaurant-db";
+import {
+  createPublicOrder,
+  forwardToWebhooks,
+  isSupabaseSchemaMissingError
+} from "../../../lib/restaurant-db";
 
 export async function POST(request) {
   try {
@@ -31,6 +35,16 @@ export async function POST(request) {
 
     return NextResponse.json({ ok: true, data: saved });
   } catch (error) {
+    if (isSupabaseSchemaMissingError(error)) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          setupRequired: true
+        },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       { error: error.message || "Không thể tạo order từ landing page" },
       { status: 500 }

@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../lib/supabase/server";
-import { createReservation, forwardToWebhooks } from "../../../lib/restaurant-db";
+import {
+  createReservation,
+  forwardToWebhooks,
+  isSupabaseSchemaMissingError
+} from "../../../lib/restaurant-db";
 
 export async function POST(request) {
   try {
@@ -35,6 +39,16 @@ export async function POST(request) {
 
     return NextResponse.json({ ok: true, data: saved });
   } catch (error) {
+    if (isSupabaseSchemaMissingError(error)) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          setupRequired: true
+        },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       { error: error.message || "Không thể tạo yêu cầu đặt bàn" },
       { status: 500 }
