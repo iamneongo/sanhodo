@@ -7,6 +7,7 @@ import {
   matchesLocalAdminCredentials,
   LOCAL_ADMIN_COOKIE
 } from "../../../../lib/local-admin";
+import { isSupabaseSchemaMissingError } from "../../../../lib/restaurant-db";
 import { createClient } from "../../../../lib/supabase/server";
 
 export async function POST(request) {
@@ -46,6 +47,18 @@ export async function POST(request) {
       .maybeSingle();
 
     if (profileError) {
+      if (isSupabaseSchemaMissingError(profileError)) {
+        await supabase.auth.signOut();
+        return NextResponse.json(
+          {
+            error:
+              "Supabase chua co bang public.profiles. Hay chay supabase/schema.sql roi chay supabase/seed.sql de backfill admin va du lieu mau.",
+            setupRequired: true
+          },
+          { status: 503 }
+        );
+      }
+
       return NextResponse.json({ error: profileError.message }, { status: 500 });
     }
 
