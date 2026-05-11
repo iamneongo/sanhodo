@@ -53,6 +53,24 @@ const roleLabels = {
   driver: "Driver"
 };
 
+function getTabLabel(key) {
+  return key === "reservations"
+    ? "Đặt bàn"
+    : key === "orders"
+      ? "Đặt món / Orders"
+      : key === "tables"
+        ? "Bàn"
+        : key === "menu"
+          ? "Món ăn"
+          : key === "vouchers"
+            ? "Voucher"
+            : key === "drivers"
+              ? "Tài xế / Referral"
+              : key === "partners"
+                ? "Đối tác / HDV"
+                : "Tích hợp POS/PMS";
+}
+
 function formatDate(value) {
   if (!value) return "-";
   try {
@@ -1287,24 +1305,26 @@ export default function AdminDashboard({
 
   const orderDraftTotals = computeOrderTotals(orderDraft);
   const orderEditTotals = computeOrderTotals(orderEdit);
+  const currentTabLabel = getTabLabel(tab);
 
   return (
     <main className={styles.dashboardPage}>
       <div className={styles.shell}>
-        <header className={styles.topbar}>
-          <div>
-            <span className={styles.kicker}>Admin Dashboard</span>
-            <h1>Vận hành nhà hàng trên dữ liệu Supabase thật</h1>
+        <aside className={styles.sidebar}>
+          <div className={styles.sidebarBrand}>
+            <span className={styles.kicker}>San Hô Đỏ Admin</span>
+            <h1>Điều hành</h1>
             <p>
-              Quản lý đặt bàn, order, bàn, món, voucher và tích hợp trong cùng một dashboard.
-              {selectedBranch ? ` Đang xem dữ liệu cho ${selectedBranch.name}.` : ""}
+              Sidebar trái để chuyển nhanh giữa các module, content phải tập trung cho vận hành.
             </p>
           </div>
-          <div className={styles.topbarActions}>
-            <span className={styles.adminBadge}>
-              {adminProfile?.full_name || adminProfile?.email || "Admin"} •{" "}
-              {roleLabels[adminProfile?.role] || adminProfile?.role || "Admin"}
-            </span>
+
+          <div className={styles.sidebarSection}>
+            <span className={styles.sidebarLabel}>Tài khoản</span>
+            <div className={styles.sidebarIdentity}>
+              <strong>{adminProfile?.full_name || adminProfile?.email || "Admin"}</strong>
+              <small>{roleLabels[adminProfile?.role] || adminProfile?.role || "Admin"}</small>
+            </div>
             {(initialBranches || []).length ? (
               <label className={styles.branchControl}>
                 <span>Chi nhánh</span>
@@ -1322,13 +1342,76 @@ export default function AdminDashboard({
                 </select>
               </label>
             ) : null}
-            {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=reservations", branchFilterId)}>Export đặt bàn</a> : null}
-            {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=vouchers", branchFilterId)}>Export voucher</a> : null}
-            {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=driver-commissions", branchFilterId)}>Export hoa hồng</a> : null}
-            {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=partner-bookings", branchFilterId)}>Export booking đoàn</a> : null}
-            <button className={styles.logoutButton} type="button" onClick={logout}>Đăng xuất</button>
+          </div>
+
+          <nav className={styles.sidebarNav}>
+            {visibleTabs.map((key) => (
+              <button
+                key={key}
+                type="button"
+                className={tab === key ? styles.sidebarTabActive : styles.sidebarTab}
+                onClick={() => setTab(key)}
+              >
+                <span>{getTabLabel(key)}</span>
+                {key === "reservations" && reservationStats.pending ? <small>{reservationStats.pending}</small> : null}
+                {key === "orders" && orderStats.active ? <small>{orderStats.active}</small> : null}
+                {key === "vouchers" && voucherStats.recent ? <small>{voucherStats.recent}</small> : null}
+                {key === "drivers" && driverStats.pendingCommissions ? <small>{driverStats.pendingCommissions}</small> : null}
+                {key === "partners" && partnerStats.openBookings ? <small>{partnerStats.openBookings}</small> : null}
+              </button>
+            ))}
+          </nav>
+
+          <div className={styles.sidebarSection}>
+            <span className={styles.sidebarLabel}>Xuất dữ liệu</span>
+            <div className={styles.sidebarActions}>
+              {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=reservations", branchFilterId)}>Export đặt bàn</a> : null}
+              {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=vouchers", branchFilterId)}>Export voucher</a> : null}
+              {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=driver-commissions", branchFilterId)}>Export hoa hồng</a> : null}
+              {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=partner-bookings", branchFilterId)}>Export booking đoàn</a> : null}
+            </div>
+          </div>
+
+          <div className={styles.sidebarMiniGrid}>
+            <article className={styles.sidebarMiniCard}>
+              <span>Lead chờ xử lý</span>
+              <strong>{reservationStats.pending}</strong>
+            </article>
+            <article className={styles.sidebarMiniCard}>
+              <span>Voucher 24h</span>
+              <strong>{voucherStats.recent}</strong>
+            </article>
+            <article className={styles.sidebarMiniCard}>
+              <span>Pending payout</span>
+              <strong>{driverStats.pendingCommissions}</strong>
+            </article>
+            <article className={styles.sidebarMiniCard}>
+              <span>Booking đoàn mở</span>
+              <strong>{partnerStats.openBookings}</strong>
+            </article>
+          </div>
+
+          <button className={styles.logoutButton} type="button" onClick={logout}>Đăng xuất</button>
+        </aside>
+
+        <section className={styles.contentShell}>
+        <header className={styles.topbar}>
+          <div>
+            <span className={styles.kicker}>Admin Dashboard</span>
+            <h1>{currentTabLabel}</h1>
+            <p>
+              Quản lý đặt bàn, order, bàn, món, voucher, tài xế, đối tác và tích hợp trong cùng một dashboard.
+              {selectedBranch ? ` Đang xem dữ liệu cho ${selectedBranch.name}.` : ""}
+            </p>
+          </div>
+          <div className={styles.topbarActions}>
+            <span className={styles.adminBadge}>
+              {adminProfile?.email || "admin"} • {roleLabels[adminProfile?.role] || adminProfile?.role || "Admin"}
+            </span>
           </div>
         </header>
+
+        {message ? <p className={styles.feedback}>{message}</p> : null}
 
         <section className={styles.statsGrid}>
           <article className={styles.statCard}><span>Đặt bàn</span><strong>{reservationStats.total}</strong><small>{reservationStats.pending} lead đang chờ xử lý</small></article>
@@ -1396,37 +1479,6 @@ export default function AdminDashboard({
             </div>
           </article>
         </section>
-
-        <section className={styles.tabBar}>
-          {visibleTabs.map((key) => (
-            <button key={key} type="button" className={tab === key ? styles.activeTab : ""} onClick={() => setTab(key)}>
-              <span>
-                {key === "reservations"
-                  ? "Đặt bàn"
-                  : key === "orders"
-                    ? "Đặt món / Orders"
-                    : key === "tables"
-                      ? "Bàn"
-                        : key === "menu"
-                          ? "Món ăn"
-                        : key === "vouchers"
-                          ? "Voucher"
-                          : key === "drivers"
-                            ? "Tài xế / Referral"
-                            : key === "partners"
-                              ? "Đối tác / HDV"
-                            : "Tích hợp POS/PMS"}
-              </span>
-              {key === "reservations" && reservationStats.pending ? <small>{reservationStats.pending}</small> : null}
-              {key === "orders" && orderStats.active ? <small>{orderStats.active}</small> : null}
-              {key === "vouchers" && voucherStats.recent ? <small>{voucherStats.recent}</small> : null}
-              {key === "drivers" && driverStats.pendingCommissions ? <small>{driverStats.pendingCommissions}</small> : null}
-              {key === "partners" && partnerStats.openBookings ? <small>{partnerStats.openBookings}</small> : null}
-            </button>
-          ))}
-        </section>
-
-        {message ? <p className={styles.feedback}>{message}</p> : null}
 
         {tab === "reservations" ? (
           <section className={styles.adminGrid}>
@@ -2318,6 +2370,7 @@ export default function AdminDashboard({
         {tab === "integrations" && permissions.canViewIntegrations ? (
           <section className={styles.integrationLayout}><div className={styles.integrationList}>{integrations.map((item) => <button type="button" key={item.id} className={`${styles.integrationCard} ${item.id === selectedIntegration?.id ? styles.integrationCardActive : ""}`} onClick={() => setSelectedIntegrationId(item.id)}><div className={styles.integrationCardTop}><strong>{item.name}</strong><span className={`${styles.statusBadge} ${item.enabled ? styles.status_confirmed : styles.status_cancelled}`}>{item.enabled ? "enabled" : "disabled"}</span></div><small>{item.category.toUpperCase()} • {item.market}</small><p>{item.description}</p><span className={styles.integrationMeta}>{item.syncMode === "auto" ? "Tự động đồng bộ" : "Đồng bộ thủ công"}</span></button>)}</div><div className={styles.integrationDetail}>{selectedIntegration ? <div className={styles.detailPanel}><div className={styles.detailHeading}><div><span className={styles.kicker}>Tích hợp POS/PMS</span><h2>{selectedIntegration.name}</h2></div></div><div className={styles.editGrid}><label><span>Trạng thái</span><select defaultValue={selectedIntegration.enabled ? "enabled" : "disabled"} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { enabled: event.target.value === "enabled" })}><option value="disabled">disabled</option><option value="enabled">enabled</option></select></label><label><span>Sync mode</span><select defaultValue={selectedIntegration.syncMode} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { syncMode: event.target.value })}><option value="manual">manual</option><option value="auto">auto</option></select></label><label className={styles.fullWidth}><span>Endpoint</span><input type="url" defaultValue={selectedIntegration.endpoint} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { endpoint: event.target.value })} /></label><label><span>API key</span><input type="text" defaultValue={selectedIntegration.apiKey} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { apiKey: event.target.value })} /></label><label><span>API secret</span><input type="text" defaultValue={selectedIntegration.apiSecret} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { apiSecret: event.target.value })} /></label><label><span>Location code</span><input type="text" defaultValue={selectedIntegration.locationCode} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { locationCode: event.target.value })} /></label><label><span>Tenant code</span><input type="text" defaultValue={selectedIntegration.tenantCode} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { tenantCode: event.target.value })} /></label><label className={styles.fullWidth}><span>Ghi chú</span><textarea rows={5} defaultValue={selectedIntegration.notes} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { notes: event.target.value })} /></label></div></div> : null}<div className={styles.detailPanel}><div className={styles.detailHeading}><div><span className={styles.kicker}>Nhật ký đồng bộ</span><h2>Lịch sử sync gần đây</h2></div></div><div className={styles.logList}>{syncLogs.length ? syncLogs.slice(0, 12).map((log) => <article key={log.id} className={styles.logItem}><div className={styles.logHead}><strong>{log.integrationName}</strong><span className={`${styles.statusBadge} ${log.ok ? styles.status_confirmed : styles.status_cancelled}`}>{log.ok ? `OK ${log.status}` : `ERR ${log.status}`}</span></div><small>Reservation: {log.reservationId || "-"}</small><small>{formatDate(log.createdAt)}</small><p>{log.responsePreview || "Không có nội dung phản hồi."}</p></article>) : <div className={styles.emptyState}>Chưa có log đồng bộ.</div>}</div></div></div></section>
         ) : null}
+      </section>
       </div>
     </main>
   );

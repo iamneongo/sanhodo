@@ -122,7 +122,7 @@
 
 .dashboardPage {
   min-height: 100vh;
-  padding: 28px;
+  padding: 20px;
   background:
     linear-gradient(rgba(248, 240, 230, 0.92), rgba(248, 240, 230, 0.92)),
     radial-gradient(circle at top left, rgba(255, 233, 207, 0.65), transparent 30%),
@@ -131,8 +131,162 @@
 }
 
 .shell {
-  width: min(1440px, 100%);
+  width: min(1520px, 100%);
   margin: 0 auto;
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.contentShell {
+  min-width: 0;
+  display: grid;
+  gap: 20px;
+}
+
+.sidebar {
+  position: sticky;
+  top: 20px;
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid rgba(111, 74, 54, 0.12);
+  border-radius: 30px;
+  background:
+    linear-gradient(180deg, rgba(255, 254, 251, 0.96), rgba(251, 245, 237, 0.94));
+  box-shadow: 0 26px 46px rgba(84, 50, 29, 0.08);
+}
+
+.sidebarBrand h1 {
+  margin: 0 0 8px;
+  color: #311b15;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  line-height: 0.95;
+}
+
+.sidebarBrand p {
+  margin: 0;
+  color: #6d544a;
+  line-height: 1.6;
+}
+
+.sidebarSection {
+  display: grid;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(111, 74, 54, 0.1);
+}
+
+.sidebarLabel {
+  color: #7a5d52;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.sidebarIdentity {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid rgba(111, 74, 54, 0.1);
+  border-radius: 18px;
+  background: rgba(249, 243, 236, 0.72);
+}
+
+.sidebarIdentity strong {
+  color: #311b15;
+}
+
+.sidebarIdentity small {
+  color: #7d6257;
+}
+
+.sidebarNav {
+  display: grid;
+  gap: 8px;
+}
+
+.sidebarTab,
+.sidebarTabActive {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid rgba(111, 74, 54, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #4f392f;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.sidebarTab:hover,
+.sidebarTabActive {
+  transform: translateY(-1px);
+  border-color: rgba(198, 71, 56, 0.24);
+}
+
+.sidebarTabActive {
+  background: linear-gradient(135deg, #c64738, #dd604b);
+  color: #fffaf4;
+}
+
+.sidebarTab small,
+.sidebarTabActive small {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(198, 71, 56, 0.12);
+  color: #9f3527;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.sidebarTabActive small {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fffaf4;
+}
+
+.sidebarActions {
+  display: grid;
+  gap: 8px;
+}
+
+.sidebarMiniGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sidebarMiniCard {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid rgba(111, 74, 54, 0.1);
+  border-radius: 18px;
+  background: rgba(249, 243, 236, 0.72);
+}
+
+.sidebarMiniCard span {
+  color: #7a5d52;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sidebarMiniCard strong {
+  color: #311b15;
+  font-size: 1.4rem;
 }
 
 .topbar {
@@ -140,7 +294,11 @@
   justify-content: space-between;
   gap: 20px;
   align-items: flex-start;
-  margin-bottom: 24px;
+  padding: 22px 24px;
+  border: 1px solid rgba(111, 74, 54, 0.12);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 36px rgba(84, 50, 29, 0.06);
 }
 
 .topbar h1 {
@@ -158,8 +316,7 @@
 
 .topbarActions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
   justify-content: flex-end;
 }
@@ -214,9 +371,8 @@
 
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
-  margin-bottom: 22px;
 }
 
 .statCard {
@@ -944,6 +1100,14 @@
 }
 
 @media (max-width: 1180px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+  }
+
   .statsGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -971,6 +1135,10 @@
   }
 
   .topbar {
+    padding: 18px;
+  }
+
+  .topbar {
     flex-direction: column;
   }
 
@@ -986,18 +1154,12 @@
     grid-template-columns: 1fr;
   }
 
+  .sidebarMiniGrid {
+    grid-template-columns: 1fr;
+  }
+
   .statsStrip {
     grid-template-columns: 1fr;
-  }
-
-  .tabBar {
-    display: grid;
-    grid-template-columns: 1fr;
-    border-radius: 24px;
-  }
-
-  .tabBar button {
-    width: 100%;
   }
 
   .syncActions select {

@@ -9,8 +9,9 @@ export async function PATCH(request, { params }) {
   }
 
   try {
+    const { id } = await params;
     const body = await request.json();
-    const updated = await updatePartnerContract(context.supabase, params.id, body);
+    const updated = await updatePartnerContract(context.supabase, id, body);
     return NextResponse.json({ ok: true, data: updated });
   } catch (error) {
     return NextResponse.json({ error: error.message || "Không cập nhật được hợp đồng" }, { status: 500 });
@@ -24,7 +25,8 @@ export async function DELETE(_request, { params }) {
   }
 
   try {
-    await deletePartnerContract(context.supabase, params.id);
+    const { id } = await params;
+    await deletePartnerContract(context.supabase, id);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return NextResponse.json({ error: error.message || "Không xóa được hợp đồng" }, { status: 500 });
