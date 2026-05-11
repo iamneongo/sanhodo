@@ -166,7 +166,8 @@ export default function Page() {
     phone: "",
     guests: "2",
     date: reservationMinDate,
-    timeSlot: RESERVATION_TIME_SLOTS[14] || "17:00"
+    timeSlot: RESERVATION_TIME_SLOTS[14] || "17:00",
+    referralCode: ""
   });
   const [voucherPhone, setVoucherPhone] = useState("");
   const [voucherResult, setVoucherResult] = useState(null);
@@ -178,6 +179,7 @@ export default function Page() {
   const [orderForm, setOrderForm] = useState({
     customerName: "",
     customerPhone: "",
+    referralCode: "",
     notes: "",
     items: []
   });
@@ -598,7 +600,8 @@ export default function Page() {
         phone: "",
         guests: "2",
         date: reservationMinDate,
-        timeSlot: RESERVATION_TIME_SLOTS[14] || "17:00"
+        timeSlot: RESERVATION_TIME_SLOTS[14] || "17:00",
+        referralCode: ""
       });
       setSelectedOffer("");
     } catch (error) {
@@ -720,6 +723,7 @@ export default function Page() {
       setOrderForm({
         customerName: "",
         customerPhone: "",
+        referralCode: "",
         notes: "",
         items: []
       });
@@ -1032,6 +1036,17 @@ export default function Page() {
                   ))}
                 </select>
               </label>
+              <label>
+                <span>Mã tài xế / giới thiệu (nếu có)</span>
+                <input
+                  type="text"
+                  value={reservationForm.referralCode || ""}
+                  onChange={(event) =>
+                    setReservationForm((prev) => ({ ...prev, referralCode: event.target.value }))
+                  }
+                  placeholder="Ví dụ: DRV-HOTRAM-01"
+                />
+              </label>
               <div className="form-note">
                 <strong>Khung giờ nhận đặt bàn:</strong> 10:00 - 21:30 mỗi ngày.
                 {reservationPreview ? (
@@ -1341,6 +1356,17 @@ export default function Page() {
                   }
                   placeholder="Ví dụ: 0814 645 999"
                   required
+                />
+              </label>
+              <label>
+                <span>Mã tài xế / giới thiệu (nếu có)</span>
+                <input
+                  type="text"
+                  value={orderForm.referralCode || ""}
+                  onChange={(event) =>
+                    setOrderForm((prev) => ({ ...prev, referralCode: event.target.value }))
+                  }
+                  placeholder="Ví dụ: DRV-HOTRAM-01"
                 />
               </label>
               <label>

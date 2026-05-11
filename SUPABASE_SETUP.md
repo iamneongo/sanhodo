@@ -12,6 +12,7 @@
   - `supabase/migrations/20260511_004_phase2_roles.sql`
   - `supabase/migrations/20260511_005_phase3_multi_branch_foundation.sql`
   - `supabase/migrations/20260511_006_phase4_voucher_loyalty.sql`
+  - `supabase/migrations/20260511_007_phase5_driver_commission.sql`
   - sau do `supabase/migrations/20260509_002_seed_admin_demo.sql`
 
 ## 2. Tao tai khoan admin
@@ -55,6 +56,9 @@ where email = 'admin@gmail.com';
 - Voucher campaigns / campaign uu dai
 - Customer profiles / loyalty members
 - Voucher redemptions / lich su redeem va tich diem
+- Drivers / tai xe gioi thieu
+- Driver referrals / attribution theo tai xe
+- Driver commission transactions / giao dich hoa hong
 
 ## 6. Bien moi truong local
 File `.env.local` da duoc gan:

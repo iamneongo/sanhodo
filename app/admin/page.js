@@ -72,6 +72,9 @@ export default async function AdminPage({ searchParams }) {
         initialVoucherCampaigns={dashboardData.voucherCampaigns}
         initialCustomerProfiles={dashboardData.customerProfiles}
         initialVoucherRedemptions={dashboardData.voucherRedemptions}
+        initialDrivers={dashboardData.drivers}
+        initialDriverReferrals={dashboardData.driverReferrals}
+        initialDriverCommissions={dashboardData.driverCommissions}
         initialIntegrations={dashboardData.integrations}
         initialSyncLogs={dashboardData.syncLogs}
         initialMenuItems={dashboardData.menuItems}

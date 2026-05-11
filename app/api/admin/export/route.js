@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireAdminApi, unauthorizedResponse } from "../../../../lib/supabase/auth";
-import { listReservations, listVoucherLeads, reservationsToCsv, vouchersToCsv } from "../../../../lib/restaurant-db";
+import {
+  driverCommissionsToCsv,
+  listDriverCommissionTransactions,
+  listReservations,
+  listVoucherLeads,
+  reservationsToCsv,
+  vouchersToCsv
+} from "../../../../lib/restaurant-db";
 
 export async function GET(request) {
   const context = await requireAdminApi("dashboard.export");
@@ -19,6 +26,17 @@ export async function GET(request) {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": 'attachment; filename="vouchers.csv"'
+      }
+    });
+  }
+
+  if (type === "driver-commissions") {
+    const commissions = await listDriverCommissionTransactions(context.supabase, { branchId });
+    const csv = driverCommissionsToCsv(commissions);
+    return new NextResponse(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": 'attachment; filename="driver-commissions.csv"'
       }
     });
   }

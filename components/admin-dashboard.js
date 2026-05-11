@@ -37,6 +37,8 @@ const tableStatuses = ["available", "reserved", "occupied", "cleaning", "inactiv
 const orderChannels = ["admin", "website", "reservation", "walk-in", "phone", "zalo"];
 const spicyLevels = ["none", "mild", "medium", "hot"];
 const availabilityStatuses = ["available", "low_stock", "seasonal", "sold_out"];
+const driverStatuses = ["active", "inactive", "blocked"];
+const commissionStatuses = ["pending", "approved", "paid", "cancelled"];
 
 const roleLabels = {
   admin: "Admin",
@@ -103,6 +105,8 @@ function createEmptyOrderDraft() {
     customerPhone: "",
     reservationId: "",
     tableId: "",
+    driverId: "",
+    referralCode: "",
     status: "draft",
     orderChannel: "admin",
     notes: "",
@@ -119,6 +123,8 @@ function cloneOrder(order) {
     customerPhone: order.customerPhone || "",
     reservationId: order.reservationId || "",
     tableId: order.tableId || "",
+    driverId: order.driverId || "",
+    referralCode: order.referralCode || "",
     status: order.status || "draft",
     orderChannel: order.orderChannel || "admin",
     notes: order.notes || "",
@@ -179,6 +185,19 @@ function createEmptyCampaignDraft() {
   };
 }
 
+function createEmptyDriverDraft() {
+  return {
+    code: "",
+    fullName: "",
+    phone: "",
+    vehicleType: "Xe 4 chỗ",
+    status: "active",
+    referralCode: "",
+    commissionRate: 5,
+    notes: ""
+  };
+}
+
 function computeOrderTotals(order) {
   const subtotal = (order.items || []).reduce(
     (sum, item) => sum + Number(item.unitPrice || 0) * Number(item.quantity || 0),
@@ -217,6 +236,9 @@ export default function AdminDashboard({
   initialVoucherCampaigns,
   initialCustomerProfiles,
   initialVoucherRedemptions,
+  initialDrivers,
+  initialDriverReferrals,
+  initialDriverCommissions,
   initialIntegrations,
   initialSyncLogs,
   initialMenuItems,
@@ -243,6 +265,11 @@ export default function AdminDashboard({
   const [voucherRedemptions, setVoucherRedemptions] = useState(
     sortByCreatedDesc(initialVoucherRedemptions || [])
   );
+  const [drivers, setDrivers] = useState(sortByName(initialDrivers || [], "fullName"));
+  const [driverReferrals, setDriverReferrals] = useState(sortByCreatedDesc(initialDriverReferrals || []));
+  const [driverCommissions, setDriverCommissions] = useState(
+    sortByCreatedDesc(initialDriverCommissions || [])
+  );
   const [menuItems, setMenuItems] = useState(sortByName(initialMenuItems));
   const [restaurantTables, setRestaurantTables] = useState(sortByName(initialTables));
   const [orders, setOrders] = useState(sortByCreatedDesc(initialOrders));
@@ -257,12 +284,14 @@ export default function AdminDashboard({
   const [orderStatus, setOrderStatus] = useState("all");
   const [menuQuery, setMenuQuery] = useState("");
   const [tableQuery, setTableQuery] = useState("");
+  const [driverQuery, setDriverQuery] = useState("");
 
   const [selectedReservationId, setSelectedReservationId] = useState(initialReservations[0]?.id || "");
   const [selectedVoucherId, setSelectedVoucherId] = useState(initialVouchers[0]?.id || "");
   const [selectedVoucherCampaignId, setSelectedVoucherCampaignId] = useState(
     initialVoucherCampaigns?.[0]?.id || ""
   );
+  const [selectedDriverId, setSelectedDriverId] = useState(initialDrivers?.[0]?.id || "");
   const [selectedOrderId, setSelectedOrderId] = useState(initialOrders[0]?.id || "");
   const [selectedMenuId, setSelectedMenuId] = useState(initialMenuItems[0]?.id || "");
   const [selectedTableId, setSelectedTableId] = useState(initialTables[0]?.id || "");
@@ -278,6 +307,7 @@ export default function AdminDashboard({
   const [menuCreateOpen, setMenuCreateOpen] = useState(false);
   const [tableCreateOpen, setTableCreateOpen] = useState(false);
   const [campaignCreateOpen, setCampaignCreateOpen] = useState(false);
+  const [driverCreateOpen, setDriverCreateOpen] = useState(false);
 
   const [reservationSaving, setReservationSaving] = useState(false);
   const [voucherSaving, setVoucherSaving] = useState(false);
@@ -294,6 +324,8 @@ export default function AdminDashboard({
     selectedOffer: "",
     notes: "",
     assignedTo: "",
+    driverId: "",
+    referralCode: "",
     tableId: ""
   });
   const [orderDraft, setOrderDraft] = useState(createEmptyOrderDraft());
@@ -303,6 +335,8 @@ export default function AdminDashboard({
   const [tableDraft, setTableDraft] = useState(createEmptyTableDraft());
   const [tableEdit, setTableEdit] = useState(createEmptyTableDraft());
   const [campaignDraft, setCampaignDraft] = useState(createEmptyCampaignDraft());
+  const [driverDraft, setDriverDraft] = useState(createEmptyDriverDraft());
+  const [driverEdit, setDriverEdit] = useState(createEmptyDriverDraft());
 
   const selectedReservation = reservations.find((item) => item.id === selectedReservationId) || null;
   const selectedVoucher = vouchers.find((item) => item.id === selectedVoucherId) || null;
@@ -315,6 +349,7 @@ export default function AdminDashboard({
         (selectedVoucher?.phone && item.phone === selectedVoucher.phone)
     ) || null;
   const selectedOrder = orders.find((item) => item.id === selectedOrderId) || null;
+  const selectedDriver = drivers.find((item) => item.id === selectedDriverId) || null;
   const selectedMenuItem = menuItems.find((item) => item.id === selectedMenuId) || null;
   const selectedTable = restaurantTables.find((item) => item.id === selectedTableId) || null;
   const selectedIntegration = integrations.find((item) => item.id === selectedIntegrationId) || null;
@@ -326,6 +361,9 @@ export default function AdminDashboard({
       canManageTables: hasAdminPermission(currentRole, "tables.manage"),
       canManageMenu: hasAdminPermission(currentRole, "menu.manage"),
       canManageVouchers: hasAdminPermission(currentRole, "vouchers.manage"),
+      canViewDrivers: hasAdminPermission(currentRole, "drivers.view"),
+      canManageDrivers: hasAdminPermission(currentRole, "drivers.manage"),
+      canManageDriverCommissions: hasAdminPermission(currentRole, "drivers.commission"),
       canViewIntegrations: hasAdminPermission(currentRole, "integrations.view"),
       canManageIntegrations: hasAdminPermission(currentRole, "integrations.manage"),
       canSyncIntegrations: hasAdminPermission(currentRole, "integrations.sync")
@@ -355,6 +393,10 @@ export default function AdminDashboard({
   useEffect(() => {
     setTableEdit(selectedTable ? { ...selectedTable } : createEmptyTableDraft());
   }, [selectedTableId, selectedTable]);
+
+  useEffect(() => {
+    setDriverEdit(selectedDriver ? { ...selectedDriver } : createEmptyDriverDraft());
+  }, [selectedDriverId, selectedDriver]);
 
   useEffect(() => {
     if (!selectedVoucherCampaignId && voucherCampaigns.length) {
@@ -418,8 +460,17 @@ export default function AdminDashboard({
     [restaurantTables, tableQuery]
   );
 
+  const filteredDrivers = useMemo(
+    () =>
+      drivers.filter((item) =>
+        matchesSearch(item, driverQuery, ["fullName", "phone", "referralCode", "code", "vehicleType"])
+      ),
+    [drivers, driverQuery]
+  );
+
   const findTableName = (tableId) => restaurantTables.find((item) => item.id === tableId)?.name || "-";
   const findReservationName = (reservationId) => reservations.find((item) => item.id === reservationId)?.name || "-";
+  const findDriverName = (driverId) => drivers.find((item) => item.id === driverId)?.fullName || "-";
 
   const addItemToState = (menuItemId, setter) => {
     const found = menuItems.find((item) => item.id === menuItemId);
@@ -601,7 +652,18 @@ export default function AdminDashboard({
       setReservations((prev) => sortByCreatedDesc([data.data, ...prev]));
       setSelectedReservationId(data.data.id);
       setManualOpen(false);
-      setManualForm({ name: "", phone: "", guests: "2", datetime: "", selectedOffer: "", notes: "", assignedTo: "", tableId: "" });
+      setManualForm({
+        name: "",
+        phone: "",
+        guests: "2",
+        datetime: "",
+        selectedOffer: "",
+        notes: "",
+        assignedTo: "",
+        driverId: "",
+        referralCode: "",
+        tableId: ""
+      });
       setMessage("Đã thêm khách đặt bàn mới.");
     } catch (error) {
       setMessage(error.message);
@@ -785,6 +847,60 @@ export default function AdminDashboard({
     }
   };
 
+  const createDriverEntry = async (event) => {
+    event.preventDefault();
+    setTableSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(withBranchQuery("/api/admin/drivers", branchFilterId), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(attachBranchToPayload(driverDraft))
+      });
+      setDrivers((prev) => sortByName([data.data, ...prev], "fullName"));
+      setSelectedDriverId(data.data.id);
+      setDriverDraft(createEmptyDriverDraft());
+      setDriverCreateOpen(false);
+      setMessage("Đã tạo tài xế mới.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setTableSaving(false);
+    }
+  };
+
+  const saveDriverEdit = async () => {
+    if (!selectedDriver) return;
+    setTableSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(`/api/admin/drivers/${selectedDriver.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(attachBranchToPayload(driverEdit))
+      });
+      setDrivers((prev) => sortByName(prev.map((item) => (item.id === selectedDriver.id ? data.data : item)), "fullName"));
+      setMessage("Đã cập nhật tài xế.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setTableSaving(false);
+    }
+  };
+
+  const deleteDriverEntry = async (id) => {
+    if (!window.confirm("Xóa tài xế này?")) return;
+    try {
+      await requestJson(`/api/admin/drivers/${id}`, { method: "DELETE" });
+      const next = drivers.filter((item) => item.id !== id);
+      setDrivers(next);
+      setSelectedDriverId(next[0]?.id || "");
+      setMessage("Đã xóa tài xế.");
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
+
   const patchIntegration = async (id, payload) => {
     setIntegrationSaving(true);
     setMessage("");
@@ -858,6 +974,12 @@ export default function AdminDashboard({
     totalPoints: customerProfiles.reduce((sum, item) => sum + Number(item.loyaltyPoints || 0), 0),
     totalSpent: customerProfiles.reduce((sum, item) => sum + Number(item.totalSpent || 0), 0),
     redemptions: voucherRedemptions.length
+  };
+  const driverStats = {
+    total: drivers.length,
+    active: drivers.filter((item) => item.status === "active").length,
+    pendingCommissions: driverCommissions.filter((item) => item.status === "pending").length,
+    commissionValue: driverCommissions.reduce((sum, item) => sum + Number(item.commissionAmount || 0), 0)
   };
   const notificationFeed = sortByCreatedDesc([
     ...reservations
@@ -953,6 +1075,7 @@ export default function AdminDashboard({
             ) : null}
             {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=reservations", branchFilterId)}>Export đặt bàn</a> : null}
             {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=vouchers", branchFilterId)}>Export voucher</a> : null}
+            {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=driver-commissions", branchFilterId)}>Export hoa hồng</a> : null}
             <button className={styles.logoutButton} type="button" onClick={logout}>Đăng xuất</button>
           </div>
         </header>
@@ -963,7 +1086,7 @@ export default function AdminDashboard({
           <article className={styles.statCard}><span>Thực đơn</span><strong>{menuStats.total}</strong><small>{menuStats.featured} món featured • {menuStats.lowStock} món cần chú ý</small></article>
           <article className={styles.statCard}><span>Bàn</span><strong>{tableStats.total}</strong><small>{tableStats.available} bàn còn trống</small></article>
           <article className={styles.statCard}><span>Voucher</span><strong>{voucherStats.total}</strong><small>{voucherStats.activeCodes} mã đã phát • {voucherStats.recent} lead trong 24h</small></article>
-          <article className={styles.statCard}><span>Tỷ lệ xác nhận</span><strong>{formatPercent(reservationConversion.confirmed + reservationConversion.arrived, reservationStats.total)}</strong><small>{reservationConversion.confirmed} xác nhận • {reservationConversion.arrived} đã tới</small></article>
+          <article className={styles.statCard}><span>Tài xế</span><strong>{driverStats.total}</strong><small>{driverStats.active} đang hoạt động • {driverStats.pendingCommissions} pending</small></article>
         </section>
 
         <section className={styles.insightsGrid}>
@@ -1027,11 +1150,24 @@ export default function AdminDashboard({
           {visibleTabs.map((key) => (
             <button key={key} type="button" className={tab === key ? styles.activeTab : ""} onClick={() => setTab(key)}>
               <span>
-                {key === "reservations" ? "Đặt bàn" : key === "orders" ? "Đặt món / Orders" : key === "tables" ? "Bàn" : key === "menu" ? "Món ăn" : key === "vouchers" ? "Voucher" : "Tích hợp POS/PMS"}
+                {key === "reservations"
+                  ? "Đặt bàn"
+                  : key === "orders"
+                    ? "Đặt món / Orders"
+                    : key === "tables"
+                      ? "Bàn"
+                      : key === "menu"
+                        ? "Món ăn"
+                        : key === "vouchers"
+                          ? "Voucher"
+                          : key === "drivers"
+                            ? "Tài xế / Referral"
+                            : "Tích hợp POS/PMS"}
               </span>
               {key === "reservations" && reservationStats.pending ? <small>{reservationStats.pending}</small> : null}
               {key === "orders" && orderStats.active ? <small>{orderStats.active}</small> : null}
               {key === "vouchers" && voucherStats.recent ? <small>{voucherStats.recent}</small> : null}
+              {key === "drivers" && driverStats.pendingCommissions ? <small>{driverStats.pendingCommissions}</small> : null}
             </button>
           ))}
         </section>
@@ -1054,6 +1190,13 @@ export default function AdminDashboard({
                   <div className={styles.inlineRow}>
                     <input type="text" placeholder="Số khách" value={manualForm.guests} onChange={(event) => setManualForm((prev) => ({ ...prev, guests: event.target.value }))} required />
                     <input type="datetime-local" value={manualForm.datetime} onChange={(event) => setManualForm((prev) => ({ ...prev, datetime: event.target.value }))} required />
+                  </div>
+                  <div className={styles.inlineRow}>
+                    <select value={manualForm.driverId} onChange={(event) => setManualForm((prev) => ({ ...prev, driverId: event.target.value }))}>
+                      <option value="">Chưa gán tài xế</option>
+                      {drivers.map((driver) => <option key={driver.id} value={driver.id}>{driver.fullName}</option>)}
+                    </select>
+                    <input type="text" placeholder="Mã giới thiệu" value={manualForm.referralCode} onChange={(event) => setManualForm((prev) => ({ ...prev, referralCode: event.target.value }))} />
                   </div>
                   <select value={manualForm.tableId} onChange={(event) => setManualForm((prev) => ({ ...prev, tableId: event.target.value }))}><option value="">Chưa gán bàn</option>{restaurantTables.map((table) => <option key={table.id} value={table.id}>{table.name}</option>)}</select>
                   <textarea placeholder="Ghi chú" value={manualForm.notes} onChange={(event) => setManualForm((prev) => ({ ...prev, notes: event.target.value }))} rows={3} />
@@ -1117,6 +1260,13 @@ export default function AdminDashboard({
                   <div className={styles.inlineRow}>
                     <select value={orderDraft.tableId} onChange={(event) => setOrderDraft((prev) => ({ ...prev, tableId: event.target.value }))}><option value="">Chọn bàn</option>{restaurantTables.map((table) => <option key={table.id} value={table.id}>{table.name}</option>)}</select>
                     <select value={orderDraft.orderChannel} onChange={(event) => setOrderDraft((prev) => ({ ...prev, orderChannel: event.target.value }))}>{orderChannels.map((item) => <option key={item} value={item}>{item}</option>)}</select>
+                  </div>
+                  <div className={styles.inlineRow}>
+                    <select value={orderDraft.driverId} onChange={(event) => setOrderDraft((prev) => ({ ...prev, driverId: event.target.value }))}>
+                      <option value="">Chưa gán tài xế</option>
+                      {drivers.map((driver) => <option key={driver.id} value={driver.id}>{driver.fullName}</option>)}
+                    </select>
+                    <input type="text" placeholder="Mã giới thiệu" value={orderDraft.referralCode} onChange={(event) => setOrderDraft((prev) => ({ ...prev, referralCode: event.target.value }))} />
                   </div>
                   <div className={styles.inlineAddRow}><select defaultValue="" onChange={(event) => { if (event.target.value) { addItemToState(event.target.value, setOrderDraft); event.target.value = ""; } }}><option value="">Thêm món vào order</option>{menuItems.filter((item) => item.isAvailable).map((item) => <option key={item.id} value={item.id}>{item.name} - {formatCurrency(item.price)}</option>)}</select></div>
                   <div className={styles.lineItemList}>{orderDraft.items.map((item, index) => <div key={`${item.menuItemId}-${index}`} className={styles.lineItemRow}><strong>{item.itemName}</strong><input type="number" min="1" value={item.quantity} onChange={(event) => updateLineItem(setOrderDraft, index, "quantity", event.target.value)} /><input type="number" min="0" value={item.unitPrice} onChange={(event) => updateLineItem(setOrderDraft, index, "unitPrice", event.target.value)} /><button type="button" onClick={() => removeLineItem(setOrderDraft, index)}>Xóa</button></div>)}</div>
@@ -1604,6 +1754,121 @@ export default function AdminDashboard({
                   ) : null}
                 </div>
               </div>
+            </div>
+          </section>
+        ) : null}
+
+        {tab === "drivers" && permissions.canViewDrivers ? (
+          <section className={styles.adminGrid}>
+            <div className={styles.listPanel}>
+              <div className={styles.panelToolbar}>
+                <input
+                  type="search"
+                  placeholder="Tìm tài xế / mã giới thiệu..."
+                  value={driverQuery}
+                  onChange={(event) => setDriverQuery(event.target.value)}
+                />
+                <div></div>
+                {permissions.canManageDrivers ? (
+                  <button type="button" onClick={() => setDriverCreateOpen((prev) => !prev)}>
+                    {driverCreateOpen ? "Đóng form" : "Tạo tài xế"}
+                  </button>
+                ) : (
+                  <div></div>
+                )}
+              </div>
+              {driverCreateOpen && permissions.canManageDrivers ? (
+                <form className={styles.inlineForm} onSubmit={createDriverEntry}>
+                  <input type="text" placeholder="Mã tài xế" value={driverDraft.code} onChange={(event) => setDriverDraft((prev) => ({ ...prev, code: event.target.value }))} required />
+                  <input type="text" placeholder="Tên tài xế" value={driverDraft.fullName} onChange={(event) => setDriverDraft((prev) => ({ ...prev, fullName: event.target.value }))} required />
+                  <div className={styles.inlineRow}>
+                    <input type="tel" placeholder="SĐT" value={driverDraft.phone} onChange={(event) => setDriverDraft((prev) => ({ ...prev, phone: event.target.value }))} required />
+                    <input type="text" placeholder="Loại xe" value={driverDraft.vehicleType} onChange={(event) => setDriverDraft((prev) => ({ ...prev, vehicleType: event.target.value }))} />
+                  </div>
+                  <div className={styles.inlineRow}>
+                    <input type="text" placeholder="Mã giới thiệu" value={driverDraft.referralCode} onChange={(event) => setDriverDraft((prev) => ({ ...prev, referralCode: event.target.value }))} />
+                    <input type="number" min="0" placeholder="% hoa hồng" value={driverDraft.commissionRate} onChange={(event) => setDriverDraft((prev) => ({ ...prev, commissionRate: Number(event.target.value) }))} />
+                  </div>
+                  <textarea placeholder="Ghi chú" rows={3} value={driverDraft.notes} onChange={(event) => setDriverDraft((prev) => ({ ...prev, notes: event.target.value }))} />
+                  <button type="submit" disabled={tableSaving}>{tableSaving ? "Đang tạo..." : "Lưu tài xế"}</button>
+                </form>
+              ) : null}
+              <div className={styles.tableWrap}>
+                <table className={styles.dataTable}>
+                  <thead><tr><th>Tài xế</th><th>Mã giới thiệu</th><th>Hoa hồng</th><th>Trạng thái</th></tr></thead>
+                  <tbody>
+                    {filteredDrivers.map((item) => (
+                      <tr key={item.id} className={item.id === selectedDriver?.id ? styles.activeRow : ""} onClick={() => setSelectedDriverId(item.id)}>
+                        <td><strong>{item.fullName}</strong><span>{item.phone}</span></td>
+                        <td>{item.referralCode || "-"}</td>
+                        <td>{item.commissionRate}%</td>
+                        <td><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_confirmed}`}>{item.status}</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className={styles.detailPanel}>
+              {selectedDriver ? (
+                <div>
+                  <div className={styles.detailHeading}>
+                    <div>
+                      <span className={styles.kicker}>Driver / Referral</span>
+                      <h2>{selectedDriver.fullName}</h2>
+                    </div>
+                    {permissions.canManageDrivers ? (
+                      <button className={styles.deleteButton} type="button" onClick={() => deleteDriverEntry(selectedDriver.id)}>
+                        Xóa tài xế
+                      </button>
+                    ) : null}
+                  </div>
+                  <div className={styles.metaGrid}>
+                    <div><span>Mã tài xế</span><strong>{selectedDriver.code}</strong></div>
+                    <div><span>Mã giới thiệu</span><strong>{selectedDriver.referralCode || "-"}</strong></div>
+                    <div><span>Hoa hồng</span><strong>{selectedDriver.commissionRate}%</strong></div>
+                    <div><span>Pending payout</span><strong>{formatCurrency(driverCommissions.filter((item) => item.driverId === selectedDriver.id && item.status === "pending").reduce((sum, item) => sum + item.commissionAmount, 0))}</strong></div>
+                  </div>
+                  <div className={styles.editGrid}>
+                    <label><span>Tên tài xế</span><input type="text" value={driverEdit.fullName} disabled={!permissions.canManageDrivers} onChange={(event) => setDriverEdit((prev) => ({ ...prev, fullName: event.target.value }))} /></label>
+                    <label><span>SĐT</span><input type="text" value={driverEdit.phone} disabled={!permissions.canManageDrivers} onChange={(event) => setDriverEdit((prev) => ({ ...prev, phone: event.target.value }))} /></label>
+                    <label><span>Loại xe</span><input type="text" value={driverEdit.vehicleType} disabled={!permissions.canManageDrivers} onChange={(event) => setDriverEdit((prev) => ({ ...prev, vehicleType: event.target.value }))} /></label>
+                    <label><span>% hoa hồng</span><input type="number" min="0" value={driverEdit.commissionRate} disabled={!permissions.canManageDrivers} onChange={(event) => setDriverEdit((prev) => ({ ...prev, commissionRate: Number(event.target.value) }))} /></label>
+                    <label><span>Mã giới thiệu</span><input type="text" value={driverEdit.referralCode} disabled={!permissions.canManageDrivers} onChange={(event) => setDriverEdit((prev) => ({ ...prev, referralCode: event.target.value }))} /></label>
+                    <label><span>Trạng thái</span><select value={driverEdit.status} disabled={!permissions.canManageDrivers} onChange={(event) => setDriverEdit((prev) => ({ ...prev, status: event.target.value }))}>{driverStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></label>
+                    <label className={styles.fullWidth}><span>Ghi chú</span><textarea rows={4} value={driverEdit.notes} disabled={!permissions.canManageDrivers} onChange={(event) => setDriverEdit((prev) => ({ ...prev, notes: event.target.value }))} /></label>
+                  </div>
+                  {permissions.canManageDrivers ? <div className={styles.detailActions}><button type="button" className={styles.saveButton} onClick={saveDriverEdit} disabled={tableSaving}>{tableSaving ? "Đang lưu..." : "Lưu tài xế"}</button></div> : null}
+                  <div className={styles.subsection}>
+                    <div className={styles.detailHeading}><div><span className={styles.kicker}>Referral gần đây</span><h2>Lead do tài xế giới thiệu</h2></div></div>
+                    <div className={styles.logList}>
+                      {driverReferrals.filter((item) => item.driverId === selectedDriver.id).slice(0, 6).map((item) => (
+                        <article key={item.id} className={styles.logItem}>
+                          <div className={styles.logHead}><strong>{item.referredName || item.referredPhone}</strong><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{item.status}</span></div>
+                          <small>{item.referralCode || "-"}</small>
+                          <p>Base {formatCurrency(item.commissionBaseAmount)} • Hoa hồng {formatCurrency(item.commissionAmount)}</p>
+                        </article>
+                      ))}
+                      {!driverReferrals.filter((item) => item.driverId === selectedDriver.id).length ? <div className={styles.emptyState}>Chưa có referral.</div> : null}
+                    </div>
+                  </div>
+                  <div className={styles.subsection}>
+                    <div className={styles.detailHeading}><div><span className={styles.kicker}>Commission</span><h2>Giao dịch hoa hồng</h2></div></div>
+                    <div className={styles.logList}>
+                      {driverCommissions.filter((item) => item.driverId === selectedDriver.id).slice(0, 6).map((item) => (
+                        <article key={item.id} className={styles.logItem}>
+                          <div className={styles.logHead}><strong>{formatCurrency(item.commissionAmount)}</strong><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{item.status}</span></div>
+                          <small>Order: {item.orderId || "-"} • Reservation: {item.reservationId || "-"}</small>
+                          <p>{item.notes || "Chưa có ghi chú payout."}</p>
+                        </article>
+                      ))}
+                      {!driverCommissions.filter((item) => item.driverId === selectedDriver.id).length ? <div className={styles.emptyState}>Chưa có commission transaction.</div> : null}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.emptyState}>Chưa có tài xế.</div>
+              )}
             </div>
           </section>
         ) : null}

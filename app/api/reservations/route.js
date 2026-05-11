@@ -38,6 +38,8 @@ export async function POST(request) {
       lastContactAt: "",
       confirmationChannel: "zalo",
       confirmationSentAt: "",
+      driverId: body.driverId || "",
+      referralCode: body.referralCode || "",
       tableId: body.tableId || ""
     };
 

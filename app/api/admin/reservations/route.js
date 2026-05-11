@@ -33,6 +33,8 @@ export async function POST(request) {
       notes: body.notes || "",
       assignedTo: body.assignedTo || "",
       lastContactAt: body.lastContactAt || "",
+      driverId: body.driverId || "",
+      referralCode: body.referralCode || "",
       branchId: body.branchId || "",
       tableId: body.tableId || ""
     };

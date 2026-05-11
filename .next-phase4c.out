@@ -1,8 +1,0 @@
-
-> sanhodo-next@1.0.0 start
-> next start --port 3022
-
-▲ Next.js 16.2.4
-- Local:         http://localhost:3022
-- Network:       http://192.168.110.203:3022
-✓ Ready in 996ms

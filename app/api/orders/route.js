@@ -20,6 +20,8 @@ export async function POST(request) {
       branchId: body.branchId || "",
       reservationId: body.reservationId || "",
       tableId: body.tableId || "",
+      driverId: body.driverId || "",
+      referralCode: body.referralCode || "",
       orderChannel: "website",
       items: Array.isArray(body.items) ? body.items : []
     };
