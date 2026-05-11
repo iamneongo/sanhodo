@@ -122,7 +122,7 @@
 
 .dashboardPage {
   min-height: 100vh;
-  padding: 20px;
+  padding: 0;
   background:
     linear-gradient(rgba(248, 240, 230, 0.92), rgba(248, 240, 230, 0.92)),
     radial-gradient(circle at top left, rgba(255, 233, 207, 0.65), transparent 30%),
@@ -131,11 +131,11 @@
 }
 
 .shell {
-  width: min(1520px, 100%);
-  margin: 0 auto;
+  width: 100%;
+  min-height: 100vh;
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);
-  gap: 22px;
+  gap: 0;
   align-items: start;
 }
 
@@ -143,19 +143,21 @@
   min-width: 0;
   display: grid;
   gap: 20px;
+  padding: 20px;
 }
 
 .sidebar {
   position: sticky;
-  top: 20px;
+  top: 0;
+  min-height: 100vh;
   display: grid;
   gap: 16px;
-  padding: 18px;
-  border: 1px solid rgba(111, 74, 54, 0.12);
-  border-radius: 30px;
+  align-content: start;
+  padding: 20px 18px;
+  border-right: 1px solid rgba(111, 74, 54, 0.12);
   background:
     linear-gradient(180deg, rgba(255, 254, 251, 0.96), rgba(251, 245, 237, 0.94));
-  box-shadow: 0 26px 46px rgba(84, 50, 29, 0.08);
+  box-shadow: 20px 0 40px rgba(84, 50, 29, 0.04);
 }
 
 .sidebarBrand h1 {
@@ -371,7 +373,7 @@
 
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
 }
 
@@ -1106,6 +1108,9 @@
 
   .sidebar {
     position: static;
+    min-height: auto;
+    border-right: 0;
+    border-bottom: 1px solid rgba(111, 74, 54, 0.12);
   }
 
   .statsGrid {
@@ -1131,11 +1136,15 @@
 
 @media (max-width: 860px) {
   .dashboardPage {
-    padding: 16px;
+    padding: 0;
   }
 
   .topbar {
     padding: 18px;
+  }
+
+  .contentShell {
+    padding: 16px;
   }
 
   .topbar {
