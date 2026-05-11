@@ -75,6 +75,9 @@ export default async function AdminPage({ searchParams }) {
         initialDrivers={dashboardData.drivers}
         initialDriverReferrals={dashboardData.driverReferrals}
         initialDriverCommissions={dashboardData.driverCommissions}
+        initialTravelPartners={dashboardData.travelPartners}
+        initialPartnerContracts={dashboardData.partnerContracts}
+        initialPartnerBookings={dashboardData.partnerBookings}
         initialIntegrations={dashboardData.integrations}
         initialSyncLogs={dashboardData.syncLogs}
         initialMenuItems={dashboardData.menuItems}

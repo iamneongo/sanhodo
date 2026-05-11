@@ -39,6 +39,10 @@ const spicyLevels = ["none", "mild", "medium", "hot"];
 const availabilityStatuses = ["available", "low_stock", "seasonal", "sold_out"];
 const driverStatuses = ["active", "inactive", "blocked"];
 const commissionStatuses = ["pending", "approved", "paid", "cancelled"];
+const partnerTypes = ["agency", "hdv", "hotel", "corporate"];
+const partnerStatuses = ["active", "inactive", "paused"];
+const partnerBookingStatuses = ["lead", "confirmed", "arrived", "completed", "cancelled"];
+const partnerContractStatuses = ["draft", "active", "expired", "terminated"];
 
 const roleLabels = {
   admin: "Admin",
@@ -198,6 +202,56 @@ function createEmptyDriverDraft() {
   };
 }
 
+function createEmptyPartnerDraft() {
+  return {
+    code: "",
+    name: "",
+    partnerType: "agency",
+    contactName: "",
+    phone: "",
+    email: "",
+    commissionType: "percent",
+    commissionValue: 10,
+    status: "active",
+    notes: "",
+    contractStartAt: "",
+    contractEndAt: ""
+  };
+}
+
+function createEmptyPartnerContractDraft() {
+  return {
+    partnerId: "",
+    title: "",
+    discountPercent: 0,
+    commissionPercent: 10,
+    paymentTerms: "",
+    status: "draft",
+    startsAt: "",
+    endsAt: "",
+    notes: ""
+  };
+}
+
+function createEmptyPartnerBookingDraft() {
+  return {
+    partnerId: "",
+    reservationId: "",
+    code: "",
+    customerName: "",
+    customerPhone: "",
+    groupSize: 10,
+    bookingAt: "",
+    packageName: "",
+    menuBudget: 0,
+    discountAmount: 0,
+    commissionAmount: 0,
+    status: "lead",
+    guestManifestUrl: "",
+    notes: ""
+  };
+}
+
 function computeOrderTotals(order) {
   const subtotal = (order.items || []).reduce(
     (sum, item) => sum + Number(item.unitPrice || 0) * Number(item.quantity || 0),
@@ -239,6 +293,9 @@ export default function AdminDashboard({
   initialDrivers,
   initialDriverReferrals,
   initialDriverCommissions,
+  initialTravelPartners,
+  initialPartnerContracts,
+  initialPartnerBookings,
   initialIntegrations,
   initialSyncLogs,
   initialMenuItems,
@@ -270,6 +327,15 @@ export default function AdminDashboard({
   const [driverCommissions, setDriverCommissions] = useState(
     sortByCreatedDesc(initialDriverCommissions || [])
   );
+  const [travelPartners, setTravelPartners] = useState(
+    sortByName(initialTravelPartners || [], "name")
+  );
+  const [partnerContracts, setPartnerContracts] = useState(
+    sortByCreatedDesc(initialPartnerContracts || [])
+  );
+  const [partnerBookings, setPartnerBookings] = useState(
+    sortByCreatedDesc(initialPartnerBookings || [])
+  );
   const [menuItems, setMenuItems] = useState(sortByName(initialMenuItems));
   const [restaurantTables, setRestaurantTables] = useState(sortByName(initialTables));
   const [orders, setOrders] = useState(sortByCreatedDesc(initialOrders));
@@ -285,6 +351,7 @@ export default function AdminDashboard({
   const [menuQuery, setMenuQuery] = useState("");
   const [tableQuery, setTableQuery] = useState("");
   const [driverQuery, setDriverQuery] = useState("");
+  const [partnerQuery, setPartnerQuery] = useState("");
 
   const [selectedReservationId, setSelectedReservationId] = useState(initialReservations[0]?.id || "");
   const [selectedVoucherId, setSelectedVoucherId] = useState(initialVouchers[0]?.id || "");
@@ -292,6 +359,7 @@ export default function AdminDashboard({
     initialVoucherCampaigns?.[0]?.id || ""
   );
   const [selectedDriverId, setSelectedDriverId] = useState(initialDrivers?.[0]?.id || "");
+  const [selectedPartnerId, setSelectedPartnerId] = useState(initialTravelPartners?.[0]?.id || "");
   const [selectedOrderId, setSelectedOrderId] = useState(initialOrders[0]?.id || "");
   const [selectedMenuId, setSelectedMenuId] = useState(initialMenuItems[0]?.id || "");
   const [selectedTableId, setSelectedTableId] = useState(initialTables[0]?.id || "");
@@ -308,6 +376,9 @@ export default function AdminDashboard({
   const [tableCreateOpen, setTableCreateOpen] = useState(false);
   const [campaignCreateOpen, setCampaignCreateOpen] = useState(false);
   const [driverCreateOpen, setDriverCreateOpen] = useState(false);
+  const [partnerCreateOpen, setPartnerCreateOpen] = useState(false);
+  const [partnerContractCreateOpen, setPartnerContractCreateOpen] = useState(false);
+  const [partnerBookingCreateOpen, setPartnerBookingCreateOpen] = useState(false);
 
   const [reservationSaving, setReservationSaving] = useState(false);
   const [voucherSaving, setVoucherSaving] = useState(false);
@@ -315,6 +386,7 @@ export default function AdminDashboard({
   const [menuSaving, setMenuSaving] = useState(false);
   const [tableSaving, setTableSaving] = useState(false);
   const [integrationSaving, setIntegrationSaving] = useState(false);
+  const [partnerSaving, setPartnerSaving] = useState(false);
 
   const [manualForm, setManualForm] = useState({
     name: "",
@@ -337,6 +409,10 @@ export default function AdminDashboard({
   const [campaignDraft, setCampaignDraft] = useState(createEmptyCampaignDraft());
   const [driverDraft, setDriverDraft] = useState(createEmptyDriverDraft());
   const [driverEdit, setDriverEdit] = useState(createEmptyDriverDraft());
+  const [partnerDraft, setPartnerDraft] = useState(createEmptyPartnerDraft());
+  const [partnerEdit, setPartnerEdit] = useState(createEmptyPartnerDraft());
+  const [partnerContractDraft, setPartnerContractDraft] = useState(createEmptyPartnerContractDraft());
+  const [partnerBookingDraft, setPartnerBookingDraft] = useState(createEmptyPartnerBookingDraft());
 
   const selectedReservation = reservations.find((item) => item.id === selectedReservationId) || null;
   const selectedVoucher = vouchers.find((item) => item.id === selectedVoucherId) || null;
@@ -350,6 +426,7 @@ export default function AdminDashboard({
     ) || null;
   const selectedOrder = orders.find((item) => item.id === selectedOrderId) || null;
   const selectedDriver = drivers.find((item) => item.id === selectedDriverId) || null;
+  const selectedPartner = travelPartners.find((item) => item.id === selectedPartnerId) || null;
   const selectedMenuItem = menuItems.find((item) => item.id === selectedMenuId) || null;
   const selectedTable = restaurantTables.find((item) => item.id === selectedTableId) || null;
   const selectedIntegration = integrations.find((item) => item.id === selectedIntegrationId) || null;
@@ -364,6 +441,10 @@ export default function AdminDashboard({
       canViewDrivers: hasAdminPermission(currentRole, "drivers.view"),
       canManageDrivers: hasAdminPermission(currentRole, "drivers.manage"),
       canManageDriverCommissions: hasAdminPermission(currentRole, "drivers.commission"),
+      canViewPartners: hasAdminPermission(currentRole, "partners.view"),
+      canManagePartners: hasAdminPermission(currentRole, "partners.manage"),
+      canManagePartnerBookings: hasAdminPermission(currentRole, "partners.booking"),
+      canManagePartnerContracts: hasAdminPermission(currentRole, "partners.contract"),
       canViewIntegrations: hasAdminPermission(currentRole, "integrations.view"),
       canManageIntegrations: hasAdminPermission(currentRole, "integrations.manage"),
       canSyncIntegrations: hasAdminPermission(currentRole, "integrations.sync")
@@ -397,6 +478,18 @@ export default function AdminDashboard({
   useEffect(() => {
     setDriverEdit(selectedDriver ? { ...selectedDriver } : createEmptyDriverDraft());
   }, [selectedDriverId, selectedDriver]);
+
+  useEffect(() => {
+    setPartnerEdit(selectedPartner ? { ...selectedPartner } : createEmptyPartnerDraft());
+    setPartnerContractDraft((prev) => ({
+      ...prev,
+      partnerId: selectedPartner?.id || prev.partnerId || ""
+    }));
+    setPartnerBookingDraft((prev) => ({
+      ...prev,
+      partnerId: selectedPartner?.id || prev.partnerId || ""
+    }));
+  }, [selectedPartnerId, selectedPartner]);
 
   useEffect(() => {
     if (!selectedVoucherCampaignId && voucherCampaigns.length) {
@@ -468,9 +561,18 @@ export default function AdminDashboard({
     [drivers, driverQuery]
   );
 
+  const filteredPartners = useMemo(
+    () =>
+      travelPartners.filter((item) =>
+        matchesSearch(item, partnerQuery, ["name", "code", "contactName", "phone", "email"])
+      ),
+    [travelPartners, partnerQuery]
+  );
+
   const findTableName = (tableId) => restaurantTables.find((item) => item.id === tableId)?.name || "-";
   const findReservationName = (reservationId) => reservations.find((item) => item.id === reservationId)?.name || "-";
   const findDriverName = (driverId) => drivers.find((item) => item.id === driverId)?.fullName || "-";
+  const findPartnerName = (partnerId) => travelPartners.find((item) => item.id === partnerId)?.name || "-";
 
   const addItemToState = (menuItemId, setter) => {
     const found = menuItems.find((item) => item.id === menuItemId);
@@ -901,6 +1003,137 @@ export default function AdminDashboard({
     }
   };
 
+  const createPartnerEntry = async (event) => {
+    event.preventDefault();
+    setPartnerSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(withBranchQuery("/api/admin/travel-partners", branchFilterId), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(attachBranchToPayload(partnerDraft))
+      });
+      setTravelPartners((prev) => sortByName([data.data, ...prev], "name"));
+      setSelectedPartnerId(data.data.id);
+      setPartnerDraft(createEmptyPartnerDraft());
+      setPartnerCreateOpen(false);
+      setMessage("Đã tạo đối tác / HDV mới.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setPartnerSaving(false);
+    }
+  };
+
+  const savePartnerEdit = async () => {
+    if (!selectedPartner) return;
+    setPartnerSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(`/api/admin/travel-partners/${selectedPartner.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(attachBranchToPayload(partnerEdit))
+      });
+      setTravelPartners((prev) => sortByName(prev.map((item) => (item.id === selectedPartner.id ? data.data : item)), "name"));
+      setMessage("Đã cập nhật đối tác.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setPartnerSaving(false);
+    }
+  };
+
+  const deletePartnerEntry = async (id) => {
+    if (!window.confirm("Xóa đối tác này?")) return;
+    try {
+      await requestJson(`/api/admin/travel-partners/${id}`, { method: "DELETE" });
+      const next = travelPartners.filter((item) => item.id !== id);
+      setTravelPartners(next);
+      setSelectedPartnerId(next[0]?.id || "");
+      setMessage("Đã xóa đối tác.");
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
+
+  const createPartnerContractEntry = async (event) => {
+    event.preventDefault();
+    setPartnerSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(withBranchQuery("/api/admin/partner-contracts", branchFilterId), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(attachBranchToPayload({
+          ...partnerContractDraft,
+          partnerId: partnerContractDraft.partnerId || selectedPartner?.id || ""
+        }))
+      });
+      setPartnerContracts((prev) => sortByCreatedDesc([data.data, ...prev]));
+      setPartnerContractDraft(createEmptyPartnerContractDraft());
+      setPartnerContractCreateOpen(false);
+      setMessage("Đã tạo hợp đồng đối tác.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setPartnerSaving(false);
+    }
+  };
+
+  const createPartnerBookingEntry = async (event) => {
+    event.preventDefault();
+    setPartnerSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(withBranchQuery("/api/admin/partner-bookings", branchFilterId), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(attachBranchToPayload({
+          ...partnerBookingDraft,
+          partnerId: partnerBookingDraft.partnerId || selectedPartner?.id || ""
+        }))
+      });
+      setPartnerBookings((prev) => sortByCreatedDesc([data.data, ...prev]));
+      setPartnerBookingDraft(createEmptyPartnerBookingDraft());
+      setPartnerBookingCreateOpen(false);
+      setMessage("Đã tạo booking đoàn.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setPartnerSaving(false);
+    }
+  };
+
+  const patchPartnerBooking = async (id, payload) => {
+    setPartnerSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(`/api/admin/partner-bookings/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(attachBranchToPayload(payload))
+      });
+      setPartnerBookings((prev) => sortByCreatedDesc(prev.map((item) => (item.id === id ? data.data : item))));
+      setMessage("Đã cập nhật booking đoàn.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setPartnerSaving(false);
+    }
+  };
+
+  const deletePartnerBookingEntry = async (id) => {
+    if (!window.confirm("Xóa booking đoàn này?")) return;
+    try {
+      await requestJson(`/api/admin/partner-bookings/${id}`, { method: "DELETE" });
+      setPartnerBookings((prev) => prev.filter((item) => item.id !== id));
+      setMessage("Đã xóa booking đoàn.");
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
+
   const patchIntegration = async (id, payload) => {
     setIntegrationSaving(true);
     setMessage("");
@@ -981,6 +1214,12 @@ export default function AdminDashboard({
     pendingCommissions: driverCommissions.filter((item) => item.status === "pending").length,
     commissionValue: driverCommissions.reduce((sum, item) => sum + Number(item.commissionAmount || 0), 0)
   };
+  const partnerStats = {
+    total: travelPartners.length,
+    active: travelPartners.filter((item) => item.status === "active").length,
+    openBookings: partnerBookings.filter((item) => ["lead", "confirmed"].includes(item.status)).length,
+    monthlyBudget: partnerBookings.reduce((sum, item) => sum + Number(item.menuBudget || 0), 0)
+  };
   const notificationFeed = sortByCreatedDesc([
     ...reservations
       .filter((item) => isRecentItem(item.createdAt, 24))
@@ -1009,6 +1248,16 @@ export default function AdminDashboard({
         type: "voucher",
         title: `${item.phone} vừa nhận voucher`,
         subtitle: item.voucherCode || "Lead voucher mới",
+        createdAt: item.createdAt,
+        status: item.status
+      })),
+    ...partnerBookings
+      .filter((item) => isRecentItem(item.createdAt, 24))
+      .map((item) => ({
+        id: `partner-booking-${item.id}`,
+        type: "partner-booking",
+        title: `${findPartnerName(item.partnerId)} vừa gửi booking đoàn`,
+        subtitle: `${item.customerName} • ${item.groupSize} khách • ${formatDate(item.bookingAt)}`,
         createdAt: item.createdAt,
         status: item.status
       }))
@@ -1076,6 +1325,7 @@ export default function AdminDashboard({
             {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=reservations", branchFilterId)}>Export đặt bàn</a> : null}
             {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=vouchers", branchFilterId)}>Export voucher</a> : null}
             {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=driver-commissions", branchFilterId)}>Export hoa hồng</a> : null}
+            {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=partner-bookings", branchFilterId)}>Export booking đoàn</a> : null}
             <button className={styles.logoutButton} type="button" onClick={logout}>Đăng xuất</button>
           </div>
         </header>
@@ -1087,6 +1337,7 @@ export default function AdminDashboard({
           <article className={styles.statCard}><span>Bàn</span><strong>{tableStats.total}</strong><small>{tableStats.available} bàn còn trống</small></article>
           <article className={styles.statCard}><span>Voucher</span><strong>{voucherStats.total}</strong><small>{voucherStats.activeCodes} mã đã phát • {voucherStats.recent} lead trong 24h</small></article>
           <article className={styles.statCard}><span>Tài xế</span><strong>{driverStats.total}</strong><small>{driverStats.active} đang hoạt động • {driverStats.pendingCommissions} pending</small></article>
+          <article className={styles.statCard}><span>Đối tác</span><strong>{partnerStats.total}</strong><small>{partnerStats.openBookings} booking đoàn mở • {partnerStats.active} đang active</small></article>
         </section>
 
         <section className={styles.insightsGrid}>
@@ -1156,18 +1407,21 @@ export default function AdminDashboard({
                     ? "Đặt món / Orders"
                     : key === "tables"
                       ? "Bàn"
-                      : key === "menu"
-                        ? "Món ăn"
+                        : key === "menu"
+                          ? "Món ăn"
                         : key === "vouchers"
                           ? "Voucher"
                           : key === "drivers"
                             ? "Tài xế / Referral"
+                            : key === "partners"
+                              ? "Đối tác / HDV"
                             : "Tích hợp POS/PMS"}
               </span>
               {key === "reservations" && reservationStats.pending ? <small>{reservationStats.pending}</small> : null}
               {key === "orders" && orderStats.active ? <small>{orderStats.active}</small> : null}
               {key === "vouchers" && voucherStats.recent ? <small>{voucherStats.recent}</small> : null}
               {key === "drivers" && driverStats.pendingCommissions ? <small>{driverStats.pendingCommissions}</small> : null}
+              {key === "partners" && partnerStats.openBookings ? <small>{partnerStats.openBookings}</small> : null}
             </button>
           ))}
         </section>
@@ -1868,6 +2122,194 @@ export default function AdminDashboard({
                 </div>
               ) : (
                 <div className={styles.emptyState}>Chưa có tài xế.</div>
+              )}
+            </div>
+          </section>
+        ) : null}
+
+        {tab === "partners" && permissions.canViewPartners ? (
+          <section className={styles.adminGrid}>
+            <div className={styles.listPanel}>
+              <div className={styles.panelToolbar}>
+                <input
+                  type="search"
+                  placeholder="Tìm đối tác / HDV..."
+                  value={partnerQuery}
+                  onChange={(event) => setPartnerQuery(event.target.value)}
+                />
+                <div></div>
+                {permissions.canManagePartners ? (
+                  <button type="button" onClick={() => setPartnerCreateOpen((prev) => !prev)}>
+                    {partnerCreateOpen ? "Đóng form" : "Tạo đối tác"}
+                  </button>
+                ) : (
+                  <div></div>
+                )}
+              </div>
+              {partnerCreateOpen && permissions.canManagePartners ? (
+                <form className={styles.inlineForm} onSubmit={createPartnerEntry}>
+                  <input type="text" placeholder="Mã đối tác" value={partnerDraft.code} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, code: event.target.value }))} required />
+                  <input type="text" placeholder="Tên đối tác / HDV" value={partnerDraft.name} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, name: event.target.value }))} required />
+                  <div className={styles.inlineRow}>
+                    <select value={partnerDraft.partnerType} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, partnerType: event.target.value }))}>{partnerTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select>
+                    <select value={partnerDraft.status} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, status: event.target.value }))}>{partnerStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select>
+                  </div>
+                  <div className={styles.inlineRow}>
+                    <input type="text" placeholder="Người liên hệ" value={partnerDraft.contactName} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, contactName: event.target.value }))} />
+                    <input type="tel" placeholder="SĐT" value={partnerDraft.phone} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, phone: event.target.value }))} required />
+                  </div>
+                  <div className={styles.inlineRow}>
+                    <input type="email" placeholder="Email" value={partnerDraft.email} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, email: event.target.value }))} />
+                    <input type="number" min="0" placeholder="Hoa hồng / chiết khấu" value={partnerDraft.commissionValue} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, commissionValue: Number(event.target.value) }))} />
+                  </div>
+                  <div className={styles.inlineRow}>
+                    <select value={partnerDraft.commissionType} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, commissionType: event.target.value }))}>
+                      <option value="percent">percent</option>
+                      <option value="amount">amount</option>
+                    </select>
+                    <input type="datetime-local" placeholder="Bắt đầu hợp tác" value={partnerDraft.contractStartAt} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, contractStartAt: event.target.value }))} />
+                  </div>
+                  <input type="datetime-local" placeholder="Kết thúc hợp tác" value={partnerDraft.contractEndAt} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, contractEndAt: event.target.value }))} />
+                  <textarea placeholder="Ghi chú" rows={3} value={partnerDraft.notes} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, notes: event.target.value }))} />
+                  <button type="submit" disabled={partnerSaving}>{partnerSaving ? "Đang tạo..." : "Lưu đối tác"}</button>
+                </form>
+              ) : null}
+              <div className={styles.tableWrap}>
+                <table className={styles.dataTable}>
+                  <thead><tr><th>Đối tác</th><th>Loại</th><th>Hoa hồng</th><th>Trạng thái</th></tr></thead>
+                  <tbody>
+                    {filteredPartners.map((item) => (
+                      <tr key={item.id} className={item.id === selectedPartner?.id ? styles.activeRow : ""} onClick={() => setSelectedPartnerId(item.id)}>
+                        <td><strong>{item.name}</strong><span>{item.contactName || item.phone}</span></td>
+                        <td>{item.partnerType}</td>
+                        <td>{item.commissionType === "amount" ? formatCurrency(item.commissionValue) : `${item.commissionValue}%`}</td>
+                        <td><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_confirmed}`}>{item.status}</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className={styles.detailPanel}>
+              {selectedPartner ? (
+                <div>
+                  <div className={styles.detailHeading}>
+                    <div>
+                      <span className={styles.kicker}>Travel partner / HDV</span>
+                      <h2>{selectedPartner.name}</h2>
+                    </div>
+                  </div>
+                  {permissions.canManagePartners ? (
+                    <div className={styles.detailHeading} style={{ justifyContent: "flex-end", marginTop: "-16px" }}>
+                      <button className={styles.deleteButton} type="button" onClick={() => deletePartnerEntry(selectedPartner.id)}>Xóa đối tác</button>
+                    </div>
+                  ) : null}
+                  <div className={styles.metaGrid}>
+                    <div><span>Mã đối tác</span><strong>{selectedPartner.code}</strong></div>
+                    <div><span>Loại</span><strong>{selectedPartner.partnerType}</strong></div>
+                    <div><span>Booking mở</span><strong>{partnerBookings.filter((item) => item.partnerId === selectedPartner.id && ["lead", "confirmed"].includes(item.status)).length}</strong></div>
+                    <div><span>Tổng ngân sách</span><strong>{formatCurrency(partnerBookings.filter((item) => item.partnerId === selectedPartner.id).reduce((sum, item) => sum + Number(item.menuBudget || 0), 0))}</strong></div>
+                  </div>
+                  <div className={styles.editGrid}>
+                    <label><span>Tên đối tác</span><input type="text" value={partnerEdit.name} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, name: event.target.value }))} /></label>
+                    <label><span>Người liên hệ</span><input type="text" value={partnerEdit.contactName} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, contactName: event.target.value }))} /></label>
+                    <label><span>SĐT</span><input type="text" value={partnerEdit.phone} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, phone: event.target.value }))} /></label>
+                    <label><span>Email</span><input type="text" value={partnerEdit.email} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, email: event.target.value }))} /></label>
+                    <label><span>Loại</span><select value={partnerEdit.partnerType} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, partnerType: event.target.value }))}>{partnerTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label>
+                    <label><span>Trạng thái</span><select value={partnerEdit.status} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, status: event.target.value }))}>{partnerStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></label>
+                    <label><span>Kiểu chiết khấu</span><select value={partnerEdit.commissionType} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, commissionType: event.target.value }))}><option value="percent">percent</option><option value="amount">amount</option></select></label>
+                    <label><span>Giá trị</span><input type="number" min="0" value={partnerEdit.commissionValue} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, commissionValue: Number(event.target.value) }))} /></label>
+                    <label><span>Bắt đầu hợp tác</span><input type="datetime-local" value={partnerEdit.contractStartAt ? String(partnerEdit.contractStartAt).slice(0, 16) : ""} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, contractStartAt: event.target.value }))} /></label>
+                    <label><span>Kết thúc hợp tác</span><input type="datetime-local" value={partnerEdit.contractEndAt ? String(partnerEdit.contractEndAt).slice(0, 16) : ""} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, contractEndAt: event.target.value }))} /></label>
+                    <label className={styles.fullWidth}><span>Ghi chú</span><textarea rows={4} value={partnerEdit.notes} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, notes: event.target.value }))} /></label>
+                  </div>
+                  {permissions.canManagePartners ? <div className={styles.detailActions}><button type="button" className={styles.saveButton} onClick={savePartnerEdit} disabled={partnerSaving}>{partnerSaving ? "Đang lưu..." : "Lưu đối tác"}</button></div> : null}
+                  <div className={styles.subsection}>
+                    <div className={styles.panelToolbar}>
+                      <div>
+                        <span className={styles.kicker}>Hợp đồng</span>
+                        <h2>Chính sách áp dụng</h2>
+                      </div>
+                      {permissions.canManagePartnerContracts ? <button type="button" onClick={() => setPartnerContractCreateOpen((prev) => !prev)}>{partnerContractCreateOpen ? "Đóng form" : "Thêm hợp đồng"}</button> : <div></div>}
+                    </div>
+                    {partnerContractCreateOpen && permissions.canManagePartnerContracts ? (
+                      <form className={styles.inlineForm} onSubmit={createPartnerContractEntry}>
+                        <input type="text" placeholder="Tên hợp đồng" value={partnerContractDraft.title} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, title: event.target.value }))} required />
+                        <div className={styles.inlineRow}>
+                          <input type="number" min="0" placeholder="% chiết khấu" value={partnerContractDraft.discountPercent} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, discountPercent: Number(event.target.value) }))} />
+                          <input type="number" min="0" placeholder="% hoa hồng" value={partnerContractDraft.commissionPercent} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, commissionPercent: Number(event.target.value) }))} />
+                        </div>
+                        <div className={styles.inlineRow}>
+                          <select value={partnerContractDraft.status} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, status: event.target.value }))}>{partnerContractStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select>
+                          <input type="datetime-local" value={partnerContractDraft.startsAt} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, startsAt: event.target.value }))} />
+                        </div>
+                        <input type="datetime-local" value={partnerContractDraft.endsAt} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, endsAt: event.target.value }))} />
+                        <textarea placeholder="Điều khoản thanh toán / ghi chú" rows={3} value={partnerContractDraft.paymentTerms} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, paymentTerms: event.target.value }))} />
+                        <button type="submit" disabled={partnerSaving}>{partnerSaving ? "Đang tạo..." : "Lưu hợp đồng"}</button>
+                      </form>
+                    ) : null}
+                    <div className={styles.logList}>
+                      {partnerContracts.filter((item) => item.partnerId === selectedPartner.id).slice(0, 6).map((item) => (
+                        <article key={item.id} className={styles.logItem}>
+                          <div className={styles.logHead}><strong>{item.title}</strong><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{item.status}</span></div>
+                          <small>{formatDate(item.startsAt)} → {formatDate(item.endsAt)}</small>
+                          <p>Chiết khấu {item.discountPercent}% • Hoa hồng {item.commissionPercent}%</p>
+                        </article>
+                      ))}
+                      {!partnerContracts.filter((item) => item.partnerId === selectedPartner.id).length ? <div className={styles.emptyState}>Chưa có hợp đồng.</div> : null}
+                    </div>
+                  </div>
+                  <div className={styles.subsection}>
+                    <div className={styles.panelToolbar}>
+                      <div>
+                        <span className={styles.kicker}>Booking đoàn</span>
+                        <h2>Đơn từ đối tác / HDV</h2>
+                      </div>
+                      {permissions.canManagePartnerBookings ? <button type="button" onClick={() => setPartnerBookingCreateOpen((prev) => !prev)}>{partnerBookingCreateOpen ? "Đóng form" : "Tạo booking đoàn"}</button> : <div></div>}
+                    </div>
+                    {partnerBookingCreateOpen && permissions.canManagePartnerBookings ? (
+                      <form className={styles.inlineForm} onSubmit={createPartnerBookingEntry}>
+                        <input type="text" placeholder="Mã booking" value={partnerBookingDraft.code} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, code: event.target.value }))} />
+                        <input type="text" placeholder="Tên trưởng đoàn / khách" value={partnerBookingDraft.customerName} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, customerName: event.target.value }))} required />
+                        <div className={styles.inlineRow}>
+                          <input type="tel" placeholder="SĐT" value={partnerBookingDraft.customerPhone} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, customerPhone: event.target.value }))} required />
+                          <input type="number" min="1" placeholder="Số khách" value={partnerBookingDraft.groupSize} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, groupSize: Number(event.target.value) }))} />
+                        </div>
+                        <div className={styles.inlineRow}>
+                          <input type="datetime-local" value={partnerBookingDraft.bookingAt} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, bookingAt: event.target.value }))} required />
+                          <select value={partnerBookingDraft.status} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, status: event.target.value }))}>{partnerBookingStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select>
+                        </div>
+                        <div className={styles.inlineRow}>
+                          <input type="text" placeholder="Set menu / package" value={partnerBookingDraft.packageName} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, packageName: event.target.value }))} />
+                          <input type="number" min="0" placeholder="Ngân sách menu" value={partnerBookingDraft.menuBudget} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, menuBudget: Number(event.target.value) }))} />
+                        </div>
+                        <div className={styles.inlineRow}>
+                          <input type="number" min="0" placeholder="Chiết khấu" value={partnerBookingDraft.discountAmount} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, discountAmount: Number(event.target.value) }))} />
+                          <input type="number" min="0" placeholder="Hoa hồng" value={partnerBookingDraft.commissionAmount} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, commissionAmount: Number(event.target.value) }))} />
+                        </div>
+                        <input type="url" placeholder="Link manifest / danh sách khách" value={partnerBookingDraft.guestManifestUrl} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, guestManifestUrl: event.target.value }))} />
+                        <textarea placeholder="Ghi chú" rows={3} value={partnerBookingDraft.notes} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, notes: event.target.value }))} />
+                        <button type="submit" disabled={partnerSaving}>{partnerSaving ? "Đang tạo..." : "Lưu booking đoàn"}</button>
+                      </form>
+                    ) : null}
+                    <div className={styles.logList}>
+                      {partnerBookings.filter((item) => item.partnerId === selectedPartner.id).slice(0, 8).map((item) => (
+                        <article key={item.id} className={styles.logItem}>
+                          <div className={styles.logHead}><strong>{item.customerName}</strong><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{item.status}</span></div>
+                          <small>{item.code || "Chưa có mã"} • {item.groupSize} khách • {formatDate(item.bookingAt)}</small>
+                          <p>{item.packageName || "Chưa chọn set menu"} • Budget {formatCurrency(item.menuBudget)} • Commission {formatCurrency(item.commissionAmount)}</p>
+                          <div className={styles.inlineRow}>
+                            <select value={item.status} disabled={!permissions.canManagePartnerBookings} onChange={(event) => patchPartnerBooking(item.id, { ...item, status: event.target.value })}>{partnerBookingStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select>
+                            {permissions.canManagePartnerBookings ? <button type="button" className={styles.deleteButton} onClick={() => deletePartnerBookingEntry(item.id)}>Xóa</button> : null}
+                          </div>
+                        </article>
+                      ))}
+                      {!partnerBookings.filter((item) => item.partnerId === selectedPartner.id).length ? <div className={styles.emptyState}>Chưa có booking đoàn.</div> : null}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.emptyState}>Chưa có đối tác / HDV.</div>
               )}
             </div>
           </section>

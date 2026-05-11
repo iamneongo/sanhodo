@@ -13,6 +13,7 @@
   - `supabase/migrations/20260511_005_phase3_multi_branch_foundation.sql`
   - `supabase/migrations/20260511_006_phase4_voucher_loyalty.sql`
   - `supabase/migrations/20260511_007_phase5_driver_commission.sql`
+  - `supabase/migrations/20260511_008_phase6_travel_partner_portal.sql`
   - sau do `supabase/migrations/20260509_002_seed_admin_demo.sql`
 
 ## 2. Tao tai khoan admin
@@ -59,6 +60,9 @@ where email = 'admin@gmail.com';
 - Drivers / tai xe gioi thieu
 - Driver referrals / attribution theo tai xe
 - Driver commission transactions / giao dich hoa hong
+- Travel partners / doi tac du lich, HDV, hotel, corporate
+- Partner contracts / chinh sach hop tac, chiết khau, commission
+- Partner bookings / booking doan, set menu, ngan sach, manifest link
 
 ## 6. Bien moi truong local
 File `.env.local` da duoc gan:
