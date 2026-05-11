@@ -3,7 +3,7 @@ import { requireAdminApi, unauthorizedResponse } from "../../../../../lib/supaba
 import { deleteVoucherLead, updateVoucherLead } from "../../../../../lib/restaurant-db";
 
 export async function PATCH(request, { params }) {
-  const context = await requireAdminApi();
+  const context = await requireAdminApi("vouchers.manage");
   if (!context) {
     return unauthorizedResponse();
   }
@@ -27,7 +27,7 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(_request, { params }) {
-  const context = await requireAdminApi();
+  const context = await requireAdminApi("vouchers.manage");
   if (!context) {
     return unauthorizedResponse();
   }

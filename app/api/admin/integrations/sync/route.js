@@ -3,7 +3,7 @@ import { requireAdminApi, unauthorizedResponse } from "../../../../../lib/supaba
 import { syncReservationToIntegrationDb } from "../../../../../lib/restaurant-db";
 
 export async function POST(request) {
-  const context = await requireAdminApi();
+  const context = await requireAdminApi("integrations.sync");
   if (!context) {
     return unauthorizedResponse();
   }

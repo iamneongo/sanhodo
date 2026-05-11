@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { createClient } from "../../../lib/supabase/server";
 import { isSupabaseSchemaMissingError, listMenuItems } from "../../../lib/restaurant-db";
 
-export async function GET() {
+export async function GET(request) {
   try {
     const supabase = await createClient();
-    const items = await listMenuItems(supabase, { availableOnly: true, featuredOnly: true });
+    const { searchParams } = new URL(request.url);
+    const branchId = searchParams.get("branchId") || "";
+    const items = await listMenuItems(supabase, { availableOnly: true, featuredOnly: true, branchId });
     return NextResponse.json({ ok: true, data: items });
   } catch (error) {
     if (isSupabaseSchemaMissingError(error)) {

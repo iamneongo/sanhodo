@@ -1,12 +1,25 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { DEFAULT_BRANCHES, MAIN_BRANCH_ID } from "../lib/branches";
+import {
+  RESERVATION_TIME_SLOTS,
+  VOUCHER_PRESET,
+  buildFallbackVoucherCampaign,
+  formatVoucherBenefit,
+  formatVietnamPhone,
+  generateVoucherPayload,
+  getReservationDateLabel,
+  getTodayDateInput,
+  isValidVietnamPhone
+} from "../lib/business-rules";
 
 const hotline = "0814645999";
 const hotlineDisplay = "0814 645 999";
 const secondaryHotline = "0522282229";
 const secondaryHotlineDisplay = "0522 282 229";
 const zaloLink = `https://zalo.me/${hotline}`;
+const reservationMinDate = getTodayDateInput();
 
 const fallbackFeaturedDishes = [
   {
@@ -14,49 +27,69 @@ const fallbackFeaturedDishes = [
     price: "1.290.000đ",
     description: "Thịt chắc, ngọt đậm vị biển, phù hợp cho bàn tiệc cần món signature.",
     image: "/assets/dish-king-crab.png",
-    offer: "Thêm sò điệp nướng phô mai, giảm ngay 10% món khai vị."
+    offer: "Thêm sò điệp nướng phô mai, giảm ngay 10% món khai vị.",
+    category: "Hải sản cao cấp",
+    availabilityStatus: "available",
+    seasonNote: "Signature được gọi nhiều cho bàn tiếp khách."
   },
   {
     name: "Tôm hùm nướng",
     price: "990.000đ",
     description: "Nướng bơ tỏi thơm đậm, thích hợp cho cặp đôi hoặc bàn tiếp khách.",
     image: "/assets/dish-lobster.png",
-    offer: "Combo tôm hùm + sashimi tiết kiệm hơn 180.000đ."
+    offer: "Combo tôm hùm + sashimi tiết kiệm hơn 180.000đ.",
+    category: "Hải sản cao cấp",
+    availabilityStatus: "low_stock",
+    seasonNote: "Số lượng đẹp mỗi ngày có giới hạn."
   },
   {
     name: "Sashimi tổng hợp",
     price: "680.000đ",
     description: "Tươi, mát và trình bày đẹp mắt cho bàn ăn sang trọng.",
     image: "/assets/dish-sashimi.png",
-    offer: "Thêm set rượu vang nhẹ giảm 10% cho bàn 2 người."
+    offer: "Thêm set rượu vang nhẹ giảm 10% cho bàn 2 người.",
+    category: "Món lạnh",
+    availabilityStatus: "seasonal",
+    seasonNote: "Thay đổi theo mẻ cá tươi trong ngày."
   },
   {
     name: "Ốc hương hấp sả",
     price: "320.000đ",
     description: "Món khai vị dễ gọi thêm, hợp cho nhóm gia đình và bạn bè.",
     image: "/assets/dish-snails.png",
-    offer: "Nâng cấp thành combo 4 người sẽ tối ưu hơn 12% chi phí."
+    offer: "Nâng cấp thành combo 4 người sẽ tối ưu hơn 12% chi phí.",
+    category: "Khai vị",
+    availabilityStatus: "available",
+    seasonNote: "Món mở vị dễ upsell cho bàn 4 khách."
   }
 ];
+
+const fallbackBranches = DEFAULT_BRANCHES;
 
 const combos = [
   {
     title: "Combo 2 người",
     price: "1.590.000đ",
+    originalPrice: "1.740.000đ",
     description: "1 tôm hùm nướng, 1 sashimi tổng hợp, 1 món rau và 2 nước.",
-    badge: "Tiết kiệm 8%"
+    badge: "Tiết kiệm 8%",
+    serves: "Phù hợp 2 khách"
   },
   {
     title: "Combo 4 người",
     price: "2.990.000đ",
+    originalPrice: "3.360.000đ",
     description: "Cua huỳnh đế, ốc hương hấp sả, sashimi, cơm chiên hải sản, nước.",
-    badge: "Bán chạy"
+    badge: "Bán chạy",
+    serves: "Phù hợp 4 khách"
   },
   {
     title: "Combo tiệc",
     price: "6.890.000đ",
     description: "Set dành cho 8-10 khách, tối ưu cho sinh nhật, tiếp khách, họp nhóm.",
-    badge: "Ưu tiên upsell"
+    originalPrice: "7.650.000đ",
+    badge: "Ưu tiên upsell",
+    serves: "Phù hợp 8-10 khách"
   }
 ];
 
@@ -105,23 +138,50 @@ function parseMoneyToNumber(value) {
   return Number(String(value || "0").replace(/[^\d]/g, "")) || 0;
 }
 
+function formatMoney(value) {
+  return `${new Intl.NumberFormat("vi-VN").format(value || 0)}đ`;
+}
+
+function getAvailabilityLabel(status) {
+  switch (status) {
+    case "low_stock":
+      return "Số lượng giới hạn";
+    case "seasonal":
+      return "Theo mùa";
+    case "sold_out":
+      return "Tạm hết";
+    default:
+      return "Sẵn phục vụ";
+  }
+}
+
 export default function Page() {
   const [featuredDishes, setFeaturedDishes] = useState(fallbackFeaturedDishes);
+  const [branches, setBranches] = useState(fallbackBranches);
+  const [selectedBranchId, setSelectedBranchId] = useState(MAIN_BRANCH_ID);
+  const [voucherCampaigns, setVoucherCampaigns] = useState([buildFallbackVoucherCampaign(MAIN_BRANCH_ID)]);
+  const [selectedVoucherCampaignId, setSelectedVoucherCampaignId] = useState("");
   const [reservationForm, setReservationForm] = useState({
     name: "",
     phone: "",
     guests: "2",
-    datetime: ""
+    date: reservationMinDate,
+    timeSlot: RESERVATION_TIME_SLOTS[14] || "17:00"
   });
   const [voucherPhone, setVoucherPhone] = useState("");
+  const [voucherResult, setVoucherResult] = useState(null);
   const [reservationStatus, setReservationStatus] = useState("");
   const [voucherStatus, setVoucherStatus] = useState("");
+  const [reservationError, setReservationError] = useState("");
+  const [voucherError, setVoucherError] = useState("");
+  const [orderError, setOrderError] = useState("");
   const [orderForm, setOrderForm] = useState({
     customerName: "",
     customerPhone: "",
     notes: "",
     items: []
   });
+  const [activeMenuCategory, setActiveMenuCategory] = useState("Tất cả");
   const [reservationLoading, setReservationLoading] = useState(false);
   const [voucherLoading, setVoucherLoading] = useState(false);
   const [orderLoading, setOrderLoading] = useState(false);
@@ -142,10 +202,137 @@ export default function Page() {
     []
   );
 
+  const menuCategories = useMemo(
+    () => ["Tất cả", ...new Set(featuredDishes.map((item) => item.category || "Khác"))],
+    [featuredDishes]
+  );
+
+  const filteredDishes = useMemo(() => {
+    if (activeMenuCategory === "Tất cả") {
+      return featuredDishes;
+    }
+
+    return featuredDishes.filter((item) => item.category === activeMenuCategory);
+  }, [activeMenuCategory, featuredDishes]);
+
+  const orderSubtotal = useMemo(
+    () =>
+      orderForm.items.reduce(
+        (sum, item) => sum + (Number(item.unitPrice) || 0) * (Number(item.quantity) || 0),
+        0
+      ),
+    [orderForm.items]
+  );
+
+  const reservationPreview = useMemo(
+    () => getReservationDateLabel(reservationForm.date, reservationForm.timeSlot),
+    [reservationForm.date, reservationForm.timeSlot]
+  );
+  const selectedBranch = useMemo(
+    () => branches.find((item) => item.id === selectedBranchId) || branches[0] || null,
+    [branches, selectedBranchId]
+  );
+  const activeVoucherCampaign = useMemo(() => {
+    const branchFallback = buildFallbackVoucherCampaign(selectedBranchId);
+    return (
+      voucherCampaigns.find((item) => item.id === selectedVoucherCampaignId) ||
+      voucherCampaigns[0] ||
+      branchFallback
+    );
+  }, [selectedBranchId, selectedVoucherCampaignId, voucherCampaigns]);
+
+  const structuredData = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "Restaurant",
+      name: "San Hô Đỏ Hồ Tràm",
+      image: ["https://sanhodo.vn/assets/drive-hero-exterior.jpg"],
+      telephone: hotlineDisplay,
+      servesCuisine: ["Hải sản", "Việt Nam", "Fine dining"],
+      priceRange: "$$",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "Đường ven biển, Ấp Hồ Tràm",
+        addressLocality: "Xuyên Mộc",
+        addressRegion: "Bà Rịa - Vũng Tàu",
+        addressCountry: "VN"
+      },
+      openingHoursSpecification: [
+        {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+          ],
+          opens: "10:00",
+          closes: "22:00"
+        }
+      ],
+      sameAs: [zaloLink]
+    }),
+    []
+  );
+
   useEffect(() => {
     let ignore = false;
 
-    fetch("/api/menu")
+    fetch("/api/branches")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload) => {
+        if (ignore || !payload?.data?.length) {
+          return;
+        }
+
+        setBranches(payload.data);
+        setSelectedBranchId((current) =>
+          payload.data.some((item) => item.id === current) ? current : payload.data[0].id
+        );
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    let ignore = false;
+
+    fetch(
+      `/api/voucher-campaigns${selectedBranchId ? `?branchId=${encodeURIComponent(selectedBranchId)}` : ""}`
+    )
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload) => {
+        if (ignore) {
+          return;
+        }
+
+        const items = payload?.data?.length
+          ? payload.data
+          : [buildFallbackVoucherCampaign(selectedBranchId)];
+        setVoucherCampaigns(items);
+        setSelectedVoucherCampaignId((current) =>
+          items.some((item) => item.id === current) ? current : items[0]?.id || ""
+        );
+      })
+      .catch(() => {
+        if (!ignore) {
+          const fallback = [buildFallbackVoucherCampaign(selectedBranchId)];
+          setVoucherCampaigns(fallback);
+          setSelectedVoucherCampaignId(fallback[0]?.id || "");
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [selectedBranchId]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    fetch(`/api/menu${selectedBranchId ? `?branchId=${encodeURIComponent(selectedBranchId)}` : ""}`)
       .then((response) => (response.ok ? response.json() : null))
       .then((payload) => {
         if (ignore || !payload?.data?.length) {
@@ -159,7 +346,10 @@ export default function Page() {
             price: `${new Intl.NumberFormat("vi-VN").format(item.price || 0)}đ`,
             description: item.description || "Món nổi bật đang được phục vụ tại nhà hàng.",
             image: item.imageUrl || "/assets/dish-king-crab.png",
-            offer: `Chọn ${item.name} và đội ngũ sẽ hỗ trợ ghép combo phù hợp hơn cho bàn của bạn.`
+            offer: `Chọn ${item.name} và đội ngũ sẽ hỗ trợ ghép combo phù hợp hơn cho bàn của bạn.`,
+            category: item.category || "Khác",
+            availabilityStatus: item.availabilityStatus || "available",
+            seasonNote: item.seasonNote || ""
           }))
         );
       })
@@ -323,7 +513,7 @@ export default function Page() {
 
       observer.disconnect();
     };
-  }, []);
+  }, [featuredDishes.length, selectedBranchId]);
 
   const focusReservation = (offerName = "") => {
     const target = document.getElementById("reservation");
@@ -333,10 +523,53 @@ export default function Page() {
     target?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const focusOrderSection = () => {
+    document.getElementById("order-online")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const addDishToOrder = (dish) => {
+    setOrderForm((prev) => {
+      const currentItem = prev.items.find(
+        (item) => item.menuItemId === dish.id || item.itemName === dish.name
+      );
+
+      if (currentItem) {
+        return {
+          ...prev,
+          items: prev.items.map((item) =>
+            item.menuItemId === dish.id || item.itemName === dish.name
+              ? { ...item, quantity: item.quantity + 1 }
+              : item
+          )
+        };
+      }
+
+      return {
+        ...prev,
+        items: [
+          ...prev.items,
+          {
+            menuItemId: dish.id || "",
+            itemName: dish.name,
+            unitPrice: parseMoneyToNumber(dish.price),
+            quantity: 1
+          }
+        ]
+      };
+    });
+  };
+
   const handleReservationSubmit = async (event) => {
     event.preventDefault();
     setReservationLoading(true);
     setReservationStatus("");
+    setReservationError("");
+
+    if (!isValidVietnamPhone(reservationForm.phone)) {
+      setReservationLoading(false);
+      setReservationError("Số điện thoại cần đúng định dạng di động Việt Nam.");
+      return;
+    }
 
     try {
       const response = await fetch("/api/reservations", {
@@ -344,21 +577,34 @@ export default function Page() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...reservationForm,
+          branchId: selectedBranchId,
+          phone: formatVietnamPhone(reservationForm.phone),
           selectedOffer
         })
       });
 
+      const payload = await response.json();
+
       if (!response.ok) {
-        throw new Error("submit_failed");
+        throw new Error(payload.error || "submit_failed");
       }
 
       setReservationStatus(
-        "Đặt bàn đã được ghi nhận. Hệ thống đã lưu lead và sẵn sàng đẩy sang CRM / Google Sheet / Zalo webhook khi bạn cấu hình."
+        payload.message ||
+          `Đặt bàn đã được ghi nhận cho ${reservationPreview.toLowerCase()}. Đội ngũ sẽ liên hệ xác nhận qua hotline hoặc Zalo.`
       );
-      setReservationForm({ name: "", phone: "", guests: "2", datetime: "" });
+      setReservationForm({
+        name: "",
+        phone: "",
+        guests: "2",
+        date: reservationMinDate,
+        timeSlot: RESERVATION_TIME_SLOTS[14] || "17:00"
+      });
       setSelectedOffer("");
-    } catch {
-      setReservationStatus("Chưa gửi được yêu cầu. Vui lòng thử lại hoặc gọi ngay hotline.");
+    } catch (error) {
+      setReservationError(
+        error.message || "Chưa gửi được yêu cầu. Vui lòng thử lại hoặc gọi ngay hotline."
+      );
     } finally {
       setReservationLoading(false);
     }
@@ -368,24 +614,38 @@ export default function Page() {
     event.preventDefault();
     setVoucherLoading(true);
     setVoucherStatus("");
+    setVoucherError("");
+
+    if (!isValidVietnamPhone(voucherPhone)) {
+      setVoucherLoading(false);
+      setVoucherError("Số điện thoại nhận ưu đãi cần đúng định dạng di động Việt Nam.");
+      return;
+    }
 
     try {
       const response = await fetch("/api/vouchers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: voucherPhone })
+        body: JSON.stringify({
+          phone: voucherPhone,
+          branchId: selectedBranchId,
+          campaignId: activeVoucherCampaign?.id || ""
+        })
       });
 
+      const payload = await response.json();
+
       if (!response.ok) {
-        throw new Error("voucher_failed");
+        throw new Error(payload.error || "voucher_failed");
       }
 
-      setVoucherStatus(
-        "Đã nhận số điện thoại. Lead voucher đã được lưu để kết hợp WiFi Ads GOECO hoặc webhook chăm sóc khách."
+      setVoucherResult(
+        payload.data || generateVoucherPayload(voucherPhone, activeVoucherCampaign, selectedBranchId)
       );
+      setVoucherStatus(payload.message || "Đã giữ ưu đãi thành công cho số điện thoại của bạn.");
       setVoucherPhone("");
-    } catch {
-      setVoucherStatus("Chưa nhận được ưu đãi. Vui lòng thử lại sau.");
+    } catch (error) {
+      setVoucherError(error.message || "Chưa nhận được ưu đãi. Vui lòng thử lại sau.");
     } finally {
       setVoucherLoading(false);
     }
@@ -429,27 +689,45 @@ export default function Page() {
     event.preventDefault();
     setOrderLoading(true);
     setOrderStatus("");
+    setOrderError("");
+
+    if (!isValidVietnamPhone(orderForm.customerPhone)) {
+      setOrderLoading(false);
+      setOrderError("Số điện thoại đặt món cần đúng định dạng di động Việt Nam.");
+      return;
+    }
 
     try {
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderForm)
+        body: JSON.stringify({
+          ...orderForm,
+          branchId: selectedBranchId,
+          customerPhone: formatVietnamPhone(orderForm.customerPhone)
+        })
       });
 
+      const payload = await response.json();
+
       if (!response.ok) {
-        throw new Error("order_failed");
+        throw new Error(payload.error || "order_failed");
       }
 
-      setOrderStatus("Yêu cầu đặt món đã được ghi nhận. Admin có thể xử lý trực tiếp trong tab Orders.");
+      setOrderStatus(
+        payload.message || "Yêu cầu đặt món đã được ghi nhận. Admin có thể xử lý trực tiếp trong tab Orders."
+      );
       setOrderForm({
         customerName: "",
         customerPhone: "",
         notes: "",
         items: []
       });
-    } catch {
-      setOrderStatus("Chưa gửi được yêu cầu đặt món. Vui lòng thử lại hoặc gọi hotline để xác nhận nhanh.");
+    } catch (error) {
+      setOrderError(
+        error.message ||
+          "Chưa gửi được yêu cầu đặt món. Vui lòng thử lại hoặc gọi hotline để xác nhận nhanh."
+      );
     } finally {
       setOrderLoading(false);
     }
@@ -475,6 +753,10 @@ export default function Page() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <header className="site-header" id="top">
         <div className="container header-inner">
           <a className="brand" href="#top" aria-label="San Ho Do Ho Tram">
@@ -562,6 +844,10 @@ export default function Page() {
                 <div className="hero-trust-card">
                   <strong>Đặt bàn nhanh</strong>
                   <span>Form 1 phút, tự động lưu lead và sẵn sàng đẩy CRM / Sheet / Zalo.</span>
+                </div>
+                <div className="hero-trust-card branch-trust-card">
+                  <strong>Chi nhánh phục vụ</strong>
+                  <span>{selectedBranch?.name || "San Hô Đỏ Hồ Tràm"}</span>
                 </div>
               </div>
               <div className="hero-scroll">
@@ -652,6 +938,25 @@ export default function Page() {
                   <span>Nhắn tư vấn nhanh</span>
                 </a>
               </div>
+              {(branches || []).length > 1 ? (
+                <label className="branch-selector">
+                  <span>Chọn chi nhánh phục vụ</span>
+                  <select
+                    value={selectedBranchId}
+                    onChange={(event) => setSelectedBranchId(event.target.value)}
+                  >
+                    {branches.map((branch) => (
+                      <option key={branch.id} value={branch.id}>
+                        {branch.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : (
+                <div className="branch-inline-note">
+                  <strong>Đang nhận lead tại:</strong> {selectedBranch?.name || "San Hô Đỏ Hồ Tràm"}
+                </div>
+              )}
             </div>
 
             <form className="reservation-form reveal" onSubmit={handleReservationSubmit}>
@@ -679,6 +984,7 @@ export default function Page() {
                   onChange={(event) =>
                     setReservationForm((prev) => ({ ...prev, phone: event.target.value }))
                   }
+                  placeholder="Ví dụ: 0814 645 999"
                   required
                 />
               </label>
@@ -699,21 +1005,56 @@ export default function Page() {
                   </select>
                 </label>
                 <label>
-                  <span>Thời gian</span>
+                  <span>Ngày đến</span>
                   <input
-                    type="datetime-local"
-                    value={reservationForm.datetime}
+                    type="date"
+                    min={reservationMinDate}
+                    value={reservationForm.date}
                     onChange={(event) =>
-                      setReservationForm((prev) => ({ ...prev, datetime: event.target.value }))
+                      setReservationForm((prev) => ({ ...prev, date: event.target.value }))
                     }
                     required
                   />
                 </label>
               </div>
+              <label>
+                <span>Khung giờ</span>
+                <select
+                  value={reservationForm.timeSlot}
+                  onChange={(event) =>
+                    setReservationForm((prev) => ({ ...prev, timeSlot: event.target.value }))
+                  }
+                >
+                  {RESERVATION_TIME_SLOTS.map((slot) => (
+                    <option key={slot} value={slot}>
+                      {slot}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="form-note">
+                <strong>Khung giờ nhận đặt bàn:</strong> 10:00 - 21:30 mỗi ngày.
+                {reservationPreview ? (
+                  <span> Lịch hẹn đang chọn: {reservationPreview}.</span>
+                ) : null}
+                {selectedBranch ? <span> Chi nhánh tiếp nhận: {selectedBranch.name}.</span> : null}
+              </div>
+              <label>
+                <span>Ghi chú thêm</span>
+                <textarea
+                  rows={3}
+                  value={reservationForm.notes || ""}
+                  onChange={(event) =>
+                    setReservationForm((prev) => ({ ...prev, notes: event.target.value }))
+                  }
+                  placeholder="Ví dụ: cần ghế em bé, bàn yên tĩnh, có sinh nhật..."
+                />
+              </label>
               <button className="button button-primary" type="submit" disabled={reservationLoading}>
                 {reservationLoading ? "Đang gửi..." : "Gửi yêu cầu đặt bàn"}
               </button>
-              {reservationStatus ? <p className="form-status">{reservationStatus}</p> : null}
+              {reservationError ? <p className="form-status is-error">{reservationError}</p> : null}
+              {reservationStatus ? <div className="form-success-card">{reservationStatus}</div> : null}
             </form>
           </div>
         </section>
@@ -728,6 +1069,23 @@ export default function Page() {
                 Mỗi món đều có giá, mô tả ngắn và nút đặt ngay. Khi khách bấm chọn món hoặc combo,
                 hệ thống sẽ bật gợi ý upsell để tăng giá trị đơn hàng.
               </p>
+              <div className="menu-category-pills">
+                {menuCategories.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    className={`menu-category-pill${
+                      activeMenuCategory === category ? " is-active" : ""
+                    }`}
+                    onClick={() => {
+                      setActiveMenuCategory(category);
+                      focusOrderSection();
+                    }}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
               <div className="menu-controls">
                 <button
                   className="slider-button"
@@ -754,16 +1112,27 @@ export default function Page() {
                   <article className={`dish-card${index === 0 ? " is-current" : ""}`} key={dish.name}>
                     <img src={dish.image} alt={dish.name} />
                     <div className="dish-card-body">
+                      <div className="dish-card-flags">
+                        <span className={`dish-flag is-${dish.availabilityStatus || "available"}`}>
+                          {getAvailabilityLabel(dish.availabilityStatus)}
+                        </span>
+                        <span className="dish-category">{dish.category}</span>
+                      </div>
                       <div className="dish-meta">
                         <h3>{dish.name}</h3>
                         <span className="dish-price">{dish.price}</span>
                       </div>
                       <p>{dish.description}</p>
+                      {dish.seasonNote ? <small className="dish-note">{dish.seasonNote}</small> : null}
                       <div className="dish-actions">
                         <button
                           className="button button-primary"
                           type="button"
-                          onClick={() => openUpsell(dish.name, dish.offer)}
+                          onClick={() => {
+                            addDishToOrder(dish);
+                            openUpsell(dish.name, dish.offer);
+                            focusOrderSection();
+                          }}
                         >
                           Chọn món
                         </button>
@@ -780,10 +1149,15 @@ export default function Page() {
                 ))}
               </div>
               <div className="slider-dots" aria-label="Chọn món">
-                <button className="dot is-active" type="button" data-index="0" aria-label="Món 1"></button>
-                <button className="dot" type="button" data-index="1" aria-label="Món 2"></button>
-                <button className="dot" type="button" data-index="2" aria-label="Món 3"></button>
-                <button className="dot" type="button" data-index="3" aria-label="Món 4"></button>
+                {featuredDishes.map((dish, index) => (
+                  <button
+                    key={dish.name}
+                    className={`dot${index === 0 ? " is-active" : ""}`}
+                    type="button"
+                    data-index={index}
+                    aria-label={`Món ${index + 1}`}
+                  ></button>
+                ))}
               </div>
             </div>
           </div>
@@ -798,7 +1172,9 @@ export default function Page() {
                 <article className="combo-card" key={combo.title}>
                   <span className="combo-badge">{combo.badge}</span>
                   <h3>{combo.title}</h3>
+                  <span className="combo-serves">{combo.serves}</span>
                   <strong className="combo-price">{combo.price}</strong>
+                  <span className="combo-original-price">{combo.originalPrice}</span>
                   <p>{combo.description}</p>
                   <div className="dish-actions">
                     <button
@@ -868,11 +1244,25 @@ export default function Page() {
                 Khách có thể chọn trước các món nổi bật và gửi yêu cầu đặt món. Dữ liệu sẽ đi vào
                 Supabase thật và xuất hiện trong tab `Orders` của admin để đội ngũ xử lý.
               </p>
+              <div className="menu-category-pills is-light">
+                {menuCategories.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    className={`menu-category-pill${
+                      activeMenuCategory === category ? " is-active" : ""
+                    }`}
+                    onClick={() => setActiveMenuCategory(category)}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <form className="order-online-form reveal" onSubmit={handleOrderSubmit}>
               <div className="order-selection-grid">
-                {featuredDishes.map((dish) => {
+                {filteredDishes.map((dish) => {
                   const selected = orderForm.items.some(
                     (item) => item.menuItemId === dish.id || item.itemName === dish.name
                   );
@@ -890,17 +1280,27 @@ export default function Page() {
                       <div>
                         <strong>{dish.name}</strong>
                         <span>{dish.price}</span>
+                        {dish.seasonNote ? <small>{dish.seasonNote}</small> : null}
                       </div>
                     </label>
                   );
                 })}
               </div>
+              {!filteredDishes.length ? (
+                <div className="form-note">
+                  Chưa có món nổi bật trong nhóm này. Bạn có thể chọn nhóm khác hoặc gọi hotline để
+                  được tư vấn nhanh.
+                </div>
+              ) : null}
 
               {orderForm.items.length ? (
                 <div className="order-selected-list">
                   {orderForm.items.map((item) => (
                     <div className="order-selected-row" key={item.itemName}>
-                      <span>{item.itemName}</span>
+                      <div>
+                        <span>{item.itemName}</span>
+                        <small>{formatMoney((item.unitPrice || 0) * (item.quantity || 0))}</small>
+                      </div>
                       <input
                         type="number"
                         min="1"
@@ -911,6 +1311,14 @@ export default function Page() {
                   ))}
                 </div>
               ) : null}
+
+              <div className="order-summary-card">
+                <div>
+                  <strong>Tạm tính</strong>
+                  <span>{orderForm.items.length} món đã chọn</span>
+                </div>
+                <strong>{formatMoney(orderSubtotal)}</strong>
+              </div>
 
               <label>
                 <span>Tên khách</span>
@@ -931,6 +1339,7 @@ export default function Page() {
                   onChange={(event) =>
                     setOrderForm((prev) => ({ ...prev, customerPhone: event.target.value }))
                   }
+                  placeholder="Ví dụ: 0814 645 999"
                   required
                 />
               </label>
@@ -952,7 +1361,8 @@ export default function Page() {
               >
                 {orderLoading ? "Đang gửi..." : "Gửi yêu cầu đặt món"}
               </button>
-              {orderStatus ? <p className="form-status">{orderStatus}</p> : null}
+              {orderError ? <p className="form-status is-error">{orderError}</p> : null}
+              {orderStatus ? <div className="form-success-card">{orderStatus}</div> : null}
             </form>
           </div>
         </section>
@@ -966,8 +1376,54 @@ export default function Page() {
                 Form này phù hợp để kết hợp cùng WiFi Ads GOECO, popup khuyến mãi hoặc chiến dịch
                 remarketing về sau.
               </p>
+              {selectedBranch ? (
+                <div className="branch-inline-note">
+                  <strong>Ưu đãi đang áp dụng tại:</strong> {selectedBranch.name}
+                </div>
+              ) : null}
+              {voucherCampaigns.length > 1 ? (
+                <div className="voucher-campaign-list">
+                  {voucherCampaigns.map((campaign) => (
+                    <button
+                      key={campaign.id}
+                      type="button"
+                      className={`voucher-campaign-chip ${
+                        campaign.id === activeVoucherCampaign?.id ? "is-active" : ""
+                      }`}
+                      onClick={() => setSelectedVoucherCampaignId(campaign.id)}
+                    >
+                      <strong>{campaign.title}</strong>
+                      <span>{formatVoucherBenefit(campaign)}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              <div className="voucher-offer-card">
+                <strong>{activeVoucherCampaign?.title || VOUCHER_PRESET.title}</strong>
+                <p>{activeVoucherCampaign?.description || VOUCHER_PRESET.description}</p>
+                <span>
+                  {formatVoucherBenefit(activeVoucherCampaign)} • hiệu lực trong{" "}
+                  {activeVoucherCampaign?.validDays || VOUCHER_PRESET.validDays} ngày kể từ lúc nhận
+                  mã.
+                </span>
+              </div>
             </div>
             <form className="voucher-form reveal" onSubmit={handleVoucherSubmit}>
+              {voucherCampaigns.length > 1 ? (
+                <label>
+                  <span>Chiến dịch ưu đãi</span>
+                  <select
+                    value={selectedVoucherCampaignId}
+                    onChange={(event) => setSelectedVoucherCampaignId(event.target.value)}
+                  >
+                    {voucherCampaigns.map((campaign) => (
+                      <option key={campaign.id} value={campaign.id}>
+                        {campaign.title} - {formatVoucherBenefit(campaign)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
               <label>
                 <span>Số điện thoại</span>
                 <input
@@ -981,7 +1437,33 @@ export default function Page() {
               <button className="button button-primary" type="submit" disabled={voucherLoading}>
                 {voucherLoading ? "Đang xử lý..." : "Nhận ưu đãi ngay"}
               </button>
+              {voucherError ? <p className="form-status is-error">{voucherError}</p> : null}
               {voucherStatus ? <p className="form-status">{voucherStatus}</p> : null}
+              {voucherResult ? (
+                <div className="voucher-result-card">
+                  <span>Mã ưu đãi của bạn</span>
+                  <strong>{voucherResult.voucherCode}</strong>
+                  <p>
+                    {voucherResult.voucherTitle} -{" "}
+                    {voucherResult.voucherDiscountType === "percent"
+                      ? `giảm ${voucherResult.voucherDiscountValue}%`
+                      : `giảm ${formatMoney(voucherResult.voucherDiscountValue)}`}
+                  </p>
+                  <small>
+                    Hạn dùng:{" "}
+                    {new Intl.DateTimeFormat("vi-VN", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric"
+                    }).format(new Date(voucherResult.expiresAt))}
+                  </small>
+                  {activeVoucherCampaign?.minOrderValue ? (
+                    <small>
+                      Áp dụng cho hóa đơn từ {formatMoney(activeVoucherCampaign.minOrderValue)}.
+                    </small>
+                  ) : null}
+                </div>
+              ) : null}
             </form>
           </div>
         </section>
@@ -1095,7 +1577,7 @@ export default function Page() {
           <div>
             <h3>Thông tin liên hệ</h3>
             <ul className="footer-meta">
-              <li>Đường ven biển, Ấp Hồ Tràm, Xã Phước Thuận, H. Xuyên Mộc, Bà Rịa - Vũng Tàu</li>
+              <li>{selectedBranch?.address || "Đường ven biển, Ấp Hồ Tràm, Xã Phước Thuận, H. Xuyên Mộc, Bà Rịa - Vũng Tàu"}</li>
               <li>{hotlineDisplay}</li>
               <li>{secondaryHotlineDisplay}</li>
               <li>info@sanhodohotram.vn</li>

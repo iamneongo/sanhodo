@@ -1,0 +1,87 @@
+
+> sanhodo-next@1.0.0 dev
+> next dev --port 3010
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3010
+- Network:       http://192.168.110.203:3010
+- Environments: .env.local
+✓ Ready in 850ms
+⚠ Slow filesystem detected. The benchmark took 260ms. If D:\Coding\nhahang\.next/dev is a network drive, consider moving it to a local folder.
+See more: https://nextjs.org/docs/app/guides/local-development
+○ Compiling proxy ...
+
+ POST /api/reservations 200 in 1033ms (next.js: 139ms, proxy.ts: 277ms, application-code: 617ms)
+ POST /api/vouchers 200 in 753ms (next.js: 43ms, proxy.ts: 174ms, application-code: 537ms)
+ GET /api/menu 200 in 760ms (next.js: 128ms, proxy.ts: 175ms, application-code: 457ms)
+ POST /api/orders 200 in 940ms (next.js: 77ms, proxy.ts: 175ms, application-code: 688ms)
+ GET / 200 in 2.5s (next.js: 953ms, proxy.ts: 1072ms, application-code: 455ms)
+ POST /api/admin/login 200 in 3.0s (next.js: 1372ms, proxy.ts: 5ms, application-code: 1631ms)
+⨯ Error: {"code":"42703","details":null,"hint":null,"message":"column profiles.branch_code does not exist"}
+    at ignore-listed frames {
+  digest: '3113873070@E394'
+}
+ GET /admin 500 in 3.3s (next.js: 1966ms, proxy.ts: 88ms, application-code: 1212ms)
+○ Compiling /api/admin/export ...
+⨯ {
+  code: '42703',
+  details: null,
+  hint: null,
+  message: 'column profiles.branch_code does not exist'
+}
+ GET /api/admin/export?type=reservations 500 in 10.8s (next.js: 10.4s, proxy.ts: 103ms, application-code: 298ms)
+ GET /api/menu 200 in 535ms (next.js: 434ms, proxy.ts: 5ms, application-code: 97ms)
+ POST /api/admin/login 200 in 760ms (next.js: 2ms, proxy.ts: 4ms, application-code: 754ms)
+⨯ Error: {"code":"42703","details":null,"hint":null,"message":"column profiles.branch_code does not exist"}
+    at ignore-listed frames {
+  digest: '3113873070@E394'
+}
+ GET /admin 500 in 534ms (next.js: 2ms, proxy.ts: 73ms, application-code: 458ms)
+⨯ {
+  code: '42703',
+  details: null,
+  hint: null,
+  message: 'column profiles.branch_code does not exist'
+}
+ GET /api/admin/export?type=reservations 500 in 221ms (next.js: 2ms, proxy.ts: 69ms, application-code: 150ms)
+✓ Compiled in 1379ms
+✓ Compiled in 8ms
+ POST /api/admin/login 200 in 1353ms (next.js: 80ms, proxy.ts: 68ms, application-code: 1204ms)
+ GET /admin 200 in 1873ms (next.js: 86ms, proxy.ts: 66ms, application-code: 1721ms)
+ GET /api/admin/export?type=reservations 200 in 367ms (next.js: 61ms, proxy.ts: 56ms, application-code: 250ms)
+ GET /api/menu 200 in 277ms (next.js: 200ms, proxy.ts: 4ms, application-code: 74ms)
+ POST /api/admin/login 200 in 545ms (next.js: 2ms, proxy.ts: 5ms, application-code: 538ms)
+ GET /api/admin/reservations 200 in 1452ms (next.js: 1082ms, proxy.ts: 60ms, application-code: 310ms)
+○ Compiling /api/admin/orders ...
+ GET /api/admin/orders 200 in 6.9s (next.js: 6.3s, proxy.ts: 70ms, application-code: 466ms)
+✓ Finished filesystem cache database compaction in 12.7s
+✓ Compiled in 5.9s
+✓ Compiled in 44ms
+✓ Compiled in 3.1s
+✓ Compiled in 3.5s
+✓ Compiled in 98ms
+✓ Compiled in 51ms
+✓ Compiled in 42ms
+✓ Compiled in 49ms
+✓ Compiled in 7ms
+✓ Compiled in 1181ms
+✓ Finished filesystem cache database compaction in 28.3s
+✓ Compiled in 265ms
+✓ Compiled in 32ms
+✓ Compiled in 25ms
+✓ Compiled in 409ms
+✓ Compiled in 2s
+✓ Compiled in 1339ms
+✓ Compiled in 352ms
+✓ Compiled in 47ms
+✓ Compiled in 20ms
+✓ Compiled in 51ms
+✓ Compiled in 39ms
+✓ Compiled in 45ms
+✓ Finished filesystem cache database compaction in 12.4s
+✓ Compiled in 25ms
+✓ Compiled in 6ms
+✓ Compiled in 26ms
+✓ Compiled in 34ms
+✓ Compiled in 48ms
+✓ Finished filesystem cache database compaction in 12.9s

@@ -2,18 +2,20 @@ import { NextResponse } from "next/server";
 import { requireAdminApi, unauthorizedResponse } from "../../../../lib/supabase/auth";
 import { createReservation, listReservations } from "../../../../lib/restaurant-db";
 
-export async function GET() {
-  const context = await requireAdminApi();
+export async function GET(request) {
+  const context = await requireAdminApi("reservations.view");
   if (!context) {
     return unauthorizedResponse();
   }
 
-  const items = await listReservations(context.supabase);
+  const { searchParams } = new URL(request.url);
+  const branchId = searchParams.get("branchId") || "";
+  const items = await listReservations(context.supabase, { branchId });
   return NextResponse.json({ ok: true, data: items });
 }
 
 export async function POST(request) {
-  const context = await requireAdminApi();
+  const context = await requireAdminApi("reservations.manage");
   if (!context) {
     return unauthorizedResponse();
   }
@@ -31,6 +33,7 @@ export async function POST(request) {
       notes: body.notes || "",
       assignedTo: body.assignedTo || "",
       lastContactAt: body.lastContactAt || "",
+      branchId: body.branchId || "",
       tableId: body.tableId || ""
     };
 

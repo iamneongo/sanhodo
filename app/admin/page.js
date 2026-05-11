@@ -1,6 +1,7 @@
 import AdminDashboard from "../../components/admin-dashboard";
+import { resolveBranchScope } from "../../lib/branches";
 import { requireAdminPage } from "../../lib/supabase/auth";
-import { getAdminDashboardData, isSupabaseSchemaMissingError } from "../../lib/restaurant-db";
+import { getAdminDashboardData, isSupabaseSchemaMissingError, listBranches } from "../../lib/restaurant-db";
 
 export const metadata = {
   title: "Admin Dashboard | San Hô Đỏ"
@@ -8,7 +9,7 @@ export const metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminPage() {
+export default async function AdminPage({ searchParams }) {
   const { supabase, profile, setupRequired } = await requireAdminPage();
 
   if (setupRequired) {
@@ -52,17 +53,32 @@ export default async function AdminPage() {
   }
 
   try {
-    const dashboardData = await getAdminDashboardData(supabase);
+    const branches = await listBranches(supabase);
+    const requestedBranchId = searchParams?.branch || "";
+    const branchScope = resolveBranchScope({
+      profile,
+      branches,
+      requestedBranchId
+    });
+    const dashboardData = await getAdminDashboardData(supabase, {
+      branchId: branchScope.branchFilterId
+    });
 
     return (
       <AdminDashboard
+        initialBranches={dashboardData.branches}
         initialReservations={dashboardData.reservations}
         initialVouchers={dashboardData.vouchers}
+        initialVoucherCampaigns={dashboardData.voucherCampaigns}
+        initialCustomerProfiles={dashboardData.customerProfiles}
+        initialVoucherRedemptions={dashboardData.voucherRedemptions}
         initialIntegrations={dashboardData.integrations}
         initialSyncLogs={dashboardData.syncLogs}
         initialMenuItems={dashboardData.menuItems}
         initialTables={dashboardData.restaurantTables}
         initialOrders={dashboardData.orders}
+        activeBranchId={branchScope.activeBranchId}
+        canViewAllBranches={branchScope.canViewAll}
         adminProfile={profile}
       />
     );

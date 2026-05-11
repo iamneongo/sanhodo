@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import {
+  ADMIN_SESSION_COOKIE,
+  createAdminSessionValue,
+  getAdminSessionCookieOptions
+} from "../../../../lib/admin-session";
+import {
   createLocalAdminCookieValue,
   getLocalAdminCookieOptions,
   getLocalAdminProfile,
@@ -7,8 +12,43 @@ import {
   matchesLocalAdminCredentials,
   LOCAL_ADMIN_COOKIE
 } from "../../../../lib/local-admin";
+import { hasDashboardAccess } from "../../../../lib/admin-permissions";
 import { isSupabaseSchemaMissingError } from "../../../../lib/restaurant-db";
 import { createClient } from "../../../../lib/supabase/server";
+
+async function loadAdminProfile(supabase, userId) {
+  const primary = await supabase
+    .from("profiles")
+    .select("id, email, full_name, role, branch_id, branch_code")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (!primary.error && primary.data) {
+    return primary.data;
+  }
+
+  if (primary.error && !isSupabaseSchemaMissingError(primary.error)) {
+    throw primary.error;
+  }
+
+  const fallback = await supabase
+    .from("profiles")
+    .select("id, email, full_name, role")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (fallback.error) {
+    throw fallback.error;
+  }
+
+  return fallback.data
+    ? {
+        ...fallback.data,
+        branch_id: null,
+        branch_code: "main"
+      }
+    : null;
+}
 
 export async function POST(request) {
   try {
@@ -21,12 +61,21 @@ export async function POST(request) {
     }
 
     if (isLocalAdminEnabled() && matchesLocalAdminCredentials(email, password)) {
+      const localAdmin = getLocalAdminProfile();
       const response = NextResponse.json({
         ok: true,
-        user: getLocalAdminProfile().user,
+        user: localAdmin.user,
         localFallback: true
       });
       response.cookies.set(LOCAL_ADMIN_COOKIE, createLocalAdminCookieValue(), getLocalAdminCookieOptions());
+      response.cookies.set(
+        ADMIN_SESSION_COOKIE,
+        createAdminSessionValue({
+          user: localAdmin.user,
+          profile: localAdmin.profile
+        }),
+        getAdminSessionCookieOptions()
+      );
       return response;
     }
 
@@ -40,13 +89,10 @@ export async function POST(request) {
       return NextResponse.json({ error: error?.message || "Đăng nhập thất bại" }, { status: 401 });
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (profileError) {
+    let profile;
+    try {
+      profile = await loadAdminProfile(supabase, user.id);
+    } catch (profileError) {
       if (isSupabaseSchemaMissingError(profileError)) {
         await supabase.auth.signOut();
         return NextResponse.json(
@@ -62,7 +108,7 @@ export async function POST(request) {
       return NextResponse.json({ error: profileError.message }, { status: 500 });
     }
 
-    if (!profile || !["admin", "manager"].includes(profile.role)) {
+    if (!profile || !hasDashboardAccess(profile.role)) {
       await supabase.auth.signOut();
       return NextResponse.json(
         { error: "Tài khoản này chưa có quyền truy cập dashboard admin" },
@@ -70,7 +116,34 @@ export async function POST(request) {
       );
     }
 
-    return NextResponse.json({ ok: true, user: { id: user.id, email: user.email } });
+    const { error: loginAuditError } = await supabase
+      .from("profiles")
+      .update({ last_login_at: new Date().toISOString() })
+      .eq("id", user.id);
+
+    if (loginAuditError && !isSupabaseSchemaMissingError(loginAuditError)) {
+      return NextResponse.json({ error: loginAuditError.message }, { status: 500 });
+    }
+
+    const response = NextResponse.json({ ok: true, user: { id: user.id, email: user.email } });
+    response.cookies.set(
+      ADMIN_SESSION_COOKIE,
+      createAdminSessionValue({
+        user: { id: user.id, email: user.email },
+        profile: {
+          id: user.id,
+          email: user.email,
+          full_name: profile.full_name || user.email,
+          role: profile.role,
+          branch_id: profile.branch_id || null,
+          branch_code: profile.branch_code || "main",
+          last_login_at: new Date().toISOString()
+        }
+      }),
+      getAdminSessionCookieOptions()
+    );
+
+    return response;
   } catch (error) {
     return NextResponse.json(
       { error: error.message || "Không thể đăng nhập với Supabase" },

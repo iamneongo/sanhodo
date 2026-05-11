@@ -412,6 +412,10 @@ p {
   line-height: 1.55;
 }
 
+.branch-trust-card {
+  margin-top: 12px;
+}
+
 .about::before,
 .space::before,
 .news::before {
@@ -565,6 +569,37 @@ p {
   color: var(--muted);
 }
 
+.branch-selector,
+.branch-inline-note {
+  display: grid;
+  gap: 8px;
+  padding: 18px 20px;
+  border: 1px solid rgba(120, 78, 58, 0.12);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  box-shadow: 0 18px 30px rgba(91, 52, 31, 0.06);
+}
+
+.branch-selector span,
+.branch-inline-note strong {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.branch-selector select {
+  min-height: 50px;
+  padding: 0 16px;
+  border: 1px solid rgba(116, 79, 60, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 252, 248, 0.92);
+  color: var(--ink);
+}
+
+.branch-inline-note {
+  line-height: 1.6;
+}
+
 .reservation-form,
 .voucher-form,
 .order-online-form {
@@ -595,7 +630,9 @@ p {
 
 .reservation-form input,
 .reservation-form select,
+.reservation-form textarea,
 .voucher-form input,
+.voucher-form select,
 .order-online-form input,
 .order-online-form textarea {
   min-height: 52px;
@@ -606,10 +643,32 @@ p {
   color: var(--ink);
 }
 
+.reservation-form textarea {
+  padding: 14px 16px;
+  resize: vertical;
+}
+
 .reservation-form-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
+}
+
+.form-note {
+  margin-top: -4px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.form-success-card {
+  padding: 14px 16px;
+  border: 1px solid rgba(78, 143, 94, 0.18);
+  border-radius: 18px;
+  background: rgba(235, 247, 238, 0.88);
+  color: #30533b;
+  font-size: 0.94rem;
+  line-height: 1.6;
 }
 
 .selected-offer-banner {
@@ -618,6 +677,39 @@ p {
   background: rgba(198, 71, 56, 0.1);
   color: var(--brand-deep);
   font-size: 0.94rem;
+}
+
+.menu-category-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.menu-category-pills.is-light .menu-category-pill {
+  background: rgba(255, 251, 246, 0.9);
+  border-color: rgba(116, 79, 60, 0.12);
+  color: var(--ink);
+}
+
+.menu-category-pill {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 236, 220, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff2e6;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--ease), color var(--ease), transform var(--ease);
+}
+
+.menu-category-pill:hover,
+.menu-category-pill:focus-visible,
+.menu-category-pill.is-active {
+  background: rgba(255, 231, 217, 0.94);
+  color: var(--brand-deep);
+  transform: translateY(-1px);
 }
 
 .order-online {
@@ -673,6 +765,14 @@ p {
   font-weight: 700;
 }
 
+.order-pick-card small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
 .order-pick-card.is-selected {
   border-color: rgba(198, 71, 56, 0.3);
   box-shadow: 0 12px 22px rgba(198, 71, 56, 0.1);
@@ -698,6 +798,17 @@ p {
   font-weight: 700;
 }
 
+.order-selected-row small {
+  display: block;
+  margin-top: 4px;
+  color: var(--brand);
+  font-size: 0.84rem;
+}
+
+.order-selected-row > div {
+  min-width: 0;
+}
+
 .order-selected-row input {
   min-height: 46px;
 }
@@ -705,6 +816,31 @@ p {
 .form-status {
   font-size: 0.92rem;
   color: var(--brand-deep);
+}
+
+.form-status.is-error {
+  color: #a53d34;
+}
+
+.order-summary-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 18px;
+  border: 1px solid rgba(198, 71, 56, 0.12);
+  border-radius: 18px;
+  background: rgba(198, 71, 56, 0.08);
+}
+
+.order-summary-card div {
+  display: grid;
+  gap: 4px;
+}
+
+.order-summary-card span {
+  color: var(--muted);
+  font-size: 0.88rem;
 }
 
 .menu-backdrop {
@@ -800,6 +936,13 @@ p {
   gap: 12px;
 }
 
+.dish-card-flags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
 .dish-card-body h3 {
   font-family: var(--font-montserrat), sans-serif;
   font-size: 0.98rem;
@@ -822,6 +965,51 @@ p {
   color: var(--brand);
   font-weight: 800;
   font-size: 1rem;
+}
+
+.dish-flag,
+.dish-category {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.dish-flag {
+  background: rgba(198, 71, 56, 0.1);
+  color: var(--brand-deep);
+}
+
+.dish-flag.is-low_stock {
+  background: rgba(212, 147, 31, 0.14);
+  color: #8a5f04;
+}
+
+.dish-flag.is-seasonal {
+  background: rgba(52, 116, 170, 0.12);
+  color: #1f5b89;
+}
+
+.dish-flag.is-sold_out {
+  background: rgba(114, 92, 80, 0.14);
+  color: #6a564a;
+}
+
+.dish-category {
+  background: rgba(68, 28, 14, 0.08);
+  color: var(--ink);
+}
+
+.dish-note {
+  display: block;
+  color: #6e4c3b;
+  font-size: 0.82rem;
+  line-height: 1.5;
 }
 
 .dish-actions {
@@ -883,6 +1071,19 @@ p {
   color: var(--brand-deep);
 }
 
+.combo-serves {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.combo-original-price {
+  margin-top: -8px;
+  color: rgba(91, 66, 53, 0.66);
+  font-size: 0.9rem;
+  text-decoration: line-through;
+}
+
 .dot {
   width: 11px;
   height: 11px;
@@ -940,6 +1141,69 @@ p {
 .voucher-copy {
   display: grid;
   gap: 16px;
+}
+
+.voucher-campaign-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.voucher-campaign-chip {
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(198, 71, 56, 0.14);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  min-width: 180px;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.voucher-campaign-chip strong {
+  color: var(--brand-deep);
+  font-size: 0.98rem;
+}
+
+.voucher-campaign-chip span {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.voucher-campaign-chip.is-active,
+.voucher-campaign-chip:hover {
+  transform: translateY(-1px);
+  border-color: rgba(198, 71, 56, 0.28);
+  box-shadow: 0 12px 24px rgba(94, 53, 33, 0.1);
+}
+
+.voucher-offer-card,
+.voucher-result-card {
+  display: grid;
+  gap: 8px;
+  padding: 18px 20px;
+  border: 1px solid rgba(198, 71, 56, 0.12);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 18px 30px rgba(94, 53, 33, 0.08);
+}
+
+.voucher-offer-card strong,
+.voucher-result-card strong {
+  color: var(--brand-deep);
+}
+
+.voucher-offer-card span,
+.voucher-result-card span,
+.voucher-result-card small {
+  color: var(--muted);
+}
+
+.voucher-result-card strong {
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
 }
 
 .space-card {
@@ -1518,6 +1782,10 @@ p {
     grid-template-columns: 1fr;
   }
 
+  .menu-category-pills {
+    gap: 8px;
+  }
+
   .feature-strip {
     padding: 24px 20px;
   }
@@ -1696,6 +1964,11 @@ p {
 
   .dish-card {
     border-radius: 22px;
+  }
+
+  .order-summary-card {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .news-body {

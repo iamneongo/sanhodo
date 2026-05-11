@@ -20,8 +20,34 @@ const greatVibes = Great_Vibes({
 });
 
 export const metadata = {
-  title: "San Ho Do Ho Tram",
-  description: "Landing page cho nhà hàng San Hô Đỏ Hồ Tràm"
+  metadataBase: new URL("https://sanhodo.vn"),
+  title: "San Hô Đỏ Hồ Tràm | Hải sản cao cấp, đặt bàn nhanh, combo tiết kiệm",
+  description:
+    "Nhà hàng San Hô Đỏ Hồ Tràm với không gian sang trọng, hải sản cao cấp, combo 2 người - 4 người - tiệc và form đặt bàn nhanh kết nối CRM, Zalo, Google Sheet.",
+  openGraph: {
+    title: "San Hô Đỏ Hồ Tràm | Hải sản cao cấp, đặt bàn nhanh, combo tiết kiệm",
+    description:
+      "Không gian ẩm thực chỉn chu, món signature nổi bật, combo tối ưu theo số người và hệ thống đặt bàn nhanh cho nhà hàng San Hô Đỏ Hồ Tràm.",
+    url: "https://sanhodo.vn",
+    siteName: "San Hô Đỏ Hồ Tràm",
+    locale: "vi_VN",
+    type: "website",
+    images: [
+      {
+        url: "/assets/drive-hero-exterior.jpg",
+        width: 1600,
+        height: 900,
+        alt: "Không gian nhà hàng San Hô Đỏ Hồ Tràm"
+      }
+    ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "San Hô Đỏ Hồ Tràm | Đặt bàn nhanh, combo tối ưu",
+    description:
+      "Đặt bàn nhanh, gọi ngay, nhận ưu đãi và chọn món trước cho nhà hàng San Hô Đỏ Hồ Tràm.",
+    images: ["/assets/drive-hero-exterior.jpg"]
+  }
 };
 
 export const viewport = {

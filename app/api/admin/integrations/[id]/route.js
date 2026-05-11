@@ -3,7 +3,7 @@ import { requireAdminApi, unauthorizedResponse } from "../../../../../lib/supaba
 import { updateIntegrationSettingDb } from "../../../../../lib/restaurant-db";
 
 export async function PATCH(request, { params }) {
-  const context = await requireAdminApi();
+  const context = await requireAdminApi("integrations.manage");
   if (!context) {
     return unauthorizedResponse();
   }

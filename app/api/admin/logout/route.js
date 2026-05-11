@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ADMIN_SESSION_COOKIE, getAdminSessionCookieOptions } from "../../../../lib/admin-session";
 import { getLocalAdminCookieOptions, LOCAL_ADMIN_COOKIE } from "../../../../lib/local-admin";
 import { createClient } from "../../../../lib/supabase/server";
 
@@ -8,6 +9,10 @@ export async function POST() {
   const response = NextResponse.json({ ok: true });
   response.cookies.set(LOCAL_ADMIN_COOKIE, "", {
     ...getLocalAdminCookieOptions(),
+    maxAge: 0
+  });
+  response.cookies.set(ADMIN_SESSION_COOKIE, "", {
+    ...getAdminSessionCookieOptions(),
     maxAge: 0
   });
   return response;

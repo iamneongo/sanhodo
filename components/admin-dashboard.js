@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { formatVoucherBenefit } from "../lib/business-rules";
+import { DASHBOARD_TABS, hasAdminPermission } from "../lib/admin-permissions";
 import styles from "./admin.module.css";
 
 const reservationStatuses = [
@@ -34,6 +36,16 @@ const orderStatuses = [
 const tableStatuses = ["available", "reserved", "occupied", "cleaning", "inactive"];
 const orderChannels = ["admin", "website", "reservation", "walk-in", "phone", "zalo"];
 const spicyLevels = ["none", "mild", "medium", "hot"];
+const availabilityStatuses = ["available", "low_stock", "seasonal", "sold_out"];
+
+const roleLabels = {
+  admin: "Admin",
+  manager: "Manager",
+  staff: "Staff",
+  super_admin: "Super Admin",
+  branch_manager: "Branch Manager",
+  driver: "Driver"
+};
 
 function formatDate(value) {
   if (!value) return "-";
@@ -49,6 +61,26 @@ function formatDate(value) {
 
 function formatCurrency(value) {
   return `${new Intl.NumberFormat("vi-VN").format(Number(value || 0))}đ`;
+}
+
+function formatPercent(value, total) {
+  if (!total) return "0%";
+  return `${Math.round((Number(value || 0) / Number(total || 1)) * 100)}%`;
+}
+
+function formatVoucherValue(voucher) {
+  if (!voucher) return "-";
+  if (voucher.voucherDiscountType === "amount") {
+    return formatCurrency(voucher.voucherDiscountValue);
+  }
+  return `${voucher.voucherDiscountValue || 0}%`;
+}
+
+function isRecentItem(value, hours = 24) {
+  if (!value) return false;
+  const createdAt = new Date(value).getTime();
+  if (Number.isNaN(createdAt)) return false;
+  return Date.now() - createdAt <= hours * 60 * 60 * 1000;
 }
 
 function matchesSearch(item, query, fields) {
@@ -108,6 +140,8 @@ function createEmptyMenuDraft() {
     spicyLevel: "none",
     isFeatured: false,
     isAvailable: true,
+    availabilityStatus: "available",
+    seasonNote: "",
     sortOrder: 0
   };
 }
@@ -122,6 +156,26 @@ function createEmptyTableDraft() {
     notes: "",
     sortOrder: 0,
     isActive: true
+  };
+}
+
+function createEmptyCampaignDraft() {
+  return {
+    code: "",
+    name: "",
+    title: "",
+    description: "",
+    discountType: "percent",
+    discountValue: 10,
+    minOrderValue: 0,
+    validDays: 14,
+    usageLimitTotal: 0,
+    usageLimitPerPhone: 1,
+    autoIssue: true,
+    isActive: true,
+    startsAt: "",
+    endsAt: "",
+    sortOrder: 0
   };
 }
 
@@ -147,22 +201,48 @@ async function requestJson(url, options = {}) {
   return data;
 }
 
+function withBranchQuery(url, branchId) {
+  if (!branchId) {
+    return url;
+  }
+
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}branchId=${encodeURIComponent(branchId)}`;
+}
+
 export default function AdminDashboard({
+  initialBranches,
   initialReservations,
   initialVouchers,
+  initialVoucherCampaigns,
+  initialCustomerProfiles,
+  initialVoucherRedemptions,
   initialIntegrations,
   initialSyncLogs,
   initialMenuItems,
   initialTables,
   initialOrders,
+  activeBranchId,
+  canViewAllBranches,
   adminProfile
 }) {
   const router = useRouter();
+  const currentRole = adminProfile?.role || "admin";
+  const branchFilterId = activeBranchId && activeBranchId !== "all" ? activeBranchId : "";
   const [tab, setTab] = useState("reservations");
   const [message, setMessage] = useState("");
 
   const [reservations, setReservations] = useState(sortByCreatedDesc(initialReservations));
   const [vouchers, setVouchers] = useState(sortByCreatedDesc(initialVouchers));
+  const [voucherCampaigns, setVoucherCampaigns] = useState(
+    sortByName(initialVoucherCampaigns || [], "title")
+  );
+  const [customerProfiles, setCustomerProfiles] = useState(
+    sortByCreatedDesc(initialCustomerProfiles || [])
+  );
+  const [voucherRedemptions, setVoucherRedemptions] = useState(
+    sortByCreatedDesc(initialVoucherRedemptions || [])
+  );
   const [menuItems, setMenuItems] = useState(sortByName(initialMenuItems));
   const [restaurantTables, setRestaurantTables] = useState(sortByName(initialTables));
   const [orders, setOrders] = useState(sortByCreatedDesc(initialOrders));
@@ -180,15 +260,24 @@ export default function AdminDashboard({
 
   const [selectedReservationId, setSelectedReservationId] = useState(initialReservations[0]?.id || "");
   const [selectedVoucherId, setSelectedVoucherId] = useState(initialVouchers[0]?.id || "");
+  const [selectedVoucherCampaignId, setSelectedVoucherCampaignId] = useState(
+    initialVoucherCampaigns?.[0]?.id || ""
+  );
   const [selectedOrderId, setSelectedOrderId] = useState(initialOrders[0]?.id || "");
   const [selectedMenuId, setSelectedMenuId] = useState(initialMenuItems[0]?.id || "");
   const [selectedTableId, setSelectedTableId] = useState(initialTables[0]?.id || "");
   const [selectedIntegrationId, setSelectedIntegrationId] = useState(initialIntegrations[0]?.id || "");
+  const selectedBranch =
+    (initialBranches || []).find((item) => item.id === branchFilterId) ||
+    (initialBranches || []).find((item) => item.code === adminProfile?.branch_code) ||
+    (initialBranches || [])[0] ||
+    null;
 
   const [manualOpen, setManualOpen] = useState(false);
   const [orderCreateOpen, setOrderCreateOpen] = useState(false);
   const [menuCreateOpen, setMenuCreateOpen] = useState(false);
   const [tableCreateOpen, setTableCreateOpen] = useState(false);
+  const [campaignCreateOpen, setCampaignCreateOpen] = useState(false);
 
   const [reservationSaving, setReservationSaving] = useState(false);
   const [voucherSaving, setVoucherSaving] = useState(false);
@@ -213,13 +302,47 @@ export default function AdminDashboard({
   const [menuEdit, setMenuEdit] = useState(createEmptyMenuDraft());
   const [tableDraft, setTableDraft] = useState(createEmptyTableDraft());
   const [tableEdit, setTableEdit] = useState(createEmptyTableDraft());
+  const [campaignDraft, setCampaignDraft] = useState(createEmptyCampaignDraft());
 
   const selectedReservation = reservations.find((item) => item.id === selectedReservationId) || null;
   const selectedVoucher = vouchers.find((item) => item.id === selectedVoucherId) || null;
+  const selectedVoucherCampaign =
+    voucherCampaigns.find((item) => item.id === selectedVoucherCampaignId) || null;
+  const selectedVoucherCustomer =
+    customerProfiles.find(
+      (item) =>
+        item.id === selectedVoucher?.customerProfileId ||
+        (selectedVoucher?.phone && item.phone === selectedVoucher.phone)
+    ) || null;
   const selectedOrder = orders.find((item) => item.id === selectedOrderId) || null;
   const selectedMenuItem = menuItems.find((item) => item.id === selectedMenuId) || null;
   const selectedTable = restaurantTables.find((item) => item.id === selectedTableId) || null;
   const selectedIntegration = integrations.find((item) => item.id === selectedIntegrationId) || null;
+  const permissions = useMemo(
+    () => ({
+      canExport: hasAdminPermission(currentRole, "dashboard.export"),
+      canManageReservations: hasAdminPermission(currentRole, "reservations.manage"),
+      canManageOrders: hasAdminPermission(currentRole, "orders.manage"),
+      canManageTables: hasAdminPermission(currentRole, "tables.manage"),
+      canManageMenu: hasAdminPermission(currentRole, "menu.manage"),
+      canManageVouchers: hasAdminPermission(currentRole, "vouchers.manage"),
+      canViewIntegrations: hasAdminPermission(currentRole, "integrations.view"),
+      canManageIntegrations: hasAdminPermission(currentRole, "integrations.manage"),
+      canSyncIntegrations: hasAdminPermission(currentRole, "integrations.sync")
+    }),
+    [currentRole]
+  );
+  const visibleTabs = useMemo(
+    () =>
+      Object.entries(DASHBOARD_TABS)
+        .filter(([, permission]) => hasAdminPermission(currentRole, permission))
+        .map(([key]) => key),
+    [currentRole]
+  );
+  const attachBranchToPayload = (payload) => ({
+    ...payload,
+    branchId: payload?.branchId || branchFilterId || ""
+  });
 
   useEffect(() => {
     setOrderEdit(cloneOrder(selectedOrder));
@@ -232,6 +355,31 @@ export default function AdminDashboard({
   useEffect(() => {
     setTableEdit(selectedTable ? { ...selectedTable } : createEmptyTableDraft());
   }, [selectedTableId, selectedTable]);
+
+  useEffect(() => {
+    if (!selectedVoucherCampaignId && voucherCampaigns.length) {
+      setSelectedVoucherCampaignId(voucherCampaigns[0].id);
+    }
+  }, [selectedVoucherCampaignId, voucherCampaigns]);
+
+  useEffect(() => {
+    if (!visibleTabs.includes(tab) && visibleTabs.length) {
+      setTab(visibleTabs[0]);
+    }
+  }, [tab, visibleTabs]);
+
+  const handleBranchChange = (event) => {
+    const nextBranchId = event.target.value;
+    const params = new URLSearchParams(window.location.search);
+    if (!nextBranchId || nextBranchId === "all") {
+      params.delete("branch");
+    } else {
+      params.set("branch", nextBranchId);
+    }
+    const query = params.toString();
+    router.replace(query ? `/admin?${query}` : "/admin");
+    router.refresh();
+  };
 
   const filteredReservations = useMemo(
     () =>
@@ -246,7 +394,7 @@ export default function AdminDashboard({
     () =>
       vouchers.filter((item) => {
         const statusMatch = voucherStatus === "all" || item.status === voucherStatus;
-        return statusMatch && matchesSearch(item, voucherQuery, ["phone", "notes", "source"]);
+        return statusMatch && matchesSearch(item, voucherQuery, ["phone", "notes", "source", "voucherCode", "voucherTitle"]);
       }),
     [vouchers, voucherQuery, voucherStatus]
   );
@@ -315,7 +463,7 @@ export default function AdminDashboard({
       const data = await requestJson(`/api/admin/reservations/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(attachBranchToPayload(payload))
       });
       setReservations((prev) => sortByCreatedDesc(prev.map((item) => (item.id === id ? data.data : item))));
       setMessage("Đã cập nhật đặt bàn.");
@@ -333,10 +481,106 @@ export default function AdminDashboard({
       const data = await requestJson(`/api/admin/vouchers/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(attachBranchToPayload(payload))
       });
       setVouchers((prev) => sortByCreatedDesc(prev.map((item) => (item.id === id ? data.data : item))));
       setMessage("Đã cập nhật voucher.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setVoucherSaving(false);
+    }
+  };
+
+  const createVoucherCampaignEntry = async (event) => {
+    event.preventDefault();
+    setVoucherSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(withBranchQuery("/api/admin/voucher-campaigns", branchFilterId), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(attachBranchToPayload(campaignDraft))
+      });
+      setVoucherCampaigns((prev) => sortByName([data.data, ...prev], "title"));
+      setSelectedVoucherCampaignId(data.data.id);
+      setCampaignDraft(createEmptyCampaignDraft());
+      setCampaignCreateOpen(false);
+      setMessage("Đã tạo campaign voucher.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setVoucherSaving(false);
+    }
+  };
+
+  const patchVoucherCampaign = async (id, payload) => {
+    setVoucherSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(`/api/admin/voucher-campaigns/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(attachBranchToPayload(payload))
+      });
+      setVoucherCampaigns((prev) =>
+        sortByName(prev.map((item) => (item.id === id ? data.data : item)), "title")
+      );
+      setMessage("Đã cập nhật campaign voucher.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setVoucherSaving(false);
+    }
+  };
+
+  const deleteVoucherCampaignEntry = async (id) => {
+    if (!window.confirm("Xóa campaign voucher này?")) return;
+    try {
+      await requestJson(`/api/admin/voucher-campaigns/${id}`, { method: "DELETE" });
+      const next = voucherCampaigns.filter((item) => item.id !== id);
+      setVoucherCampaigns(next);
+      setSelectedVoucherCampaignId(next[0]?.id || "");
+      setMessage("Đã xóa campaign voucher.");
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
+
+  const redeemVoucher = async (voucher) => {
+    const spendInput = window.prompt("Nhập tổng hóa đơn để redeem voucher và cộng loyalty points", "1500000");
+    if (spendInput === null) return;
+
+    setVoucherSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(`/api/admin/vouchers/${voucher.id}/redeem`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          branchId: voucher.branchId || branchFilterId || "",
+          spendAmount: Number(String(spendInput).replace(/[^\d]/g, "")) || 0,
+          notes: voucher.notes || ""
+        })
+      });
+      if (data.data?.voucher) {
+        setVouchers((prev) =>
+          sortByCreatedDesc(prev.map((item) => (item.id === voucher.id ? data.data.voucher : item)))
+        );
+      }
+      if (data.data?.customer) {
+        setCustomerProfiles((prev) => {
+          const exists = prev.some((item) => item.id === data.data.customer.id);
+          const next = exists
+            ? prev.map((item) => (item.id === data.data.customer.id ? data.data.customer : item))
+            : [data.data.customer, ...prev];
+          return sortByCreatedDesc(next);
+        });
+      }
+      if (data.data?.redemption) {
+        setVoucherRedemptions((prev) => sortByCreatedDesc([data.data.redemption, ...prev]));
+      }
+      setMessage("Đã redeem voucher và cập nhật loyalty.");
     } catch (error) {
       setMessage(error.message);
     } finally {
@@ -349,10 +593,10 @@ export default function AdminDashboard({
     setReservationSaving(true);
     setMessage("");
     try {
-      const data = await requestJson("/api/admin/reservations", {
+      const data = await requestJson(withBranchQuery("/api/admin/reservations", branchFilterId), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...manualForm, status: "confirmed", source: "admin-manual" })
+        body: JSON.stringify(attachBranchToPayload({ ...manualForm, status: "confirmed", source: "admin-manual" }))
       });
       setReservations((prev) => sortByCreatedDesc([data.data, ...prev]));
       setSelectedReservationId(data.data.id);
@@ -384,10 +628,10 @@ export default function AdminDashboard({
     setOrderSaving(true);
     setMessage("");
     try {
-      const data = await requestJson("/api/admin/orders", {
+      const data = await requestJson(withBranchQuery("/api/admin/orders", branchFilterId), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderDraft)
+        body: JSON.stringify(attachBranchToPayload(orderDraft))
       });
       setOrders((prev) => sortByCreatedDesc([data.data, ...prev]));
       setSelectedOrderId(data.data.id);
@@ -409,7 +653,7 @@ export default function AdminDashboard({
       const data = await requestJson(`/api/admin/orders/${selectedOrder.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderEdit)
+        body: JSON.stringify(attachBranchToPayload(orderEdit))
       });
       setOrders((prev) => sortByCreatedDesc(prev.map((item) => (item.id === selectedOrder.id ? data.data : item))));
       setMessage("Đã cập nhật order.");
@@ -438,10 +682,10 @@ export default function AdminDashboard({
     setMenuSaving(true);
     setMessage("");
     try {
-      const data = await requestJson("/api/admin/menu-items", {
+      const data = await requestJson(withBranchQuery("/api/admin/menu-items", branchFilterId), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(menuDraft)
+        body: JSON.stringify(attachBranchToPayload(menuDraft))
       });
       setMenuItems((prev) => sortByName([data.data, ...prev]));
       setSelectedMenuId(data.data.id);
@@ -463,7 +707,7 @@ export default function AdminDashboard({
       const data = await requestJson(`/api/admin/menu-items/${selectedMenuItem.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(menuEdit)
+        body: JSON.stringify(attachBranchToPayload(menuEdit))
       });
       setMenuItems((prev) => sortByName(prev.map((item) => (item.id === selectedMenuItem.id ? data.data : item))));
       setMessage("Đã cập nhật món ăn.");
@@ -492,10 +736,10 @@ export default function AdminDashboard({
     setTableSaving(true);
     setMessage("");
     try {
-      const data = await requestJson("/api/admin/tables", {
+      const data = await requestJson(withBranchQuery("/api/admin/tables", branchFilterId), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(tableDraft)
+        body: JSON.stringify(attachBranchToPayload(tableDraft))
       });
       setRestaurantTables((prev) => sortByName([data.data, ...prev]));
       setSelectedTableId(data.data.id);
@@ -517,7 +761,7 @@ export default function AdminDashboard({
       const data = await requestJson(`/api/admin/tables/${selectedTable.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(tableEdit)
+        body: JSON.stringify(attachBranchToPayload(tableEdit))
       });
       setRestaurantTables((prev) => sortByName(prev.map((item) => (item.id === selectedTable.id ? data.data : item))));
       setMessage("Đã cập nhật bàn.");
@@ -548,7 +792,7 @@ export default function AdminDashboard({
       const data = await requestJson(`/api/admin/integrations/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(attachBranchToPayload(payload))
       });
       setIntegrations((prev) => prev.map((item) => (item.id === id ? data.data : item)));
       setMessage("Đã cập nhật cấu hình tích hợp.");
@@ -568,7 +812,7 @@ export default function AdminDashboard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reservationId, integrationId })
       });
-      const logData = await requestJson("/api/admin/integrations/logs");
+      const logData = await requestJson(withBranchQuery("/api/admin/integrations/logs", branchFilterId));
       setSyncLogs(logData.data || []);
       setMessage("Đồng bộ đặt bàn sang POS/PMS thành công.");
     } catch (error) {
@@ -594,11 +838,80 @@ export default function AdminDashboard({
   };
   const menuStats = {
     total: menuItems.length,
-    featured: menuItems.filter((item) => item.isFeatured).length
+    featured: menuItems.filter((item) => item.isFeatured).length,
+    seasonal: menuItems.filter((item) => item.availabilityStatus === "seasonal").length,
+    lowStock: menuItems.filter((item) => item.availabilityStatus === "low_stock").length
   };
   const tableStats = {
     total: restaurantTables.length,
     available: restaurantTables.filter((item) => item.status === "available").length
+  };
+  const voucherStats = {
+    total: vouchers.length,
+    activeCodes: vouchers.filter((item) => item.voucherCode).length,
+    recent: vouchers.filter((item) => isRecentItem(item.createdAt, 24)).length,
+    campaigns: voucherCampaigns.filter((item) => item.isActive).length,
+    redeemed: vouchers.filter((item) => item.status === "used").length
+  };
+  const loyaltyStats = {
+    members: customerProfiles.length,
+    totalPoints: customerProfiles.reduce((sum, item) => sum + Number(item.loyaltyPoints || 0), 0),
+    totalSpent: customerProfiles.reduce((sum, item) => sum + Number(item.totalSpent || 0), 0),
+    redemptions: voucherRedemptions.length
+  };
+  const notificationFeed = sortByCreatedDesc([
+    ...reservations
+      .filter((item) => isRecentItem(item.createdAt, 24))
+      .map((item) => ({
+        id: `reservation-${item.id}`,
+        type: "reservation",
+        title: `${item.name} vừa tạo lead đặt bàn`,
+        subtitle: `${item.guests} khách • ${formatDate(item.datetime)}`,
+        createdAt: item.createdAt,
+        status: item.status
+      })),
+    ...orders
+      .filter((item) => isRecentItem(item.createdAt, 24))
+      .map((item) => ({
+        id: `order-${item.id}`,
+        type: "order",
+        title: `${item.customerName} vừa gửi order`,
+        subtitle: `${item.items.length} món • ${formatCurrency(item.totalAmount)}`,
+        createdAt: item.createdAt,
+        status: item.status
+      })),
+    ...vouchers
+      .filter((item) => isRecentItem(item.createdAt, 24))
+      .map((item) => ({
+        id: `voucher-${item.id}`,
+        type: "voucher",
+        title: `${item.phone} vừa nhận voucher`,
+        subtitle: item.voucherCode || "Lead voucher mới",
+        createdAt: item.createdAt,
+        status: item.status
+      }))
+  ]).slice(0, 8);
+  const topSellingItems = useMemo(() => {
+    const totals = new Map();
+
+    orders.forEach((order) => {
+      (order.items || []).forEach((item) => {
+        const current = totals.get(item.itemName) || { quantity: 0, revenue: 0 };
+        totals.set(item.itemName, {
+          quantity: current.quantity + Number(item.quantity || 0),
+          revenue: current.revenue + Number(item.lineTotal || 0)
+        });
+      });
+    });
+
+    return [...totals.entries()]
+      .map(([name, metrics]) => ({ name, ...metrics }))
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 5);
+  }, [orders]);
+  const reservationConversion = {
+    confirmed: reservations.filter((item) => item.status === "confirmed").length,
+    arrived: reservations.filter((item) => item.status === "arrived").length
   };
 
   const orderDraftTotals = computeOrderTotals(orderDraft);
@@ -611,12 +924,35 @@ export default function AdminDashboard({
           <div>
             <span className={styles.kicker}>Admin Dashboard</span>
             <h1>Vận hành nhà hàng trên dữ liệu Supabase thật</h1>
-            <p>Quản lý đặt bàn, order, bàn, món, voucher và tích hợp trong cùng một dashboard.</p>
+            <p>
+              Quản lý đặt bàn, order, bàn, món, voucher và tích hợp trong cùng một dashboard.
+              {selectedBranch ? ` Đang xem dữ liệu cho ${selectedBranch.name}.` : ""}
+            </p>
           </div>
           <div className={styles.topbarActions}>
-            <span className={styles.adminBadge}>{adminProfile?.full_name || adminProfile?.email || "Admin"}</span>
-            <a className={styles.exportButton} href="/api/admin/export?type=reservations">Export đặt bàn</a>
-            <a className={styles.exportButton} href="/api/admin/export?type=vouchers">Export voucher</a>
+            <span className={styles.adminBadge}>
+              {adminProfile?.full_name || adminProfile?.email || "Admin"} •{" "}
+              {roleLabels[adminProfile?.role] || adminProfile?.role || "Admin"}
+            </span>
+            {(initialBranches || []).length ? (
+              <label className={styles.branchControl}>
+                <span>Chi nhánh</span>
+                <select
+                  value={activeBranchId || "all"}
+                  onChange={handleBranchChange}
+                  disabled={!canViewAllBranches && Boolean(selectedBranch)}
+                >
+                  {canViewAllBranches ? <option value="all">Tất cả chi nhánh</option> : null}
+                  {(initialBranches || []).map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.shortName || branch.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+            {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=reservations", branchFilterId)}>Export đặt bàn</a> : null}
+            {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=vouchers", branchFilterId)}>Export voucher</a> : null}
             <button className={styles.logoutButton} type="button" onClick={logout}>Đăng xuất</button>
           </div>
         </header>
@@ -624,14 +960,78 @@ export default function AdminDashboard({
         <section className={styles.statsGrid}>
           <article className={styles.statCard}><span>Đặt bàn</span><strong>{reservationStats.total}</strong><small>{reservationStats.pending} lead đang chờ xử lý</small></article>
           <article className={styles.statCard}><span>Orders</span><strong>{orderStats.total}</strong><small>{orderStats.active} order đang phục vụ</small></article>
-          <article className={styles.statCard}><span>Thực đơn</span><strong>{menuStats.total}</strong><small>{menuStats.featured} món featured</small></article>
+          <article className={styles.statCard}><span>Thực đơn</span><strong>{menuStats.total}</strong><small>{menuStats.featured} món featured • {menuStats.lowStock} món cần chú ý</small></article>
           <article className={styles.statCard}><span>Bàn</span><strong>{tableStats.total}</strong><small>{tableStats.available} bàn còn trống</small></article>
+          <article className={styles.statCard}><span>Voucher</span><strong>{voucherStats.total}</strong><small>{voucherStats.activeCodes} mã đã phát • {voucherStats.recent} lead trong 24h</small></article>
+          <article className={styles.statCard}><span>Tỷ lệ xác nhận</span><strong>{formatPercent(reservationConversion.confirmed + reservationConversion.arrived, reservationStats.total)}</strong><small>{reservationConversion.confirmed} xác nhận • {reservationConversion.arrived} đã tới</small></article>
+        </section>
+
+        <section className={styles.insightsGrid}>
+          <article className={styles.insightCard}>
+            <div className={styles.insightHead}>
+              <div>
+                <span className={styles.kicker}>Thông báo mới</span>
+                <h2>Lead trong 24 giờ gần nhất</h2>
+              </div>
+            </div>
+            <div className={styles.notificationList}>
+              {notificationFeed.length ? (
+                notificationFeed.map((item) => (
+                  <article key={item.id} className={styles.notificationItem}>
+                    <div>
+                      <strong>{item.title}</strong>
+                      <p>{item.subtitle}</p>
+                    </div>
+                    <div className={styles.notificationMeta}>
+                      <span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{item.status}</span>
+                      <small>{formatDate(item.createdAt)}</small>
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <div className={styles.emptyState}>Chưa có lead mới trong 24 giờ gần nhất.</div>
+              )}
+            </div>
+          </article>
+
+          <article className={styles.insightCard}>
+            <div className={styles.insightHead}>
+              <div>
+                <span className={styles.kicker}>Analytics cơ bản</span>
+                <h2>Top món và tình trạng thực đơn</h2>
+              </div>
+            </div>
+            <div className={styles.metricStack}>
+              {topSellingItems.length ? (
+                topSellingItems.map((item) => (
+                  <div key={item.name} className={styles.metricRow}>
+                    <div>
+                      <strong>{item.name}</strong>
+                      <p>{item.quantity} phần đã bán</p>
+                    </div>
+                    <span>{formatCurrency(item.revenue)}</span>
+                  </div>
+                ))
+              ) : (
+                <div className={styles.emptyState}>Chưa có dữ liệu order đủ để tính top món.</div>
+              )}
+            </div>
+            <div className={styles.metricSummary}>
+              <span>{menuStats.seasonal} món đang theo mùa</span>
+              <span>{menuStats.lowStock} món số lượng giới hạn</span>
+            </div>
+          </article>
         </section>
 
         <section className={styles.tabBar}>
-          {["reservations", "orders", "tables", "menu", "vouchers", "integrations"].map((key) => (
+          {visibleTabs.map((key) => (
             <button key={key} type="button" className={tab === key ? styles.activeTab : ""} onClick={() => setTab(key)}>
-              {key === "reservations" ? "Đặt bàn" : key === "orders" ? "Đặt món / Orders" : key === "tables" ? "Bàn" : key === "menu" ? "Món ăn" : key === "vouchers" ? "Voucher" : "Tích hợp POS/PMS"}
+              <span>
+                {key === "reservations" ? "Đặt bàn" : key === "orders" ? "Đặt món / Orders" : key === "tables" ? "Bàn" : key === "menu" ? "Món ăn" : key === "vouchers" ? "Voucher" : "Tích hợp POS/PMS"}
+              </span>
+              {key === "reservations" && reservationStats.pending ? <small>{reservationStats.pending}</small> : null}
+              {key === "orders" && orderStats.active ? <small>{orderStats.active}</small> : null}
+              {key === "vouchers" && voucherStats.recent ? <small>{voucherStats.recent}</small> : null}
             </button>
           ))}
         </section>
@@ -644,10 +1044,10 @@ export default function AdminDashboard({
               <div className={styles.panelToolbar}>
                 <input type="search" placeholder="Tìm khách đặt bàn..." value={reservationQuery} onChange={(event) => setReservationQuery(event.target.value)} />
                 <select value={reservationStatus} onChange={(event) => setReservationStatus(event.target.value)}>{reservationStatuses.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select>
-                <button type="button" onClick={() => setManualOpen((prev) => !prev)}>{manualOpen ? "Đóng form" : "Thêm đặt bàn"}</button>
+                {permissions.canManageReservations ? <button type="button" onClick={() => setManualOpen((prev) => !prev)}>{manualOpen ? "Đóng form" : "Thêm đặt bàn"}</button> : <div></div>}
               </div>
 
-              {manualOpen ? (
+              {manualOpen && permissions.canManageReservations ? (
                 <form className={styles.inlineForm} onSubmit={createManualReservation}>
                   <input type="text" placeholder="Tên khách" value={manualForm.name} onChange={(event) => setManualForm((prev) => ({ ...prev, name: event.target.value }))} required />
                   <input type="tel" placeholder="SĐT" value={manualForm.phone} onChange={(event) => setManualForm((prev) => ({ ...prev, phone: event.target.value }))} required />
@@ -684,17 +1084,17 @@ export default function AdminDashboard({
                 <div>
                   <div className={styles.detailHeading}>
                     <div><span className={styles.kicker}>Chi tiết đặt bàn</span><h2>{selectedReservation.name}</h2></div>
-                    <button className={styles.deleteButton} type="button" onClick={() => deleteReservation(selectedReservation.id)}>Xóa lead</button>
+                    {permissions.canManageReservations ? <button className={styles.deleteButton} type="button" onClick={() => deleteReservation(selectedReservation.id)}>Xóa lead</button> : null}
                   </div>
-                  <div className={styles.quickStatusRow}>{reservationStatuses.filter((item) => item.value !== "all").map((item) => <button type="button" key={item.value} className={selectedReservation.status === item.value ? styles.quickActive : ""} onClick={() => patchReservation(selectedReservation.id, { ...selectedReservation, status: item.value })}>{item.label}</button>)}</div>
+                  {permissions.canManageReservations ? <div className={styles.quickStatusRow}>{reservationStatuses.filter((item) => item.value !== "all").map((item) => <button type="button" key={item.value} className={selectedReservation.status === item.value ? styles.quickActive : ""} onClick={() => patchReservation(selectedReservation.id, { ...selectedReservation, status: item.value })}>{item.label}</button>)}</div> : null}
                   <div className={styles.editGrid}>
-                    <label><span>SĐT</span><input type="text" defaultValue={selectedReservation.phone} onBlur={(event) => patchReservation(selectedReservation.id, { ...selectedReservation, phone: event.target.value })} /></label>
-                    <label><span>Số khách</span><input type="text" defaultValue={selectedReservation.guests} onBlur={(event) => patchReservation(selectedReservation.id, { ...selectedReservation, guests: event.target.value })} /></label>
-                    <label><span>Thời gian</span><input type="datetime-local" defaultValue={selectedReservation.datetime} onBlur={(event) => patchReservation(selectedReservation.id, { ...selectedReservation, datetime: event.target.value })} /></label>
-                    <label><span>Gán bàn</span><select defaultValue={selectedReservation.tableId || ""} onBlur={(event) => patchReservation(selectedReservation.id, { ...selectedReservation, tableId: event.target.value })}><option value="">Chưa gán bàn</option>{restaurantTables.map((table) => <option key={table.id} value={table.id}>{table.name}</option>)}</select></label>
-                    <label className={styles.fullWidth}><span>Ghi chú</span><textarea rows={5} defaultValue={selectedReservation.notes || ""} onBlur={(event) => patchReservation(selectedReservation.id, { ...selectedReservation, notes: event.target.value })} /></label>
+                    <label><span>SĐT</span><input type="text" defaultValue={selectedReservation.phone} disabled={!permissions.canManageReservations} onBlur={(event) => patchReservation(selectedReservation.id, { ...selectedReservation, phone: event.target.value })} /></label>
+                    <label><span>Số khách</span><input type="text" defaultValue={selectedReservation.guests} disabled={!permissions.canManageReservations} onBlur={(event) => patchReservation(selectedReservation.id, { ...selectedReservation, guests: event.target.value })} /></label>
+                    <label><span>Thời gian</span><input type="datetime-local" defaultValue={selectedReservation.datetime} disabled={!permissions.canManageReservations} onBlur={(event) => patchReservation(selectedReservation.id, { ...selectedReservation, datetime: event.target.value })} /></label>
+                    <label><span>Gán bàn</span><select defaultValue={selectedReservation.tableId || ""} disabled={!permissions.canManageReservations} onBlur={(event) => patchReservation(selectedReservation.id, { ...selectedReservation, tableId: event.target.value })}><option value="">Chưa gán bàn</option>{restaurantTables.map((table) => <option key={table.id} value={table.id}>{table.name}</option>)}</select></label>
+                    <label className={styles.fullWidth}><span>Ghi chú</span><textarea rows={5} defaultValue={selectedReservation.notes || ""} disabled={!permissions.canManageReservations} onBlur={(event) => patchReservation(selectedReservation.id, { ...selectedReservation, notes: event.target.value })} /></label>
                   </div>
-                  <div className={styles.syncBox}><div><span className={styles.kicker}>Sync POS/PMS</span><p>Đồng bộ lead này sang hệ POS/PMS.</p></div><div className={styles.syncActions}><select value={selectedIntegrationId} onChange={(event) => setSelectedIntegrationId(event.target.value)}>{integrations.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><button type="button" onClick={() => syncReservation(selectedReservation.id, selectedIntegrationId)} disabled={integrationSaving}>{integrationSaving ? "Đang sync..." : "Sync ngay"}</button></div></div>
+                  {permissions.canViewIntegrations ? <div className={styles.syncBox}><div><span className={styles.kicker}>Sync POS/PMS</span><p>Đồng bộ lead này sang hệ POS/PMS.</p></div><div className={styles.syncActions}><select value={selectedIntegrationId} disabled={!permissions.canManageIntegrations} onChange={(event) => setSelectedIntegrationId(event.target.value)}>{integrations.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>{permissions.canSyncIntegrations ? <button type="button" onClick={() => syncReservation(selectedReservation.id, selectedIntegrationId)} disabled={integrationSaving}>{integrationSaving ? "Đang sync..." : "Sync ngay"}</button> : null}</div></div> : null}
                 </div>
               ) : <div className={styles.emptyState}>Chưa có lead đặt bàn.</div>}
             </div>
@@ -707,10 +1107,10 @@ export default function AdminDashboard({
               <div className={styles.panelToolbar}>
                 <input type="search" placeholder="Tìm khách order..." value={orderQuery} onChange={(event) => setOrderQuery(event.target.value)} />
                 <select value={orderStatus} onChange={(event) => setOrderStatus(event.target.value)}>{orderStatuses.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select>
-                <button type="button" onClick={() => setOrderCreateOpen((prev) => !prev)}>{orderCreateOpen ? "Đóng form" : "Tạo order"}</button>
+                {permissions.canManageOrders ? <button type="button" onClick={() => setOrderCreateOpen((prev) => !prev)}>{orderCreateOpen ? "Đóng form" : "Tạo order"}</button> : <div></div>}
               </div>
 
-              {orderCreateOpen ? (
+              {orderCreateOpen && permissions.canManageOrders ? (
                 <form className={styles.inlineForm} onSubmit={createManualOrder}>
                   <input type="text" placeholder="Tên khách" value={orderDraft.customerName} onChange={(event) => setOrderDraft((prev) => ({ ...prev, customerName: event.target.value }))} required />
                   <input type="tel" placeholder="SĐT" value={orderDraft.customerPhone} onChange={(event) => setOrderDraft((prev) => ({ ...prev, customerPhone: event.target.value }))} required />
@@ -735,8 +1135,8 @@ export default function AdminDashboard({
             <div className={styles.detailPanel}>
               {selectedOrder ? (
                 <div>
-                  <div className={styles.detailHeading}><div><span className={styles.kicker}>Chi tiết order</span><h2>{selectedOrder.customerName}</h2></div><button className={styles.deleteButton} type="button" onClick={() => deleteOrder(selectedOrder.id)}>Xóa order</button></div>
-                  <div className={styles.quickStatusRow}>{orderStatuses.filter((item) => item.value !== "all").map((item) => <button type="button" key={item.value} className={orderEdit.status === item.value ? styles.quickActive : ""} onClick={() => setOrderEdit((prev) => ({ ...prev, status: item.value }))}>{item.label}</button>)}</div>
+                  <div className={styles.detailHeading}><div><span className={styles.kicker}>Chi tiết order</span><h2>{selectedOrder.customerName}</h2></div>{permissions.canManageOrders ? <button className={styles.deleteButton} type="button" onClick={() => deleteOrder(selectedOrder.id)}>Xóa order</button> : null}</div>
+                  {permissions.canManageOrders ? <div className={styles.quickStatusRow}>{orderStatuses.filter((item) => item.value !== "all").map((item) => <button type="button" key={item.value} className={orderEdit.status === item.value ? styles.quickActive : ""} onClick={() => setOrderEdit((prev) => ({ ...prev, status: item.value }))}>{item.label}</button>)}</div> : null}
                   <div className={styles.editGrid}>
                     <label><span>Tên khách</span><input type="text" value={orderEdit.customerName} onChange={(event) => setOrderEdit((prev) => ({ ...prev, customerName: event.target.value }))} /></label>
                     <label><span>SĐT</span><input type="text" value={orderEdit.customerPhone} onChange={(event) => setOrderEdit((prev) => ({ ...prev, customerPhone: event.target.value }))} /></label>
@@ -750,7 +1150,7 @@ export default function AdminDashboard({
                   <div className={styles.inlineAddRow}><select defaultValue="" onChange={(event) => { if (event.target.value) { addItemToState(event.target.value, setOrderEdit); event.target.value = ""; } }}><option value="">Thêm món vào order</option>{menuItems.filter((item) => item.isAvailable).map((item) => <option key={item.id} value={item.id}>{item.name} - {formatCurrency(item.price)}</option>)}</select></div>
                   <div className={styles.lineItemList}>{orderEdit.items.map((item, index) => <div key={`${item.menuItemId || item.id}-${index}`} className={styles.lineItemRow}><strong>{item.itemName}</strong><input type="number" min="1" value={item.quantity} onChange={(event) => updateLineItem(setOrderEdit, index, "quantity", event.target.value)} /><input type="number" min="0" value={item.unitPrice} onChange={(event) => updateLineItem(setOrderEdit, index, "unitPrice", event.target.value)} /><button type="button" onClick={() => removeLineItem(setOrderEdit, index)}>Xóa</button></div>)}</div>
                   <div className={styles.summaryRow}><span>Tạm tính: {formatCurrency(orderEditTotals.subtotal)}</span><span>Tổng: {formatCurrency(orderEditTotals.total)}</span></div>
-                  <div className={styles.detailActions}><button type="button" className={styles.saveButton} onClick={saveOrderEdit} disabled={orderSaving}>{orderSaving ? "Đang lưu..." : "Lưu order"}</button></div>
+                  {permissions.canManageOrders ? <div className={styles.detailActions}><button type="button" className={styles.saveButton} onClick={saveOrderEdit} disabled={orderSaving}>{orderSaving ? "Đang lưu..." : "Lưu order"}</button></div> : null}
                 </div>
               ) : <div className={styles.emptyState}>Chưa có order.</div>}
             </div>
@@ -760,34 +1160,456 @@ export default function AdminDashboard({
         {tab === "tables" ? (
           <section className={styles.adminGrid}>
             <div className={styles.listPanel}>
-              <div className={styles.panelToolbar}><input type="search" placeholder="Tìm bàn..." value={tableQuery} onChange={(event) => setTableQuery(event.target.value)} /><div></div><button type="button" onClick={() => setTableCreateOpen((prev) => !prev)}>{tableCreateOpen ? "Đóng form" : "Tạo bàn"}</button></div>
-              {tableCreateOpen ? <form className={styles.inlineForm} onSubmit={createTableEntry}><input type="text" placeholder="Tên bàn" value={tableDraft.name} onChange={(event) => setTableDraft((prev) => ({ ...prev, name: event.target.value }))} required /><input type="text" placeholder="Khu vực" value={tableDraft.area} onChange={(event) => setTableDraft((prev) => ({ ...prev, area: event.target.value }))} /><div className={styles.inlineRow}><input type="number" min="1" placeholder="Sức chứa" value={tableDraft.capacity} onChange={(event) => setTableDraft((prev) => ({ ...prev, capacity: Number(event.target.value) }))} /><select value={tableDraft.status} onChange={(event) => setTableDraft((prev) => ({ ...prev, status: event.target.value }))}>{tableStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></div><textarea placeholder="Ghi chú" rows={3} value={tableDraft.notes} onChange={(event) => setTableDraft((prev) => ({ ...prev, notes: event.target.value }))} /><button type="submit" disabled={tableSaving}>{tableSaving ? "Đang tạo..." : "Lưu bàn"}</button></form> : null}
+              <div className={styles.panelToolbar}><input type="search" placeholder="Tìm bàn..." value={tableQuery} onChange={(event) => setTableQuery(event.target.value)} /><div></div>{permissions.canManageTables ? <button type="button" onClick={() => setTableCreateOpen((prev) => !prev)}>{tableCreateOpen ? "Đóng form" : "Tạo bàn"}</button> : <div></div>}</div>
+              {tableCreateOpen && permissions.canManageTables ? <form className={styles.inlineForm} onSubmit={createTableEntry}><input type="text" placeholder="Tên bàn" value={tableDraft.name} onChange={(event) => setTableDraft((prev) => ({ ...prev, name: event.target.value }))} required /><input type="text" placeholder="Khu vực" value={tableDraft.area} onChange={(event) => setTableDraft((prev) => ({ ...prev, area: event.target.value }))} /><div className={styles.inlineRow}><input type="number" min="1" placeholder="Sức chứa" value={tableDraft.capacity} onChange={(event) => setTableDraft((prev) => ({ ...prev, capacity: Number(event.target.value) }))} /><select value={tableDraft.status} onChange={(event) => setTableDraft((prev) => ({ ...prev, status: event.target.value }))}>{tableStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></div><textarea placeholder="Ghi chú" rows={3} value={tableDraft.notes} onChange={(event) => setTableDraft((prev) => ({ ...prev, notes: event.target.value }))} /><button type="submit" disabled={tableSaving}>{tableSaving ? "Đang tạo..." : "Lưu bàn"}</button></form> : null}
               <div className={styles.tableWrap}><table className={styles.dataTable}><thead><tr><th>Bàn</th><th>Khu vực</th><th>Sức chứa</th><th>Trạng thái</th></tr></thead><tbody>{filteredTables.map((item) => <tr key={item.id} className={item.id === selectedTable?.id ? styles.activeRow : ""} onClick={() => setSelectedTableId(item.id)}><td><strong>{item.name}</strong><span>{formatCurrency(item.minSpend)}</span></td><td>{item.area}</td><td>{item.capacity}</td><td><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{item.status}</span></td></tr>)}</tbody></table></div>
             </div>
-            <div className={styles.detailPanel}>{selectedTable ? <div><div className={styles.detailHeading}><div><span className={styles.kicker}>Chi tiết bàn</span><h2>{selectedTable.name}</h2></div><button className={styles.deleteButton} type="button" onClick={() => deleteTableEntry(selectedTable.id)}>Xóa bàn</button></div><div className={styles.editGrid}><label><span>Tên bàn</span><input type="text" value={tableEdit.name} onChange={(event) => setTableEdit((prev) => ({ ...prev, name: event.target.value }))} /></label><label><span>Khu vực</span><input type="text" value={tableEdit.area} onChange={(event) => setTableEdit((prev) => ({ ...prev, area: event.target.value }))} /></label><label><span>Sức chứa</span><input type="number" min="1" value={tableEdit.capacity} onChange={(event) => setTableEdit((prev) => ({ ...prev, capacity: Number(event.target.value) }))} /></label><label><span>Trạng thái</span><select value={tableEdit.status} onChange={(event) => setTableEdit((prev) => ({ ...prev, status: event.target.value }))}>{tableStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></label><label className={styles.fullWidth}><span>Ghi chú</span><textarea rows={5} value={tableEdit.notes} onChange={(event) => setTableEdit((prev) => ({ ...prev, notes: event.target.value }))} /></label></div><div className={styles.detailActions}><button type="button" className={styles.saveButton} onClick={saveTableEdit} disabled={tableSaving}>{tableSaving ? "Đang lưu..." : "Lưu bàn"}</button></div></div> : <div className={styles.emptyState}>Chưa có bàn.</div>}</div>
+            <div className={styles.detailPanel}>{selectedTable ? <div><div className={styles.detailHeading}><div><span className={styles.kicker}>Chi tiết bàn</span><h2>{selectedTable.name}</h2></div>{permissions.canManageTables ? <button className={styles.deleteButton} type="button" onClick={() => deleteTableEntry(selectedTable.id)}>Xóa bàn</button> : null}</div><div className={styles.editGrid}><label><span>Tên bàn</span><input type="text" value={tableEdit.name} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, name: event.target.value }))} /></label><label><span>Khu vực</span><input type="text" value={tableEdit.area} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, area: event.target.value }))} /></label><label><span>Sức chứa</span><input type="number" min="1" value={tableEdit.capacity} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, capacity: Number(event.target.value) }))} /></label><label><span>Trạng thái</span><select value={tableEdit.status} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, status: event.target.value }))}>{tableStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></label><label className={styles.fullWidth}><span>Ghi chú</span><textarea rows={5} value={tableEdit.notes} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, notes: event.target.value }))} /></label></div>{permissions.canManageTables ? <div className={styles.detailActions}><button type="button" className={styles.saveButton} onClick={saveTableEdit} disabled={tableSaving}>{tableSaving ? "Đang lưu..." : "Lưu bàn"}</button></div> : null}</div> : <div className={styles.emptyState}>Chưa có bàn.</div>}</div>
           </section>
         ) : null}
 
         {tab === "menu" ? (
           <section className={styles.adminGrid}>
             <div className={styles.listPanel}>
-              <div className={styles.panelToolbar}><input type="search" placeholder="Tìm món..." value={menuQuery} onChange={(event) => setMenuQuery(event.target.value)} /><div></div><button type="button" onClick={() => setMenuCreateOpen((prev) => !prev)}>{menuCreateOpen ? "Đóng form" : "Tạo món"}</button></div>
-              {menuCreateOpen ? <form className={styles.inlineForm} onSubmit={createMenuItemEntry}><input type="text" placeholder="Tên món" value={menuDraft.name} onChange={(event) => setMenuDraft((prev) => ({ ...prev, name: event.target.value }))} required /><input type="text" placeholder="Danh mục" value={menuDraft.category} onChange={(event) => setMenuDraft((prev) => ({ ...prev, category: event.target.value }))} /><div className={styles.inlineRow}><input type="number" min="0" placeholder="Giá" value={menuDraft.price} onChange={(event) => setMenuDraft((prev) => ({ ...prev, price: Number(event.target.value) }))} /><select value={menuDraft.spicyLevel} onChange={(event) => setMenuDraft((prev) => ({ ...prev, spicyLevel: event.target.value }))}>{spicyLevels.map((item) => <option key={item} value={item}>{item}</option>)}</select></div><input type="text" placeholder="Image URL" value={menuDraft.imageUrl} onChange={(event) => setMenuDraft((prev) => ({ ...prev, imageUrl: event.target.value }))} /><textarea placeholder="Mô tả" rows={3} value={menuDraft.description} onChange={(event) => setMenuDraft((prev) => ({ ...prev, description: event.target.value }))} /><button type="submit" disabled={menuSaving}>{menuSaving ? "Đang tạo..." : "Lưu món"}</button></form> : null}
-              <div className={styles.tableWrap}><table className={styles.dataTable}><thead><tr><th>Món</th><th>Danh mục</th><th>Giá</th><th>Trạng thái</th></tr></thead><tbody>{filteredMenuItems.map((item) => <tr key={item.id} className={item.id === selectedMenuItem?.id ? styles.activeRow : ""} onClick={() => setSelectedMenuId(item.id)}><td><strong>{item.name}</strong><span>{item.slug}</span></td><td>{item.category}</td><td>{formatCurrency(item.price)}</td><td><span className={`${styles.statusBadge} ${item.isAvailable ? styles.status_confirmed : styles.status_cancelled}`}>{item.isAvailable ? "available" : "hidden"}</span></td></tr>)}</tbody></table></div>
+              <div className={styles.panelToolbar}><input type="search" placeholder="Tìm món..." value={menuQuery} onChange={(event) => setMenuQuery(event.target.value)} /><div></div>{permissions.canManageMenu ? <button type="button" onClick={() => setMenuCreateOpen((prev) => !prev)}>{menuCreateOpen ? "Đóng form" : "Tạo món"}</button> : <div></div>}</div>
+              {menuCreateOpen && permissions.canManageMenu ? <form className={styles.inlineForm} onSubmit={createMenuItemEntry}><input type="text" placeholder="Tên món" value={menuDraft.name} onChange={(event) => setMenuDraft((prev) => ({ ...prev, name: event.target.value }))} required /><input type="text" placeholder="Danh mục" value={menuDraft.category} onChange={(event) => setMenuDraft((prev) => ({ ...prev, category: event.target.value }))} /><div className={styles.inlineRow}><input type="number" min="0" placeholder="Giá" value={menuDraft.price} onChange={(event) => setMenuDraft((prev) => ({ ...prev, price: Number(event.target.value) }))} /><select value={menuDraft.spicyLevel} onChange={(event) => setMenuDraft((prev) => ({ ...prev, spicyLevel: event.target.value }))}>{spicyLevels.map((item) => <option key={item} value={item}>{item}</option>)}</select></div><div className={styles.inlineRow}><select value={menuDraft.availabilityStatus} onChange={(event) => setMenuDraft((prev) => ({ ...prev, availabilityStatus: event.target.value }))}>{availabilityStatuses.map((item) => <option key={item} value={item}>{item}</option>)}</select><select value={menuDraft.isFeatured ? "yes" : "no"} onChange={(event) => setMenuDraft((prev) => ({ ...prev, isFeatured: event.target.value === "yes" }))}><option value="yes">featured</option><option value="no">normal</option></select></div><input type="text" placeholder="Image URL" value={menuDraft.imageUrl} onChange={(event) => setMenuDraft((prev) => ({ ...prev, imageUrl: event.target.value }))} /><textarea placeholder="Ghi chú theo mùa / tồn kho" rows={2} value={menuDraft.seasonNote} onChange={(event) => setMenuDraft((prev) => ({ ...prev, seasonNote: event.target.value }))} /><textarea placeholder="Mô tả" rows={3} value={menuDraft.description} onChange={(event) => setMenuDraft((prev) => ({ ...prev, description: event.target.value }))} /><button type="submit" disabled={menuSaving}>{menuSaving ? "Đang tạo..." : "Lưu món"}</button></form> : null}
+              <div className={styles.tableWrap}><table className={styles.dataTable}><thead><tr><th>Món</th><th>Danh mục</th><th>Giá</th><th>Trạng thái</th></tr></thead><tbody>{filteredMenuItems.map((item) => <tr key={item.id} className={item.id === selectedMenuItem?.id ? styles.activeRow : ""} onClick={() => setSelectedMenuId(item.id)}><td><strong>{item.name}</strong><span>{item.slug}</span></td><td>{item.category}</td><td>{formatCurrency(item.price)}</td><td><span className={`${styles.statusBadge} ${styles[`status_${item.availabilityStatus || (item.isAvailable ? "confirmed" : "cancelled")}`] || styles.status_confirmed}`}>{item.availabilityStatus || (item.isAvailable ? "available" : "hidden")}</span></td></tr>)}</tbody></table></div>
             </div>
-            <div className={styles.detailPanel}>{selectedMenuItem ? <div><div className={styles.detailHeading}><div><span className={styles.kicker}>Chi tiết món ăn</span><h2>{selectedMenuItem.name}</h2></div><button className={styles.deleteButton} type="button" onClick={() => deleteMenuItemEntry(selectedMenuItem.id)}>Xóa món</button></div><div className={styles.editGrid}><label><span>Tên món</span><input type="text" value={menuEdit.name} onChange={(event) => setMenuEdit((prev) => ({ ...prev, name: event.target.value }))} /></label><label><span>Slug</span><input type="text" value={menuEdit.slug} onChange={(event) => setMenuEdit((prev) => ({ ...prev, slug: event.target.value }))} /></label><label><span>Danh mục</span><input type="text" value={menuEdit.category} onChange={(event) => setMenuEdit((prev) => ({ ...prev, category: event.target.value }))} /></label><label><span>Giá</span><input type="number" min="0" value={menuEdit.price} onChange={(event) => setMenuEdit((prev) => ({ ...prev, price: Number(event.target.value) }))} /></label><label><span>Image URL</span><input type="text" value={menuEdit.imageUrl} onChange={(event) => setMenuEdit((prev) => ({ ...prev, imageUrl: event.target.value }))} /></label><label><span>Available</span><select value={menuEdit.isAvailable ? "yes" : "no"} onChange={(event) => setMenuEdit((prev) => ({ ...prev, isAvailable: event.target.value === "yes" }))}><option value="yes">yes</option><option value="no">no</option></select></label><label><span>Featured</span><select value={menuEdit.isFeatured ? "yes" : "no"} onChange={(event) => setMenuEdit((prev) => ({ ...prev, isFeatured: event.target.value === "yes" }))}><option value="yes">yes</option><option value="no">no</option></select></label><label><span>Spicy level</span><select value={menuEdit.spicyLevel} onChange={(event) => setMenuEdit((prev) => ({ ...prev, spicyLevel: event.target.value }))}>{spicyLevels.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><label className={styles.fullWidth}><span>Mô tả</span><textarea rows={5} value={menuEdit.description} onChange={(event) => setMenuEdit((prev) => ({ ...prev, description: event.target.value }))} /></label></div><div className={styles.detailActions}><button type="button" className={styles.saveButton} onClick={saveMenuEdit} disabled={menuSaving}>{menuSaving ? "Đang lưu..." : "Lưu món"}</button></div></div> : <div className={styles.emptyState}>Chưa có món ăn.</div>}</div>
+            <div className={styles.detailPanel}>{selectedMenuItem ? <div><div className={styles.detailHeading}><div><span className={styles.kicker}>Chi tiết món ăn</span><h2>{selectedMenuItem.name}</h2></div>{permissions.canManageMenu ? <button className={styles.deleteButton} type="button" onClick={() => deleteMenuItemEntry(selectedMenuItem.id)}>Xóa món</button> : null}</div><div className={styles.editGrid}><label><span>Tên món</span><input type="text" value={menuEdit.name} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, name: event.target.value }))} /></label><label><span>Slug</span><input type="text" value={menuEdit.slug} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, slug: event.target.value }))} /></label><label><span>Danh mục</span><input type="text" value={menuEdit.category} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, category: event.target.value }))} /></label><label><span>Giá</span><input type="number" min="0" value={menuEdit.price} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, price: Number(event.target.value) }))} /></label><label><span>Image URL</span><input type="text" value={menuEdit.imageUrl} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, imageUrl: event.target.value }))} /></label><label><span>Available</span><select value={menuEdit.isAvailable ? "yes" : "no"} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, isAvailable: event.target.value === "yes" }))}><option value="yes">yes</option><option value="no">no</option></select></label><label><span>Featured</span><select value={menuEdit.isFeatured ? "yes" : "no"} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, isFeatured: event.target.value === "yes" }))}><option value="yes">yes</option><option value="no">no</option></select></label><label><span>Spicy level</span><select value={menuEdit.spicyLevel} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, spicyLevel: event.target.value }))}>{spicyLevels.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><label><span>Trạng thái món</span><select value={menuEdit.availabilityStatus || "available"} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, availabilityStatus: event.target.value }))}>{availabilityStatuses.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><label className={styles.fullWidth}><span>Ghi chú theo mùa / tồn kho</span><textarea rows={3} value={menuEdit.seasonNote || ""} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, seasonNote: event.target.value }))} /></label><label className={styles.fullWidth}><span>Mô tả</span><textarea rows={5} value={menuEdit.description} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, description: event.target.value }))} /></label></div>{permissions.canManageMenu ? <div className={styles.detailActions}><button type="button" className={styles.saveButton} onClick={saveMenuEdit} disabled={menuSaving}>{menuSaving ? "Đang lưu..." : "Lưu món"}</button></div> : null}</div> : <div className={styles.emptyState}>Chưa có món ăn.</div>}</div>
           </section>
         ) : null}
 
         {tab === "vouchers" ? (
           <section className={styles.adminGrid}>
-            <div className={styles.listPanel}><div className={styles.panelToolbar}><input type="search" placeholder="Tìm voucher..." value={voucherQuery} onChange={(event) => setVoucherQuery(event.target.value)} /><select value={voucherStatus} onChange={(event) => setVoucherStatus(event.target.value)}>{voucherStatuses.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></div><div className={styles.tableWrap}><table className={styles.dataTable}><thead><tr><th>SĐT</th><th>Nguồn</th><th>Trạng thái</th><th>Tạo lúc</th></tr></thead><tbody>{filteredVouchers.map((item) => <tr key={item.id} className={item.id === selectedVoucher?.id ? styles.activeRow : ""} onClick={() => setSelectedVoucherId(item.id)}><td>{item.phone}</td><td>{item.source}</td><td><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{item.status}</span></td><td>{formatDate(item.createdAt)}</td></tr>)}</tbody></table></div></div>
-            <div className={styles.detailPanel}>{selectedVoucher ? <div><div className={styles.detailHeading}><div><span className={styles.kicker}>Chi tiết voucher</span><h2>{selectedVoucher.phone}</h2></div><button className={styles.deleteButton} type="button" onClick={async () => { if (!window.confirm("Xóa lead voucher này?")) return; try { await requestJson(`/api/admin/vouchers/${selectedVoucher.id}`, { method: "DELETE" }); const next = vouchers.filter((item) => item.id !== selectedVoucher.id); setVouchers(next); setSelectedVoucherId(next[0]?.id || ""); setMessage("Đã xóa lead voucher."); } catch (error) { setMessage(error.message); } }}>Xóa lead</button></div><div className={styles.quickStatusRow}>{voucherStatuses.filter((item) => item.value !== "all").map((item) => <button type="button" key={item.value} className={selectedVoucher.status === item.value ? styles.quickActive : ""} onClick={() => patchVoucher(selectedVoucher.id, { ...selectedVoucher, status: item.value })}>{item.label}</button>)}</div><div className={styles.editGrid}><label className={styles.fullWidth}><span>Ghi chú</span><textarea rows={6} defaultValue={selectedVoucher.notes || ""} onBlur={(event) => patchVoucher(selectedVoucher.id, { ...selectedVoucher, notes: event.target.value })} /></label></div></div> : <div className={styles.emptyState}>Chưa có voucher.</div>}</div>
+            <div className={styles.listPanel}>
+              <div className={styles.panelToolbar}>
+                <input
+                  type="search"
+                  placeholder="Tìm voucher..."
+                  value={voucherQuery}
+                  onChange={(event) => setVoucherQuery(event.target.value)}
+                />
+                <select value={voucherStatus} onChange={(event) => setVoucherStatus(event.target.value)}>
+                  {voucherStatuses.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.statsStrip}>
+                <article className={styles.statCard}>
+                  <span>Campaign active</span>
+                  <strong>{voucherStats.campaigns}</strong>
+                  <small>{voucherStats.redeemed} voucher da redeem</small>
+                </article>
+                <article className={styles.statCard}>
+                  <span>Loyalty members</span>
+                  <strong>{loyaltyStats.members}</strong>
+                  <small>{loyaltyStats.redemptions} redemption da ghi nhan</small>
+                </article>
+              </div>
+              <div className={styles.tableWrap}>
+                <table className={styles.dataTable}>
+                  <thead>
+                    <tr>
+                      <th>SĐT</th>
+                      <th>Mã</th>
+                      <th>Campaign</th>
+                      <th>Trạng thái</th>
+                      <th>Tạo lúc</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredVouchers.map((item) => (
+                      <tr
+                        key={item.id}
+                        className={item.id === selectedVoucher?.id ? styles.activeRow : ""}
+                        onClick={() => setSelectedVoucherId(item.id)}
+                      >
+                        <td>{item.phone}</td>
+                        <td>{item.voucherCode || "-"}</td>
+                        <td>{item.voucherTitle || "-"}</td>
+                        <td>
+                          <span
+                            className={`${styles.statusBadge} ${
+                              styles[`status_${item.status}`] || styles.status_new
+                            }`}
+                          >
+                            {item.status}
+                          </span>
+                        </td>
+                        <td>{formatDate(item.createdAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className={styles.detailPanel}>
+              <div className={styles.subsection}>
+                <div className={styles.detailHeading}>
+                  <div>
+                    <span className={styles.kicker}>Voucher campaigns</span>
+                    <h2>Campaign & loyalty</h2>
+                  </div>
+                  {permissions.canManageVouchers ? (
+                    <button type="button" onClick={() => setCampaignCreateOpen((prev) => !prev)}>
+                      {campaignCreateOpen ? "Đóng form" : "Tạo campaign"}
+                    </button>
+                  ) : null}
+                </div>
+                {campaignCreateOpen && permissions.canManageVouchers ? (
+                  <form className={styles.inlineForm} onSubmit={createVoucherCampaignEntry}>
+                    <input
+                      type="text"
+                      placeholder="Tiêu đề campaign"
+                      value={campaignDraft.title}
+                      onChange={(event) =>
+                        setCampaignDraft((prev) => ({
+                          ...prev,
+                          title: event.target.value,
+                          name: prev.name || event.target.value
+                        }))
+                      }
+                      required
+                    />
+                    <input
+                      type="text"
+                      placeholder="Mã campaign"
+                      value={campaignDraft.code}
+                      onChange={(event) =>
+                        setCampaignDraft((prev) => ({ ...prev, code: event.target.value }))
+                      }
+                    />
+                    <div className={styles.inlineRow}>
+                      <select
+                        value={campaignDraft.discountType}
+                        onChange={(event) =>
+                          setCampaignDraft((prev) => ({
+                            ...prev,
+                            discountType: event.target.value
+                          }))
+                        }
+                      >
+                        <option value="percent">percent</option>
+                        <option value="amount">amount</option>
+                      </select>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="Giá trị ưu đãi"
+                        value={campaignDraft.discountValue}
+                        onChange={(event) =>
+                          setCampaignDraft((prev) => ({
+                            ...prev,
+                            discountValue: Number(event.target.value)
+                          }))
+                        }
+                      />
+                    </div>
+                    <textarea
+                      rows={3}
+                      placeholder="Mô tả campaign"
+                      value={campaignDraft.description}
+                      onChange={(event) =>
+                        setCampaignDraft((prev) => ({ ...prev, description: event.target.value }))
+                      }
+                    />
+                    <button type="submit" disabled={voucherSaving}>
+                      {voucherSaving ? "Đang tạo..." : "Lưu campaign"}
+                    </button>
+                  </form>
+                ) : null}
+                <div className={styles.campaignRail}>
+                  {voucherCampaigns.map((campaign) => (
+                    <button
+                      key={campaign.id}
+                      type="button"
+                      className={`${styles.campaignTile} ${
+                        campaign.id === selectedVoucherCampaign?.id ? styles.campaignTileActive : ""
+                      }`}
+                      onClick={() => setSelectedVoucherCampaignId(campaign.id)}
+                    >
+                      <strong>{campaign.title}</strong>
+                      <span>{formatVoucherBenefit(campaign)}</span>
+                      <small>{campaign.isActive ? "Đang chạy" : "Đã tắt"} • {campaign.validDays} ngày</small>
+                    </button>
+                  ))}
+                </div>
+                {selectedVoucherCampaign ? (
+                  <div className={styles.editGrid}>
+                    <label>
+                      <span>Tiêu đề</span>
+                      <input
+                        type="text"
+                        defaultValue={selectedVoucherCampaign.title}
+                        disabled={!permissions.canManageVouchers}
+                        onBlur={(event) =>
+                          patchVoucherCampaign(selectedVoucherCampaign.id, {
+                            ...selectedVoucherCampaign,
+                            title: event.target.value
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      <span>Mã campaign</span>
+                      <input
+                        type="text"
+                        defaultValue={selectedVoucherCampaign.code}
+                        disabled={!permissions.canManageVouchers}
+                        onBlur={(event) =>
+                          patchVoucherCampaign(selectedVoucherCampaign.id, {
+                            ...selectedVoucherCampaign,
+                            code: event.target.value
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      <span>Giá trị ưu đãi</span>
+                      <input
+                        type="number"
+                        min="0"
+                        defaultValue={selectedVoucherCampaign.discountValue}
+                        disabled={!permissions.canManageVouchers}
+                        onBlur={(event) =>
+                          patchVoucherCampaign(selectedVoucherCampaign.id, {
+                            ...selectedVoucherCampaign,
+                            discountValue: Number(event.target.value)
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      <span>Valid days</span>
+                      <input
+                        type="number"
+                        min="1"
+                        defaultValue={selectedVoucherCampaign.validDays}
+                        disabled={!permissions.canManageVouchers}
+                        onBlur={(event) =>
+                          patchVoucherCampaign(selectedVoucherCampaign.id, {
+                            ...selectedVoucherCampaign,
+                            validDays: Number(event.target.value)
+                          })
+                        }
+                      />
+                    </label>
+                    <label className={styles.fullWidth}>
+                      <span>Mô tả</span>
+                      <textarea
+                        rows={3}
+                        defaultValue={selectedVoucherCampaign.description}
+                        disabled={!permissions.canManageVouchers}
+                        onBlur={(event) =>
+                          patchVoucherCampaign(selectedVoucherCampaign.id, {
+                            ...selectedVoucherCampaign,
+                            description: event.target.value
+                          })
+                        }
+                      />
+                    </label>
+                    {permissions.canManageVouchers ? (
+                      <div className={styles.detailActions}>
+                        <button
+                          type="button"
+                          className={styles.deleteButton}
+                          onClick={() => deleteVoucherCampaignEntry(selectedVoucherCampaign.id)}
+                        >
+                          Xóa campaign
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+
+              {selectedVoucher ? (
+                <div className={styles.subsection}>
+                  <div className={styles.detailHeading}>
+                    <div>
+                      <span className={styles.kicker}>Chi tiết voucher</span>
+                      <h2>{selectedVoucher.phone}</h2>
+                    </div>
+                    <div className={styles.detailActions}>
+                      {permissions.canManageVouchers ? (
+                        <button
+                          type="button"
+                          className={styles.saveButton}
+                          onClick={() => redeemVoucher(selectedVoucher)}
+                          disabled={voucherSaving}
+                        >
+                          {voucherSaving ? "Đang xử lý..." : "Redeem + tích điểm"}
+                        </button>
+                      ) : null}
+                      {permissions.canManageVouchers ? (
+                        <button
+                          className={styles.deleteButton}
+                          type="button"
+                          onClick={async () => {
+                            if (!window.confirm("Xóa lead voucher này?")) return;
+                            try {
+                              await requestJson(`/api/admin/vouchers/${selectedVoucher.id}`, {
+                                method: "DELETE"
+                              });
+                              const next = vouchers.filter((item) => item.id !== selectedVoucher.id);
+                              setVouchers(next);
+                              setSelectedVoucherId(next[0]?.id || "");
+                              setMessage("Đã xóa lead voucher.");
+                            } catch (error) {
+                              setMessage(error.message);
+                            }
+                          }}
+                        >
+                          Xóa lead
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                  {permissions.canManageVouchers ? (
+                    <div className={styles.quickStatusRow}>
+                      {voucherStatuses
+                        .filter((item) => item.value !== "all")
+                        .map((item) => (
+                          <button
+                            type="button"
+                            key={item.value}
+                            className={selectedVoucher.status === item.value ? styles.quickActive : ""}
+                            onClick={() =>
+                              patchVoucher(selectedVoucher.id, {
+                                ...selectedVoucher,
+                                status: item.value
+                              })
+                            }
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                    </div>
+                  ) : null}
+                  <div className={styles.metaGrid}>
+                    <div>
+                      <span>Mã voucher</span>
+                      <strong>{selectedVoucher.voucherCode || "-"}</strong>
+                    </div>
+                    <div>
+                      <span>Ưu đãi</span>
+                      <strong>{selectedVoucher.voucherTitle || "-"}</strong>
+                    </div>
+                    <div>
+                      <span>Giá trị</span>
+                      <strong>{formatVoucherValue(selectedVoucher)}</strong>
+                    </div>
+                    <div>
+                      <span>Hạn dùng</span>
+                      <strong>{selectedVoucher.expiresAt ? formatDate(selectedVoucher.expiresAt) : "-"}</strong>
+                    </div>
+                    <div>
+                      <span>Khách loyalty</span>
+                      <strong>{selectedVoucherCustomer?.fullName || selectedVoucherCustomer?.phone || "-"}</strong>
+                    </div>
+                    <div>
+                      <span>Điểm hiện có</span>
+                      <strong>{selectedVoucherCustomer?.loyaltyPoints || 0}</strong>
+                    </div>
+                  </div>
+                  <div className={styles.editGrid}>
+                    <label>
+                      <span>Nguồn</span>
+                      <input
+                        type="text"
+                        defaultValue={selectedVoucher.source || ""}
+                        disabled={!permissions.canManageVouchers}
+                        onBlur={(event) =>
+                          patchVoucher(selectedVoucher.id, {
+                            ...selectedVoucher,
+                            source: event.target.value
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      <span>Mô tả ưu đãi</span>
+                      <input
+                        type="text"
+                        defaultValue={selectedVoucher.voucherDescription || ""}
+                        disabled={!permissions.canManageVouchers}
+                        onBlur={(event) =>
+                          patchVoucher(selectedVoucher.id, {
+                            ...selectedVoucher,
+                            voucherDescription: event.target.value
+                          })
+                        }
+                      />
+                    </label>
+                    <label className={styles.fullWidth}>
+                      <span>Ghi chú</span>
+                      <textarea
+                        rows={6}
+                        defaultValue={selectedVoucher.notes || ""}
+                        disabled={!permissions.canManageVouchers}
+                        onBlur={(event) =>
+                          patchVoucher(selectedVoucher.id, {
+                            ...selectedVoucher,
+                            notes: event.target.value
+                          })
+                        }
+                      />
+                    </label>
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.emptyState}>Chưa có voucher.</div>
+              )}
+
+              <div className={styles.subsection}>
+                <div className={styles.detailHeading}>
+                  <div>
+                    <span className={styles.kicker}>Loyalty</span>
+                    <h2>Top khách hàng giữ chân</h2>
+                  </div>
+                </div>
+                <div className={styles.metaGrid}>
+                  <div>
+                    <span>Tổng members</span>
+                    <strong>{loyaltyStats.members}</strong>
+                  </div>
+                  <div>
+                    <span>Tổng points</span>
+                    <strong>{loyaltyStats.totalPoints}</strong>
+                  </div>
+                  <div>
+                    <span>Tổng chi tiêu</span>
+                    <strong>{formatCurrency(loyaltyStats.totalSpent)}</strong>
+                  </div>
+                  <div>
+                    <span>Redemptions</span>
+                    <strong>{loyaltyStats.redemptions}</strong>
+                  </div>
+                </div>
+                <div className={styles.loyaltyList}>
+                  {customerProfiles.slice(0, 6).map((customer) => (
+                    <article key={customer.id} className={styles.loyaltyCard}>
+                      <strong>{customer.fullName || customer.phone}</strong>
+                      <span>{customer.phone}</span>
+                      <small>
+                        {customer.loyaltyPoints} points • {formatCurrency(customer.totalSpent)}
+                      </small>
+                    </article>
+                  ))}
+                  {!customerProfiles.length ? (
+                    <div className={styles.emptyState}>Chưa có hồ sơ loyalty.</div>
+                  ) : null}
+                </div>
+              </div>
+            </div>
           </section>
         ) : null}
 
-        {tab === "integrations" ? (
-          <section className={styles.integrationLayout}><div className={styles.integrationList}>{integrations.map((item) => <button type="button" key={item.id} className={`${styles.integrationCard} ${item.id === selectedIntegration?.id ? styles.integrationCardActive : ""}`} onClick={() => setSelectedIntegrationId(item.id)}><div className={styles.integrationCardTop}><strong>{item.name}</strong><span className={`${styles.statusBadge} ${item.enabled ? styles.status_confirmed : styles.status_cancelled}`}>{item.enabled ? "enabled" : "disabled"}</span></div><small>{item.category.toUpperCase()} • {item.market}</small><p>{item.description}</p><span className={styles.integrationMeta}>{item.syncMode === "auto" ? "Tự động đồng bộ" : "Đồng bộ thủ công"}</span></button>)}</div><div className={styles.integrationDetail}>{selectedIntegration ? <div className={styles.detailPanel}><div className={styles.detailHeading}><div><span className={styles.kicker}>Tích hợp POS/PMS</span><h2>{selectedIntegration.name}</h2></div></div><div className={styles.editGrid}><label><span>Trạng thái</span><select defaultValue={selectedIntegration.enabled ? "enabled" : "disabled"} onBlur={(event) => patchIntegration(selectedIntegration.id, { enabled: event.target.value === "enabled" })}><option value="disabled">disabled</option><option value="enabled">enabled</option></select></label><label><span>Sync mode</span><select defaultValue={selectedIntegration.syncMode} onBlur={(event) => patchIntegration(selectedIntegration.id, { syncMode: event.target.value })}><option value="manual">manual</option><option value="auto">auto</option></select></label><label className={styles.fullWidth}><span>Endpoint</span><input type="url" defaultValue={selectedIntegration.endpoint} onBlur={(event) => patchIntegration(selectedIntegration.id, { endpoint: event.target.value })} /></label><label><span>API key</span><input type="text" defaultValue={selectedIntegration.apiKey} onBlur={(event) => patchIntegration(selectedIntegration.id, { apiKey: event.target.value })} /></label><label><span>API secret</span><input type="text" defaultValue={selectedIntegration.apiSecret} onBlur={(event) => patchIntegration(selectedIntegration.id, { apiSecret: event.target.value })} /></label><label><span>Location code</span><input type="text" defaultValue={selectedIntegration.locationCode} onBlur={(event) => patchIntegration(selectedIntegration.id, { locationCode: event.target.value })} /></label><label><span>Tenant code</span><input type="text" defaultValue={selectedIntegration.tenantCode} onBlur={(event) => patchIntegration(selectedIntegration.id, { tenantCode: event.target.value })} /></label><label className={styles.fullWidth}><span>Ghi chú</span><textarea rows={5} defaultValue={selectedIntegration.notes} onBlur={(event) => patchIntegration(selectedIntegration.id, { notes: event.target.value })} /></label></div></div> : null}<div className={styles.detailPanel}><div className={styles.detailHeading}><div><span className={styles.kicker}>Nhật ký đồng bộ</span><h2>Lịch sử sync gần đây</h2></div></div><div className={styles.logList}>{syncLogs.length ? syncLogs.slice(0, 12).map((log) => <article key={log.id} className={styles.logItem}><div className={styles.logHead}><strong>{log.integrationName}</strong><span className={`${styles.statusBadge} ${log.ok ? styles.status_confirmed : styles.status_cancelled}`}>{log.ok ? `OK ${log.status}` : `ERR ${log.status}`}</span></div><small>Reservation: {log.reservationId || "-"}</small><small>{formatDate(log.createdAt)}</small><p>{log.responsePreview || "Không có nội dung phản hồi."}</p></article>) : <div className={styles.emptyState}>Chưa có log đồng bộ.</div>}</div></div></div></section>
+        {tab === "integrations" && permissions.canViewIntegrations ? (
+          <section className={styles.integrationLayout}><div className={styles.integrationList}>{integrations.map((item) => <button type="button" key={item.id} className={`${styles.integrationCard} ${item.id === selectedIntegration?.id ? styles.integrationCardActive : ""}`} onClick={() => setSelectedIntegrationId(item.id)}><div className={styles.integrationCardTop}><strong>{item.name}</strong><span className={`${styles.statusBadge} ${item.enabled ? styles.status_confirmed : styles.status_cancelled}`}>{item.enabled ? "enabled" : "disabled"}</span></div><small>{item.category.toUpperCase()} • {item.market}</small><p>{item.description}</p><span className={styles.integrationMeta}>{item.syncMode === "auto" ? "Tự động đồng bộ" : "Đồng bộ thủ công"}</span></button>)}</div><div className={styles.integrationDetail}>{selectedIntegration ? <div className={styles.detailPanel}><div className={styles.detailHeading}><div><span className={styles.kicker}>Tích hợp POS/PMS</span><h2>{selectedIntegration.name}</h2></div></div><div className={styles.editGrid}><label><span>Trạng thái</span><select defaultValue={selectedIntegration.enabled ? "enabled" : "disabled"} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { enabled: event.target.value === "enabled" })}><option value="disabled">disabled</option><option value="enabled">enabled</option></select></label><label><span>Sync mode</span><select defaultValue={selectedIntegration.syncMode} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { syncMode: event.target.value })}><option value="manual">manual</option><option value="auto">auto</option></select></label><label className={styles.fullWidth}><span>Endpoint</span><input type="url" defaultValue={selectedIntegration.endpoint} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { endpoint: event.target.value })} /></label><label><span>API key</span><input type="text" defaultValue={selectedIntegration.apiKey} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { apiKey: event.target.value })} /></label><label><span>API secret</span><input type="text" defaultValue={selectedIntegration.apiSecret} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { apiSecret: event.target.value })} /></label><label><span>Location code</span><input type="text" defaultValue={selectedIntegration.locationCode} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { locationCode: event.target.value })} /></label><label><span>Tenant code</span><input type="text" defaultValue={selectedIntegration.tenantCode} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { tenantCode: event.target.value })} /></label><label className={styles.fullWidth}><span>Ghi chú</span><textarea rows={5} defaultValue={selectedIntegration.notes} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { notes: event.target.value })} /></label></div></div> : null}<div className={styles.detailPanel}><div className={styles.detailHeading}><div><span className={styles.kicker}>Nhật ký đồng bộ</span><h2>Lịch sử sync gần đây</h2></div></div><div className={styles.logList}>{syncLogs.length ? syncLogs.slice(0, 12).map((log) => <article key={log.id} className={styles.logItem}><div className={styles.logHead}><strong>{log.integrationName}</strong><span className={`${styles.statusBadge} ${log.ok ? styles.status_confirmed : styles.status_cancelled}`}>{log.ok ? `OK ${log.status}` : `ERR ${log.status}`}</span></div><small>Reservation: {log.reservationId || "-"}</small><small>{formatDate(log.createdAt)}</small><p>{log.responsePreview || "Không có nội dung phản hồi."}</p></article>) : <div className={styles.emptyState}>Chưa có log đồng bộ.</div>}</div></div></div></section>
         ) : null}
       </div>
     </main>

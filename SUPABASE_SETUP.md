@@ -8,6 +8,10 @@
 - Neu ban da tao truoc user `admin@gmail.com`, chi can chay lai file nay la profile se duoc tao/bo sung
 - Neu muon theo kieu migration ro rang, co the chay:
   - `supabase/migrations/20260509_001_init_schema.sql`
+  - `supabase/migrations/20260511_003_phase1_conversion.sql`
+  - `supabase/migrations/20260511_004_phase2_roles.sql`
+  - `supabase/migrations/20260511_005_phase3_multi_branch_foundation.sql`
+  - `supabase/migrations/20260511_006_phase4_voucher_loyalty.sql`
   - sau do `supabase/migrations/20260509_002_seed_admin_demo.sql`
 
 ## 2. Tao tai khoan admin
@@ -46,6 +50,11 @@ where email = 'admin@gmail.com';
 - Restaurant tables / ban
 - Orders / dat mon noi bo
 - Integration settings va sync logs
+- Branches / da chi nhanh foundation
+- Branch staff assignments / phan cong nhan su theo chi nhanh
+- Voucher campaigns / campaign uu dai
+- Customer profiles / loyalty members
+- Voucher redemptions / lich su redeem va tich diem
 
 ## 6. Bien moi truong local
 File `.env.local` da duoc gan:
