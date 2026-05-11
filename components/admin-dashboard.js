@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import AdminHeader from "./admin/admin-header";
+import AppSidebar from "./admin/app-sidebar";
 import { formatVoucherBenefit } from "../lib/business-rules";
 import { DASHBOARD_TABS, hasAdminPermission } from "../lib/admin-permissions";
 import styles from "./admin.module.css";
@@ -1310,106 +1312,35 @@ export default function AdminDashboard({
   return (
     <main className={styles.dashboardPage}>
       <div className={styles.shell}>
-        <aside className={styles.sidebar}>
-          <div className={styles.sidebarBrand}>
-            <span className={styles.kicker}>San Hô Đỏ Admin</span>
-            <h1>Điều hành</h1>
-            <p>
-              Sidebar trái để chuyển nhanh giữa các module, content phải tập trung cho vận hành.
-            </p>
-          </div>
-
-          <div className={styles.sidebarSection}>
-            <span className={styles.sidebarLabel}>Tài khoản</span>
-            <div className={styles.sidebarIdentity}>
-              <strong>{adminProfile?.full_name || adminProfile?.email || "Admin"}</strong>
-              <small>{roleLabels[adminProfile?.role] || adminProfile?.role || "Admin"}</small>
-            </div>
-            {(initialBranches || []).length ? (
-              <label className={styles.branchControl}>
-                <span>Chi nhánh</span>
-                <select
-                  value={activeBranchId || "all"}
-                  onChange={handleBranchChange}
-                  disabled={!canViewAllBranches && Boolean(selectedBranch)}
-                >
-                  {canViewAllBranches ? <option value="all">Tất cả chi nhánh</option> : null}
-                  {(initialBranches || []).map((branch) => (
-                    <option key={branch.id} value={branch.id}>
-                      {branch.shortName || branch.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : null}
-          </div>
-
-          <nav className={styles.sidebarNav}>
-            {visibleTabs.map((key) => (
-              <button
-                key={key}
-                type="button"
-                className={tab === key ? styles.sidebarTabActive : styles.sidebarTab}
-                onClick={() => setTab(key)}
-              >
-                <span>{getTabLabel(key)}</span>
-                {key === "reservations" && reservationStats.pending ? <small>{reservationStats.pending}</small> : null}
-                {key === "orders" && orderStats.active ? <small>{orderStats.active}</small> : null}
-                {key === "vouchers" && voucherStats.recent ? <small>{voucherStats.recent}</small> : null}
-                {key === "drivers" && driverStats.pendingCommissions ? <small>{driverStats.pendingCommissions}</small> : null}
-                {key === "partners" && partnerStats.openBookings ? <small>{partnerStats.openBookings}</small> : null}
-              </button>
-            ))}
-          </nav>
-
-          <div className={styles.sidebarSection}>
-            <span className={styles.sidebarLabel}>Xuất dữ liệu</span>
-            <div className={styles.sidebarActions}>
-              {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=reservations", branchFilterId)}>Export đặt bàn</a> : null}
-              {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=vouchers", branchFilterId)}>Export voucher</a> : null}
-              {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=driver-commissions", branchFilterId)}>Export hoa hồng</a> : null}
-              {permissions.canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=partner-bookings", branchFilterId)}>Export booking đoàn</a> : null}
-            </div>
-          </div>
-
-          <div className={styles.sidebarMiniGrid}>
-            <article className={styles.sidebarMiniCard}>
-              <span>Lead chờ xử lý</span>
-              <strong>{reservationStats.pending}</strong>
-            </article>
-            <article className={styles.sidebarMiniCard}>
-              <span>Voucher 24h</span>
-              <strong>{voucherStats.recent}</strong>
-            </article>
-            <article className={styles.sidebarMiniCard}>
-              <span>Pending payout</span>
-              <strong>{driverStats.pendingCommissions}</strong>
-            </article>
-            <article className={styles.sidebarMiniCard}>
-              <span>Booking đoàn mở</span>
-              <strong>{partnerStats.openBookings}</strong>
-            </article>
-          </div>
-
-          <button className={styles.logoutButton} type="button" onClick={logout}>Đăng xuất</button>
-        </aside>
+        <AppSidebar
+          visibleTabs={visibleTabs}
+          tab={tab}
+          onTabChange={setTab}
+          getTabLabel={getTabLabel}
+          reservationStats={reservationStats}
+          orderStats={orderStats}
+          voucherStats={voucherStats}
+          driverStats={driverStats}
+          partnerStats={partnerStats}
+          adminProfile={adminProfile}
+          roleLabels={roleLabels}
+          branches={initialBranches || []}
+          activeBranchId={activeBranchId || "all"}
+          canViewAllBranches={canViewAllBranches}
+          selectedBranch={selectedBranch}
+          onBranchChange={handleBranchChange}
+          canExport={permissions.canExport}
+          branchFilterId={branchFilterId}
+          onLogout={logout}
+        />
 
         <section className={styles.contentShell}>
-        <header className={styles.topbar}>
-          <div>
-            <span className={styles.kicker}>Admin Dashboard</span>
-            <h1>{currentTabLabel}</h1>
-            <p>
-              Quản lý đặt bàn, order, bàn, món, voucher, tài xế, đối tác và tích hợp trong cùng một dashboard.
-              {selectedBranch ? ` Đang xem dữ liệu cho ${selectedBranch.name}.` : ""}
-            </p>
-          </div>
-          <div className={styles.topbarActions}>
-            <span className={styles.adminBadge}>
-              {adminProfile?.email || "admin"} • {roleLabels[adminProfile?.role] || adminProfile?.role || "Admin"}
-            </span>
-          </div>
-        </header>
+        <AdminHeader
+          currentTabLabel={currentTabLabel}
+          adminProfile={adminProfile}
+          selectedBranch={selectedBranch}
+          notificationCount={notificationFeed.length}
+        />
 
         {message ? <p className={styles.feedback}>{message}</p> : null}
 
