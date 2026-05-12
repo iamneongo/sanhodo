@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 function Card({ className, ...props }) {
-  return <div className={cn("rounded-3xl border border-[#e6d6ca] bg-white/85 text-[#41251e] shadow-[0_18px_36px_rgba(84,50,29,0.06)]", className)} {...props} />;
+  return <div className={cn("rounded-2xl border border-zinc-200 bg-white text-zinc-950 shadow-sm", className)} {...props} />;
 }
 
 function CardHeader({ className, ...props }) {
@@ -10,11 +10,11 @@ function CardHeader({ className, ...props }) {
 }
 
 function CardTitle({ className, ...props }) {
-  return <h3 className={cn("font-[var(--font-cormorant)] text-2xl font-semibold leading-none tracking-tight text-[#311b15]", className)} {...props} />;
+  return <h3 className={cn("text-lg font-semibold leading-none tracking-tight text-zinc-950", className)} {...props} />;
 }
 
 function CardDescription({ className, ...props }) {
-  return <p className={cn("text-sm text-[#6d544a]", className)} {...props} />;
+  return <p className={cn("text-sm text-zinc-500", className)} {...props} />;
 }
 
 function CardAction({ className, ...props }) {

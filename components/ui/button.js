@@ -4,15 +4,15 @@ import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-[#c64738]/30 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-[#c64738] text-[#fffaf4] shadow-[0_12px_24px_rgba(198,71,56,0.22)] hover:bg-[#b33b2e]",
-        secondary: "bg-[#f7eee6] text-[#553328] border border-[#e4d2c3] hover:bg-[#f1e5db]",
-        outline: "border border-[#dccabe] bg-white/80 text-[#553328] hover:bg-[#faf3ed]",
-        ghost: "text-[#5f473d] hover:bg-[#f5ece4]",
-        destructive: "bg-[#8e271d] text-white hover:bg-[#7f2219]"
+        default: "bg-zinc-900 text-white shadow-sm hover:bg-zinc-800",
+        secondary: "border border-zinc-200 bg-white text-zinc-900 shadow-sm hover:bg-zinc-50",
+        outline: "border border-zinc-200 bg-transparent text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900",
+        ghost: "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900",
+        destructive: "bg-red-600 text-white shadow-sm hover:bg-red-500"
       },
       size: {
         default: "h-10 px-4 py-2",

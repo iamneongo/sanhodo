@@ -14,12 +14,12 @@ export default function AdminHeader({
 }) {
   return (
     <Card className={styles.topbar}>
-      <CardContent className="flex items-start justify-between gap-5 p-6">
+      <CardContent className="flex items-start justify-between gap-5 p-5 md:p-6">
         <div>
-          <span className={styles.kicker}>Admin Dashboard</span>
+          <span className={styles.kicker}>Studio Admin</span>
           <h1>{currentTabLabel}</h1>
           <p>
-            Quản lý đặt bàn, món ăn, voucher, tài xế, đối tác và tích hợp trên một admin riêng.
+            Quản lý đặt bàn, món ăn, voucher, tài xế, đối tác và tích hợp trong một dashboard full-width.
             {selectedBranch ? ` Đang xem dữ liệu cho ${selectedBranch.name}.` : ""}
           </p>
         </div>

@@ -15,6 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import styles from "../admin.module.css";
 
 const TAB_ICONS = {
@@ -53,9 +54,9 @@ export default function AppSidebar({
     <aside className={styles.sidebar}>
       <div className={styles.sidebarBrand}>
         <span className={styles.kicker}>San Hô Đỏ Admin</span>
-        <h1>Studio Dashboard</h1>
+        <h1>Operations Dashboard</h1>
         <p>
-          Kiến trúc admin tách riêng khỏi landing page, ưu tiên vận hành, dữ liệu và mở rộng module.
+          Vận hành nhà hàng theo mô hình module, với shell và control bám sát dashboard shadcn hiện đại.
         </p>
       </div>
 
@@ -76,19 +77,23 @@ export default function AppSidebar({
         {branches?.length ? (
           <label className={styles.branchControl}>
             <span>Chi nhánh</span>
-            <select
+            <Select
               value={activeBranchId || "all"}
-              onChange={onBranchChange}
+              onValueChange={(value) => onBranchChange({ target: { value } })}
               disabled={!canViewAllBranches && Boolean(selectedBranch)}
-              className="flex h-11 w-full items-center rounded-xl border border-[#dccabe] bg-white/88 px-3 py-2 text-sm text-[#41251e] shadow-sm outline-none"
             >
-              {canViewAllBranches ? <option value="all">Tất cả chi nhánh</option> : null}
-              {branches.map((branch) => (
-                <option key={branch.id} value={branch.id}>
-                  {branch.shortName || branch.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="Chọn chi nhánh" />
+              </SelectTrigger>
+              <SelectContent>
+                {canViewAllBranches ? <SelectItem value="all">Tất cả chi nhánh</SelectItem> : null}
+                {branches.map((branch) => (
+                  <SelectItem key={branch.id} value={branch.id}>
+                    {branch.shortName || branch.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </label>
         ) : null}
       </div>

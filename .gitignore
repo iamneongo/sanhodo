@@ -15,6 +15,7 @@ next-supabase-dev.err.log
 .next-phase*.log
 .next-phase*.out
 .next-phase*.err
+.tmp-*.log
 .tmp-shots/
 data/
 .env.local
