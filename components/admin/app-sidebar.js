@@ -73,9 +73,9 @@ export default function AppSidebar({
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive size="lg">
+            <SidebarMenuButton asChild size="lg">
               <Link href={withBranchQuery("/admin/overview", branchFilterId)}>
-                <LayoutDashboard className="size-4" />
+                <CommandIcon className="size-4" />
                 <NavLabel>San Hô Đỏ</NavLabel>
               </Link>
             </SidebarMenuButton>
@@ -86,7 +86,7 @@ export default function AppSidebar({
       <SidebarContent>
         {branches?.length ? (
           <SidebarGroup>
-            <SidebarGroupLabel>Chi nhánh</SidebarGroupLabel>
+            <SidebarGroupLabel>Branch</SidebarGroupLabel>
             <Select
               value={activeBranchId || "all"}
               onValueChange={(value) => onBranchChange({ target: { value } })}
@@ -108,7 +108,7 @@ export default function AppSidebar({
         ) : null}
 
         <SidebarGroup>
-          <SidebarGroupLabel>Modules</SidebarGroupLabel>
+          <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
           <SidebarMenu>
             {visibleSections.map((key) => {
               const Icon = TAB_ICONS[key] || LayoutDashboard;
@@ -134,7 +134,7 @@ export default function AppSidebar({
 
       <SidebarFooter>
         {state === "expanded" ? (
-          <Card>
+          <Card className="rounded-2xl border-zinc-200 shadow-none">
             <CardContent className="grid gap-1 p-4 text-sm">
               <strong className="text-zinc-900">{adminProfile?.full_name || adminProfile?.email || "Admin"}</strong>
               <span className="text-zinc-500">{roleLabels[adminProfile?.role] || adminProfile?.role || "Admin"}</span>
@@ -147,6 +147,17 @@ export default function AppSidebar({
         </Button>
       </SidebarFooter>
     </Sidebar>
+  );
+}
+
+function CommandIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
+      <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 1 0 6 0V6a3 3 0 0 0-3-3Z" />
+      <path d="M6 3a3 3 0 0 0-3 3v12a3 3 0 1 0 6 0V6A3 3 0 0 0 6 3Z" />
+      <path d="M3 9h18" />
+      <path d="M3 15h18" />
+    </svg>
   );
 }
 

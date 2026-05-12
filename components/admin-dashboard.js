@@ -1296,8 +1296,14 @@ export default function AdminDashboard({
   const currentSectionLabel = getAdminSectionLabel(currentSection);
 
   return (
-    <SidebarProvider defaultOpen>
-      <div className={styles.dashboardPage}>
+    <SidebarProvider
+      defaultOpen
+      style={{
+        "--sidebar-width": "17rem",
+        "--sidebar-width-collapsed": "4.5rem"
+      }}
+    >
+      <div className="flex min-h-svh w-full bg-zinc-50">
         <AppSidebar
           visibleSections={visibleSections}
           activeSection={currentSection}
@@ -1318,8 +1324,8 @@ export default function AdminDashboard({
           onLogout={logout}
         />
 
-        <SidebarInset>
-        <section className={styles.contentShell}>
+        <SidebarInset className="bg-zinc-50">
+        <section className="flex min-h-svh flex-col gap-4 md:gap-6">
         <AdminHeader
           title={currentSectionLabel}
           adminProfile={adminProfile}
@@ -1327,7 +1333,13 @@ export default function AdminDashboard({
           notificationCount={notificationFeed.length}
         />
 
-        {message ? <p className={styles.feedback}>{message}</p> : null}
+        <div className="flex-1 p-4 md:p-6">
+        <div className="flex flex-col gap-4 md:gap-6">
+        {message ? (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {message}
+          </div>
+        ) : null}
 
         {currentSection === "overview" ? <section className={styles.statsGrid}>
           <AdminStatCard label="Đặt bàn" value={reservationStats.total} detail={`${reservationStats.pending} lead đang chờ xử lý`} accent="warm" />
@@ -2344,6 +2356,8 @@ export default function AdminDashboard({
             </div>
           </section>
         ) : null}
+        </div>
+        </div>
         </section>
         </SidebarInset>
       </div>
