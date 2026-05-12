@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Textarea } from "@/components/ui/textarea";
-import { ADMIN_SECTIONS, getAdminSectionDescription, getAdminSectionLabel } from "../lib/admin-sections";
+import { ADMIN_SECTIONS, getAdminSectionLabel } from "../lib/admin-sections";
 import { formatVoucherBenefit } from "../lib/business-rules";
 import { hasAdminPermission } from "../lib/admin-permissions";
 import styles from "./admin.module.css";
@@ -1293,7 +1293,6 @@ export default function AdminDashboard({
   const orderDraftTotals = computeOrderTotals(orderDraft);
   const orderEditTotals = computeOrderTotals(orderEdit);
   const currentSectionLabel = getAdminSectionLabel(currentSection);
-  const currentSectionDescription = getAdminSectionDescription(currentSection);
 
   return (
     <SidebarProvider defaultOpen>
@@ -1322,7 +1321,6 @@ export default function AdminDashboard({
         <section className={styles.contentShell}>
         <AdminHeader
           title={currentSectionLabel}
-          description={currentSectionDescription}
           adminProfile={adminProfile}
           selectedBranch={selectedBranch}
           notificationCount={notificationFeed.length}

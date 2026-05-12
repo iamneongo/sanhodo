@@ -63,7 +63,6 @@ export default function AppSidebar({
   canViewAllBranches,
   selectedBranch,
   onBranchChange,
-  canExport,
   branchFilterId,
   onLogout
 }) {
@@ -77,7 +76,7 @@ export default function AppSidebar({
             <SidebarMenuButton asChild isActive size="lg">
               <Link href={withBranchQuery("/admin/overview", branchFilterId)}>
                 <LayoutDashboard className="size-4" />
-                <NavLabel>San Hô Đỏ Admin</NavLabel>
+                <NavLabel>San Hô Đỏ</NavLabel>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -97,7 +96,7 @@ export default function AppSidebar({
                 <SelectValue placeholder="Chọn chi nhánh" />
               </SelectTrigger>
               <SelectContent>
-                {canViewAllBranches ? <SelectItem value="all">Tất cả chi nhánh</SelectItem> : null}
+                {canViewAllBranches ? <SelectItem value="all">Tất cả</SelectItem> : null}
                 {branches.map((branch) => (
                   <SelectItem key={branch.id} value={branch.id}>
                     {branch.shortName || branch.name}
@@ -109,7 +108,7 @@ export default function AppSidebar({
         ) : null}
 
         <SidebarGroup>
-          <SidebarGroupLabel>Điều hướng</SidebarGroupLabel>
+          <SidebarGroupLabel>Modules</SidebarGroupLabel>
           <SidebarMenu>
             {visibleSections.map((key) => {
               const Icon = TAB_ICONS[key] || LayoutDashboard;
@@ -131,36 +130,16 @@ export default function AppSidebar({
             })}
           </SidebarMenu>
         </SidebarGroup>
-
-        {state === "expanded" ? (
-          <SidebarGroup>
-            <SidebarGroupLabel>Tóm tắt</SidebarGroupLabel>
-            <Card>
-              <CardContent className="grid gap-3 p-4 text-sm">
-                <div className="flex items-center justify-between gap-3"><span className="text-zinc-500">Lead chờ</span><strong>{reservationStats.pending}</strong></div>
-                <div className="flex items-center justify-between gap-3"><span className="text-zinc-500">Order active</span><strong>{orderStats.active}</strong></div>
-                <div className="flex items-center justify-between gap-3"><span className="text-zinc-500">Pending payout</span><strong>{driverStats.pendingCommissions}</strong></div>
-                <div className="flex items-center justify-between gap-3"><span className="text-zinc-500">Booking đoàn</span><strong>{partnerStats.openBookings}</strong></div>
-              </CardContent>
-            </Card>
-          </SidebarGroup>
-        ) : null}
       </SidebarContent>
 
       <SidebarFooter>
         {state === "expanded" ? (
           <Card>
-            <CardContent className="grid gap-1.5 p-4 text-sm">
+            <CardContent className="grid gap-1 p-4 text-sm">
               <strong className="text-zinc-900">{adminProfile?.full_name || adminProfile?.email || "Admin"}</strong>
               <span className="text-zinc-500">{roleLabels[adminProfile?.role] || adminProfile?.role || "Admin"}</span>
-              {selectedBranch ? <span className="text-zinc-500">{selectedBranch.name}</span> : null}
             </CardContent>
           </Card>
-        ) : null}
-        {canExport && state === "expanded" ? (
-          <Button asChild variant="outline" className="justify-start">
-            <a href={withBranchQuery("/api/admin/export?type=reservations", branchFilterId)}>Export đặt bàn</a>
-          </Button>
         ) : null}
         <Button type="button" variant="outline" className="justify-start" onClick={onLogout}>
           <LogOut className="size-4" />
