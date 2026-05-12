@@ -23,7 +23,7 @@ export default function AdminTableFooter({
   return (
     <div
       className={cn(
-        "mt-4 flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 lg:flex-row lg:items-center lg:justify-between",
+        "mt-5 flex flex-col gap-4 rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-4 lg:flex-row lg:items-center lg:justify-between",
         className
       )}
     >
@@ -34,7 +34,7 @@ export default function AdminTableFooter({
         <span>Bản ghi hiển thị</span>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+      <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-end">
         <Select value={String(pageSize)} onValueChange={(value) => setPageSize(Number(value))}>
           <SelectTrigger className="min-w-[130px] bg-white">
             <SelectValue placeholder="Số dòng" />

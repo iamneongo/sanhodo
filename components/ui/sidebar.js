@@ -149,7 +149,7 @@ export function SidebarTrigger({ className, ...props }) {
 }
 
 export function SidebarHeader({ className, ...props }) {
-  return <div data-slot="sidebar-header" className={cn("flex flex-col gap-2 p-2", className)} {...props} />;
+  return <div data-slot="sidebar-header" className={cn("flex flex-col gap-3 p-3", className)} {...props} />;
 }
 
 export function SidebarContent({ className, ...props }) {
@@ -157,25 +157,25 @@ export function SidebarContent({ className, ...props }) {
 }
 
 export function SidebarFooter({ className, ...props }) {
-  return <div data-slot="sidebar-footer" className={cn("mt-auto flex flex-col gap-2 p-2", className)} {...props} />;
+  return <div data-slot="sidebar-footer" className={cn("mt-auto flex flex-col gap-3 p-3", className)} {...props} />;
 }
 
 export function SidebarGroup({ className, ...props }) {
-  return <section data-slot="sidebar-group" className={cn("flex w-full min-w-0 flex-col p-2", className)} {...props} />;
+  return <section data-slot="sidebar-group" className={cn("flex w-full min-w-0 flex-col gap-2 p-3", className)} {...props} />;
 }
 
 export function SidebarGroupLabel({ className, ...props }) {
   return (
     <div
       data-slot="sidebar-group-label"
-      className={cn("flex h-8 items-center px-2 text-xs font-medium text-zinc-500 transition-[margin,opacity] duration-200 ease-linear", className)}
+      className={cn("flex h-7 items-center px-2 text-[11px] font-medium uppercase tracking-[0.08em] text-zinc-500 transition-[margin,opacity] duration-200 ease-linear", className)}
       {...props}
     />
   );
 }
 
 export function SidebarMenu({ className, ...props }) {
-  return <ul data-slot="sidebar-menu" className={cn("flex flex-col gap-1", className)} {...props} />;
+  return <ul data-slot="sidebar-menu" className={cn("flex flex-col gap-1.5", className)} {...props} />;
 }
 
 export function SidebarMenuItem({ className, ...props }) {
@@ -183,12 +183,12 @@ export function SidebarMenuItem({ className, ...props }) {
 }
 
 const sidebarMenuButtonVariants = cva(
-  "group/menu-button flex h-8 w-full cursor-pointer items-center gap-2 overflow-hidden rounded-md px-2 text-left text-sm text-zinc-600 outline-none transition-[width,height,padding,color,background-color] hover:bg-zinc-100 hover:text-zinc-950 focus-visible:ring-2 focus-visible:ring-zinc-200 disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 data-[active=true]:bg-zinc-100 data-[active=true]:font-medium data-[active=true]:text-zinc-950",
+  "group/menu-button flex h-9 w-full cursor-pointer items-center gap-2.5 overflow-hidden rounded-lg px-2.5 text-left text-sm text-zinc-600 outline-none transition-[width,height,padding,color,background-color] hover:bg-zinc-100 hover:text-zinc-950 focus-visible:ring-2 focus-visible:ring-zinc-200 disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 data-[active=true]:bg-zinc-100 data-[active=true]:font-medium data-[active=true]:text-zinc-950",
   {
     variants: {
       size: {
         default: "",
-        lg: "h-9 text-sm"
+        lg: "h-10 text-sm"
       }
     },
     defaultVariants: {

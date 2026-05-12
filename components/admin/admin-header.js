@@ -28,11 +28,11 @@ export default function AdminHeader({
   const overviewHref = withBranchQuery("/admin/overview", branchFilterId);
 
   return (
-    <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-zinc-200 bg-white/90 px-4 backdrop-blur md:px-6">
-      <div className="flex min-w-0 items-center gap-2">
+    <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-zinc-200 bg-white/90 px-4 backdrop-blur md:px-6">
+      <div className="flex min-w-0 items-center gap-3">
         <SidebarTrigger className="-ml-1 shrink-0" />
         <Separator orientation="vertical" className="mx-1 hidden h-4 md:block" />
-        <div className="min-w-0">
+        <div className="min-w-0 space-y-0.5">
           <Breadcrumb className="hidden md:block">
             <BreadcrumbList>
               {currentSection === "overview" && !detailMode ? (
@@ -71,9 +71,9 @@ export default function AdminHeader({
           <h1 className="truncate text-sm font-semibold text-zinc-950 md:text-base">{title}</h1>
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2.5">
         {selectedBranch ? (
-          <div className="hidden rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-500 lg:inline-flex">
+          <div className="hidden rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-500 lg:inline-flex">
             {selectedBranch.name}
           </div>
         ) : null}

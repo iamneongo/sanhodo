@@ -141,7 +141,7 @@ export default function AppSidebar({
       <SidebarFooter>
         {state === "expanded" ? (
           <Card className="rounded-2xl border-zinc-200 shadow-none">
-            <CardContent className="grid gap-1 p-4 text-sm">
+            <CardContent className="grid gap-1.5 p-4 text-sm">
               <strong className="text-zinc-900">{adminProfile?.full_name || adminProfile?.email || "Admin"}</strong>
               <span className="text-zinc-500">{roleLabels[adminProfile?.role] || adminProfile?.role || "Admin"}</span>
             </CardContent>
