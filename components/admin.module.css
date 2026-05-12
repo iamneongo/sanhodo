@@ -641,6 +641,10 @@
   gap: 10px;
   margin-bottom: 14px;
   align-items: start;
+  padding: 12px;
+  border: 1px solid #e4e4e7;
+  border-radius: 18px;
+  background: #fafafa;
 }
 
 .inlineForm {
@@ -815,6 +819,13 @@
   display: flex;
   justify-content: flex-end;
   margin-top: 18px;
+}
+
+.detailHeaderActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
 }
 
 .saveButton {
@@ -1222,6 +1233,14 @@
   .detailActions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .detailHeaderActions {
+    justify-content: stretch;
+  }
+
+  .detailHeaderActions > * {
+    flex: 1 1 100%;
   }
 }
 

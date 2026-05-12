@@ -523,7 +523,7 @@ export default function AdminDashboard({
   const backToSection = (section = currentSection) => router.push(buildAdminHref(section));
   const detailOnlyLayout = detailMode && currentSection !== "overview";
   const detailHeaderActions = (section, extra = null) => (
-    <div className={styles.detailActions}>
+    <div className={styles.detailHeaderActions}>
       <Button type="button" variant="outline" onClick={() => backToSection(section)}>Quay lại danh sách</Button>
       {extra}
     </div>
