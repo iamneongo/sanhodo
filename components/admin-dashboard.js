@@ -12,8 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ADMIN_SECTIONS, getAdminSectionDescription, getAdminSectionLabel } from "../lib/admin-sections";
 import { formatVoucherBenefit } from "../lib/business-rules";
-import { DASHBOARD_TABS, hasAdminPermission } from "../lib/admin-permissions";
+import { hasAdminPermission } from "../lib/admin-permissions";
 import styles from "./admin.module.css";
 
 const reservationStatuses = [
@@ -62,24 +63,6 @@ const roleLabels = {
   branch_manager: "Branch Manager",
   driver: "Driver"
 };
-
-function getTabLabel(key) {
-  return key === "reservations"
-    ? "Đặt bàn"
-    : key === "orders"
-      ? "Đặt món / Orders"
-      : key === "tables"
-        ? "Bàn"
-        : key === "menu"
-          ? "Món ăn"
-          : key === "vouchers"
-            ? "Voucher"
-            : key === "drivers"
-              ? "Tài xế / Referral"
-              : key === "partners"
-                ? "Đối tác / HDV"
-                : "Tích hợp POS/PMS";
-}
 
 function formatDate(value) {
   if (!value) return "-";
@@ -312,6 +295,7 @@ function withBranchQuery(url, branchId) {
 }
 
 export default function AdminDashboard({
+  activeSection = "overview",
   initialBranches,
   initialReservations,
   initialVouchers,
@@ -336,7 +320,6 @@ export default function AdminDashboard({
   const router = useRouter();
   const currentRole = adminProfile?.role || "admin";
   const branchFilterId = activeBranchId && activeBranchId !== "all" ? activeBranchId : "";
-  const [tab, setTab] = useState("reservations");
   const [message, setMessage] = useState("");
 
   const [reservations, setReservations] = useState(sortByCreatedDesc(initialReservations));
@@ -479,13 +462,12 @@ export default function AdminDashboard({
     }),
     [currentRole]
   );
-  const visibleTabs = useMemo(
+  const visibleSections = useMemo(
     () =>
-      Object.entries(DASHBOARD_TABS)
-        .filter(([, permission]) => hasAdminPermission(currentRole, permission))
-        .map(([key]) => key),
+      ADMIN_SECTIONS.filter((item) => hasAdminPermission(currentRole, item.permission)).map((item) => item.key),
     [currentRole]
   );
+  const currentSection = visibleSections.includes(activeSection) ? activeSection : visibleSections[0] || "overview";
   const attachBranchToPayload = (payload) => ({
     ...payload,
     branchId: payload?.branchId || branchFilterId || ""
@@ -525,12 +507,6 @@ export default function AdminDashboard({
     }
   }, [selectedVoucherCampaignId, voucherCampaigns]);
 
-  useEffect(() => {
-    if (!visibleTabs.includes(tab) && visibleTabs.length) {
-      setTab(visibleTabs[0]);
-    }
-  }, [tab, visibleTabs]);
-
   const handleBranchChange = (event) => {
     const nextBranchId = event.target.value;
     const params = new URLSearchParams(window.location.search);
@@ -540,7 +516,7 @@ export default function AdminDashboard({
       params.set("branch", nextBranchId);
     }
     const query = params.toString();
-    router.replace(query ? `/admin?${query}` : "/admin");
+    router.replace(query ? `/admin/${currentSection}?${query}` : `/admin/${currentSection}`);
     router.refresh();
   };
 
@@ -1315,16 +1291,15 @@ export default function AdminDashboard({
 
   const orderDraftTotals = computeOrderTotals(orderDraft);
   const orderEditTotals = computeOrderTotals(orderEdit);
-  const currentTabLabel = getTabLabel(tab);
+  const currentSectionLabel = getAdminSectionLabel(currentSection);
+  const currentSectionDescription = getAdminSectionDescription(currentSection);
 
   return (
     <main className={styles.dashboardPage}>
       <div className={styles.shell}>
         <AppSidebar
-          visibleTabs={visibleTabs}
-          tab={tab}
-          onTabChange={setTab}
-          getTabLabel={getTabLabel}
+          visibleSections={visibleSections}
+          activeSection={currentSection}
           reservationStats={reservationStats}
           orderStats={orderStats}
           voucherStats={voucherStats}
@@ -1344,7 +1319,8 @@ export default function AdminDashboard({
 
         <section className={styles.contentShell}>
         <AdminHeader
-          currentTabLabel={currentTabLabel}
+          title={currentSectionLabel}
+          description={currentSectionDescription}
           adminProfile={adminProfile}
           selectedBranch={selectedBranch}
           notificationCount={notificationFeed.length}
@@ -1352,7 +1328,7 @@ export default function AdminDashboard({
 
         {message ? <p className={styles.feedback}>{message}</p> : null}
 
-        <section className={styles.statsGrid}>
+        {currentSection === "overview" ? <section className={styles.statsGrid}>
           <AdminStatCard label="Đặt bàn" value={reservationStats.total} detail={`${reservationStats.pending} lead đang chờ xử lý`} accent="warm" />
           <AdminStatCard label="Orders" value={orderStats.total} detail={`${orderStats.active} order đang phục vụ`} />
           <AdminStatCard label="Thực đơn" value={menuStats.total} detail={`${menuStats.featured} món featured • ${menuStats.lowStock} món cần chú ý`} />
@@ -1360,9 +1336,9 @@ export default function AdminDashboard({
           <AdminStatCard label="Voucher" value={voucherStats.total} detail={`${voucherStats.activeCodes} mã đã phát • ${voucherStats.recent} lead trong 24h`} accent="soft" />
           <AdminStatCard label="Tài xế" value={driverStats.total} detail={`${driverStats.active} đang hoạt động • ${driverStats.pendingCommissions} pending`} />
           <AdminStatCard label="Đối tác" value={partnerStats.total} detail={`${partnerStats.openBookings} booking đoàn mở • ${partnerStats.active} active`} accent="ocean" />
-        </section>
+        </section> : null}
 
-        <section className={styles.insightsGrid}>
+        {currentSection === "overview" ? <section className={styles.insightsGrid}>
           <AdminSurfaceCard
             kicker="Thông báo mới"
             title="Lead trong 24 giờ gần nhất"
@@ -1413,9 +1389,9 @@ export default function AdminDashboard({
               <span>{menuStats.lowStock} món số lượng giới hạn</span>
             </div>
           </AdminSurfaceCard>
-        </section>
+        </section> : null}
 
-        {tab === "reservations" ? (
+        {currentSection === "reservations" ? (
           <section className={styles.adminGrid}>
             <AdminListShell>
               <div className={styles.panelToolbar}>
@@ -1489,7 +1465,7 @@ export default function AdminDashboard({
           </section>
         ) : null}
 
-        {tab === "orders" ? (
+        {currentSection === "orders" ? (
           <section className={styles.adminGrid}>
             <AdminListShell>
               <div className={styles.panelToolbar}>
@@ -1555,7 +1531,7 @@ export default function AdminDashboard({
           </section>
         ) : null}
 
-        {tab === "tables" ? (
+        {currentSection === "tables" ? (
           <section className={styles.adminGrid}>
             <AdminListShell>
               <div className={styles.panelToolbar}><Input type="search" placeholder="Tìm bàn..." value={tableQuery} onChange={(event) => setTableQuery(event.target.value)} /><div></div>{permissions.canManageTables ? <Button type="button" variant="secondary" onClick={() => setTableCreateOpen((prev) => !prev)}>{tableCreateOpen ? "Đóng form" : "Tạo bàn"}</Button> : <div></div>}</div>
@@ -1566,7 +1542,7 @@ export default function AdminDashboard({
           </section>
         ) : null}
 
-        {tab === "menu" ? (
+        {currentSection === "menu" ? (
           <section className={styles.adminGrid}>
             <AdminListShell>
               <div className={styles.panelToolbar}><Input type="search" placeholder="Tìm món..." value={menuQuery} onChange={(event) => setMenuQuery(event.target.value)} /><div></div>{permissions.canManageMenu ? <Button type="button" variant="secondary" onClick={() => setMenuCreateOpen((prev) => !prev)}>{menuCreateOpen ? "Đóng form" : "Tạo món"}</Button> : <div></div>}</div>
@@ -1577,7 +1553,7 @@ export default function AdminDashboard({
           </section>
         ) : null}
 
-        {tab === "vouchers" ? (
+        {currentSection === "vouchers" ? (
           <section className={styles.adminGrid}>
             <AdminListShell>
               <div className={styles.panelToolbar}>
@@ -2014,7 +1990,7 @@ export default function AdminDashboard({
           </section>
         ) : null}
 
-        {tab === "drivers" && permissions.canViewDrivers ? (
+        {currentSection === "drivers" && permissions.canViewDrivers ? (
           <section className={styles.adminGrid}>
             <AdminListShell>
               <div className={styles.panelToolbar}>
@@ -2133,7 +2109,7 @@ export default function AdminDashboard({
           </section>
         ) : null}
 
-        {tab === "partners" && permissions.canViewPartners ? (
+        {currentSection === "partners" && permissions.canViewPartners ? (
           <section className={styles.adminGrid}>
             <AdminListShell>
               <div className={styles.panelToolbar}>
@@ -2315,7 +2291,7 @@ export default function AdminDashboard({
           </section>
         ) : null}
 
-        {tab === "integrations" && permissions.canViewIntegrations ? (
+        {currentSection === "integrations" && permissions.canViewIntegrations ? (
           <section className={styles.integrationLayout}>
             <div className={styles.integrationList}>
               {integrations.map((item) => (
@@ -2361,3 +2337,4 @@ export default function AdminDashboard({
     </main>
   );
 }
+

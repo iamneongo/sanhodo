@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   BookOpenText,
   Cable,
@@ -12,6 +13,7 @@ import {
   Ticket,
   UtensilsCrossed
 } from "lucide-react";
+import { ADMIN_SECTIONS } from "@/lib/admin-sections";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import styles from "../admin.module.css";
 
 const TAB_ICONS = {
+  overview: LayoutDashboard,
   reservations: ClipboardList,
   orders: UtensilsCrossed,
   tables: BookOpenText,
@@ -30,10 +33,8 @@ const TAB_ICONS = {
 };
 
 export default function AppSidebar({
-  visibleTabs,
-  tab,
-  onTabChange,
-  getTabLabel,
+  visibleSections,
+  activeSection,
   reservationStats,
   orderStats,
   voucherStats,
@@ -99,25 +100,26 @@ export default function AppSidebar({
       </div>
 
       <nav className={styles.sidebarNav}>
-        {visibleTabs.map((key) => {
+        {visibleSections.map((key) => {
           const Icon = TAB_ICONS[key] || LayoutDashboard;
           return (
             <Button
               key={key}
-              type="button"
-              variant={tab === key ? "default" : "ghost"}
-              className={tab === key ? styles.sidebarTabActive : styles.sidebarTab}
-              onClick={() => onTabChange(key)}
+              asChild
+              variant={activeSection === key ? "default" : "ghost"}
+              className={activeSection === key ? styles.sidebarTabActive : styles.sidebarTab}
             >
-              <div className={styles.sidebarTabInner}>
-                <Icon size={17} />
-                <span>{getTabLabel(key)}</span>
-              </div>
-              {key === "reservations" && reservationStats.pending ? <Badge variant="secondary">{reservationStats.pending}</Badge> : null}
-              {key === "orders" && orderStats.active ? <Badge variant="secondary">{orderStats.active}</Badge> : null}
-              {key === "vouchers" && voucherStats.recent ? <Badge variant="secondary">{voucherStats.recent}</Badge> : null}
-              {key === "drivers" && driverStats.pendingCommissions ? <Badge variant="secondary">{driverStats.pendingCommissions}</Badge> : null}
-              {key === "partners" && partnerStats.openBookings ? <Badge variant="secondary">{partnerStats.openBookings}</Badge> : null}
+              <Link href={withBranchQuery(`/admin/${key}`, branchFilterId)}>
+                <div className={styles.sidebarTabInner}>
+                  <Icon size={17} />
+                  <span>{ADMIN_SECTIONS.find((item) => item.key === key)?.label || key}</span>
+                </div>
+                {key === "reservations" && reservationStats.pending ? <Badge variant="secondary">{reservationStats.pending}</Badge> : null}
+                {key === "orders" && orderStats.active ? <Badge variant="secondary">{orderStats.active}</Badge> : null}
+                {key === "vouchers" && voucherStats.recent ? <Badge variant="secondary">{voucherStats.recent}</Badge> : null}
+                {key === "drivers" && driverStats.pendingCommissions ? <Badge variant="secondary">{driverStats.pendingCommissions}</Badge> : null}
+                {key === "partners" && partnerStats.openBookings ? <Badge variant="secondary">{partnerStats.openBookings}</Badge> : null}
+              </Link>
             </Button>
           );
         })}

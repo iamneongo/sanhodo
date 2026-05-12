@@ -7,7 +7,8 @@ import { Separator } from "@/components/ui/separator";
 import styles from "../admin.module.css";
 
 export default function AdminHeader({
-  currentTabLabel,
+  title,
+  description,
   adminProfile,
   selectedBranch,
   notificationCount = 0
@@ -17,9 +18,9 @@ export default function AdminHeader({
       <CardContent className="flex items-start justify-between gap-5 p-5 md:p-6">
         <div>
           <span className={styles.kicker}>Studio Admin</span>
-          <h1>{currentTabLabel}</h1>
+          <h1>{title}</h1>
           <p>
-            Quản lý đặt bàn, món ăn, voucher, tài xế, đối tác và tích hợp trong một dashboard full-width.
+            {description}
             {selectedBranch ? ` Đang xem dữ liệu cho ${selectedBranch.name}.` : ""}
           </p>
         </div>
