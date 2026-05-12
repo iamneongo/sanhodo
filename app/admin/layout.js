@@ -4,5 +4,60 @@ export const metadata = {
 };
 
 export default function AdminLayout({ children }) {
-  return children;
+  const adminThemeCss = `
+    body {
+      padding-bottom: 0 !important;
+      background: #f4f4f5 !important;
+      color: #09090b !important;
+    }
+
+    .admin-theme {
+      min-height: 100vh;
+      color: #09090b;
+      font-family: var(--font-montserrat), sans-serif;
+    }
+
+    .admin-theme h1,
+    .admin-theme h2,
+    .admin-theme h3,
+    .admin-theme h4,
+    .admin-theme h5,
+    .admin-theme h6 {
+      margin: 0;
+      color: #09090b;
+      font-family: var(--font-montserrat), sans-serif;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      text-transform: none;
+      line-height: 1.2;
+    }
+
+    .admin-theme h1 {
+      font-size: 1rem;
+    }
+
+    .admin-theme h2 {
+      font-size: 1.125rem;
+    }
+
+    .admin-theme h3 {
+      font-size: 1rem;
+    }
+
+    .admin-theme p {
+      color: #71717a;
+      line-height: 1.6;
+    }
+
+    .admin-theme [data-slot="sidebar-wrapper"] {
+      background: #f4f4f5;
+    }
+  `;
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: adminThemeCss }} />
+      <div className="admin-theme">{children}</div>
+    </>
+  );
 }
