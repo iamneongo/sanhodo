@@ -66,7 +66,13 @@ export default function AppSidebar({
   branchFilterId,
   onLogout
 }) {
-  const { state } = useSidebar();
+  const { state, isMobile, setOpen } = useSidebar();
+
+  const closeMobileSidebar = () => {
+    if (isMobile) {
+      setOpen(false);
+    }
+  };
 
   return (
     <Sidebar>
@@ -74,7 +80,7 @@ export default function AppSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg">
-              <Link href={withBranchQuery("/admin/overview", branchFilterId)}>
+              <Link href={withBranchQuery("/admin/overview", branchFilterId)} onClick={closeMobileSidebar}>
                 <CommandIcon className="size-4" />
                 <NavLabel>San Hô Đỏ</NavLabel>
               </Link>
@@ -115,9 +121,9 @@ export default function AppSidebar({
               return (
                 <SidebarMenuItem key={key}>
                   <SidebarMenuButton asChild isActive={activeSection === key}>
-                    <Link href={withBranchQuery(`/admin/${key}`, branchFilterId)}>
-                      <Icon className="size-4" />
-                      <NavLabel>{ADMIN_SECTIONS.find((item) => item.key === key)?.label || key}</NavLabel>
+                      <Link href={withBranchQuery(`/admin/${key}`, branchFilterId)} onClick={closeMobileSidebar}>
+                        <Icon className="size-4" />
+                        <NavLabel>{ADMIN_SECTIONS.find((item) => item.key === key)?.label || key}</NavLabel>
                       {state === "expanded" && key === "reservations" && reservationStats.pending ? <Badge variant="secondary" className="ml-auto">{reservationStats.pending}</Badge> : null}
                       {state === "expanded" && key === "orders" && orderStats.active ? <Badge variant="secondary" className="ml-auto">{orderStats.active}</Badge> : null}
                       {state === "expanded" && key === "vouchers" && voucherStats.recent ? <Badge variant="secondary" className="ml-auto">{voucherStats.recent}</Badge> : null}
@@ -141,7 +147,7 @@ export default function AppSidebar({
             </CardContent>
           </Card>
         ) : null}
-        <Button type="button" variant="outline" className="justify-start" onClick={onLogout}>
+        <Button type="button" variant="outline" className="justify-start" onClick={() => { closeMobileSidebar(); onLogout(); }}>
           <LogOut className="size-4" />
           <NavLabel>Đăng xuất</NavLabel>
         </Button>

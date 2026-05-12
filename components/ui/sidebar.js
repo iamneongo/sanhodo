@@ -18,6 +18,23 @@ export function useSidebar() {
 
 export function SidebarProvider({ defaultOpen = true, children, className, style }) {
   const [open, setOpen] = React.useState(defaultOpen);
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const updateState = () => {
+      const mobile = mediaQuery.matches;
+      setIsMobile(mobile);
+      if (mobile) {
+        setOpen(false);
+      }
+    };
+
+    updateState();
+    mediaQuery.addEventListener("change", updateState);
+
+    return () => mediaQuery.removeEventListener("change", updateState);
+  }, []);
 
   const toggleSidebar = React.useCallback(() => {
     setOpen((prev) => !prev);
@@ -26,11 +43,12 @@ export function SidebarProvider({ defaultOpen = true, children, className, style
   const value = React.useMemo(
     () => ({
       open,
+      isMobile,
       state: open ? "expanded" : "collapsed",
       setOpen,
       toggleSidebar
     }),
-    [open, toggleSidebar]
+    [isMobile, open, toggleSidebar]
   );
 
   return (
@@ -52,20 +70,47 @@ export function SidebarProvider({ defaultOpen = true, children, className, style
 }
 
 export function Sidebar({ className, children }) {
-  const { state } = useSidebar();
+  const { state, open, isMobile, setOpen } = useSidebar();
 
   return (
-    <aside
-      data-slot="sidebar"
-      data-state={state}
-      className={cn(
-        "sticky top-0 hidden h-svh shrink-0 border-r border-zinc-200/80 bg-white transition-[width] duration-200 ease-linear md:block",
-        state === "expanded" ? "w-[var(--sidebar-width)]" : "w-[var(--sidebar-width-collapsed)]",
-        className
+    <>
+      {isMobile ? (
+        <>
+          <button
+            type="button"
+            aria-label="Close sidebar"
+            onClick={() => setOpen(false)}
+            className={cn(
+              "fixed inset-0 z-40 bg-zinc-950/40 transition-opacity md:hidden",
+              open ? "opacity-100" : "pointer-events-none opacity-0"
+            )}
+          />
+          <aside
+            data-slot="sidebar"
+            data-state={state}
+            className={cn(
+              "fixed inset-y-0 left-0 z-50 flex w-[var(--sidebar-width)] max-w-[85vw] flex-col border-r border-zinc-200/80 bg-white shadow-xl transition-transform duration-200 ease-linear md:hidden",
+              open ? "translate-x-0" : "-translate-x-full",
+              className
+            )}
+          >
+            <div className="flex h-full flex-col">{children}</div>
+          </aside>
+        </>
+      ) : (
+        <aside
+          data-slot="sidebar"
+          data-state={state}
+          className={cn(
+            "sticky top-0 hidden h-svh shrink-0 border-r border-zinc-200/80 bg-white transition-[width] duration-200 ease-linear md:block",
+            state === "expanded" ? "w-[var(--sidebar-width)]" : "w-[var(--sidebar-width-collapsed)]",
+            className
+          )}
+        >
+          <div className="flex h-full flex-col">{children}</div>
+        </aside>
       )}
-    >
-      <div className="flex h-full flex-col">{children}</div>
-    </aside>
+    </>
   );
 }
 
