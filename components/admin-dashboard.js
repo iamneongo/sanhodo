@@ -1581,19 +1581,22 @@ export default function AdminDashboard({
           <section className={styles.adminGrid}>
             <AdminListShell>
               <div className={styles.panelToolbar}>
-                <input
+                <Input
                   type="search"
                   placeholder="Tìm voucher..."
                   value={voucherQuery}
                   onChange={(event) => setVoucherQuery(event.target.value)}
                 />
-                <select value={voucherStatus} onChange={(event) => setVoucherStatus(event.target.value)}>
-                  {voucherStatuses.map((item) => (
-                    <option key={item.value} value={item.value}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
+                <Select value={voucherStatus} onValueChange={setVoucherStatus}>
+                  <SelectTrigger><SelectValue placeholder="Trạng thái voucher" /></SelectTrigger>
+                  <SelectContent>
+                    {voucherStatuses.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className={styles.statsStrip}>
                 <AdminStatCard
@@ -1651,15 +1654,15 @@ export default function AdminDashboard({
                 kicker="Voucher campaigns"
                 title="Campaign & loyalty"
                 actions={permissions.canManageVouchers ? (
-                  <button type="button" onClick={() => setCampaignCreateOpen((prev) => !prev)}>
+                  <Button type="button" variant="secondary" onClick={() => setCampaignCreateOpen((prev) => !prev)}>
                     {campaignCreateOpen ? "Đóng form" : "Tạo campaign"}
-                  </button>
+                  </Button>
                 ) : null}
                 className={styles.subsectionCard}
               >
                 {campaignCreateOpen && permissions.canManageVouchers ? (
                   <form className={styles.inlineForm} onSubmit={createVoucherCampaignEntry}>
-                    <input
+                    <Input
                       type="text"
                       placeholder="Tiêu đề campaign"
                       value={campaignDraft.title}
@@ -1672,7 +1675,7 @@ export default function AdminDashboard({
                       }
                       required
                     />
-                    <input
+                    <Input
                       type="text"
                       placeholder="Mã campaign"
                       value={campaignDraft.code}
@@ -1681,19 +1684,22 @@ export default function AdminDashboard({
                       }
                     />
                     <div className={styles.inlineRow}>
-                      <select
+                      <Select
                         value={campaignDraft.discountType}
-                        onChange={(event) =>
+                        onValueChange={(value) =>
                           setCampaignDraft((prev) => ({
                             ...prev,
-                            discountType: event.target.value
+                            discountType: value
                           }))
                         }
                       >
-                        <option value="percent">percent</option>
-                        <option value="amount">amount</option>
-                      </select>
-                      <input
+                        <SelectTrigger><SelectValue placeholder="Kiểu ưu đãi" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="percent">percent</SelectItem>
+                          <SelectItem value="amount">amount</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input
                         type="number"
                         min="0"
                         placeholder="Giá trị ưu đãi"
@@ -1706,7 +1712,7 @@ export default function AdminDashboard({
                         }
                       />
                     </div>
-                    <textarea
+                    <Textarea
                       rows={3}
                       placeholder="Mô tả campaign"
                       value={campaignDraft.description}
@@ -1714,16 +1720,17 @@ export default function AdminDashboard({
                         setCampaignDraft((prev) => ({ ...prev, description: event.target.value }))
                       }
                     />
-                    <button type="submit" disabled={voucherSaving}>
+                    <Button type="submit" disabled={voucherSaving}>
                       {voucherSaving ? "Đang tạo..." : "Lưu campaign"}
-                    </button>
+                    </Button>
                   </form>
                 ) : null}
                 <div className={styles.campaignRail}>
                   {voucherCampaigns.map((campaign) => (
-                    <button
+                    <Button
                       key={campaign.id}
                       type="button"
+                      variant="ghost"
                       className={`${styles.campaignTile} ${
                         campaign.id === selectedVoucherCampaign?.id ? styles.campaignTileActive : ""
                       }`}
@@ -1732,14 +1739,14 @@ export default function AdminDashboard({
                       <strong>{campaign.title}</strong>
                       <span>{formatVoucherBenefit(campaign)}</span>
                       <small>{campaign.isActive ? "Đang chạy" : "Đã tắt"} • {campaign.validDays} ngày</small>
-                    </button>
+                    </Button>
                   ))}
                 </div>
                 {selectedVoucherCampaign ? (
                   <div className={styles.editGrid}>
                     <label>
                       <span>Tiêu đề</span>
-                      <input
+                      <Input
                         type="text"
                         defaultValue={selectedVoucherCampaign.title}
                         disabled={!permissions.canManageVouchers}
@@ -1753,7 +1760,7 @@ export default function AdminDashboard({
                     </label>
                     <label>
                       <span>Mã campaign</span>
-                      <input
+                      <Input
                         type="text"
                         defaultValue={selectedVoucherCampaign.code}
                         disabled={!permissions.canManageVouchers}
@@ -1767,7 +1774,7 @@ export default function AdminDashboard({
                     </label>
                     <label>
                       <span>Giá trị ưu đãi</span>
-                      <input
+                      <Input
                         type="number"
                         min="0"
                         defaultValue={selectedVoucherCampaign.discountValue}
@@ -1782,7 +1789,7 @@ export default function AdminDashboard({
                     </label>
                     <label>
                       <span>Valid days</span>
-                      <input
+                      <Input
                         type="number"
                         min="1"
                         defaultValue={selectedVoucherCampaign.validDays}
@@ -1797,7 +1804,7 @@ export default function AdminDashboard({
                     </label>
                     <label className={styles.fullWidth}>
                       <span>Mô tả</span>
-                      <textarea
+                      <Textarea
                         rows={3}
                         defaultValue={selectedVoucherCampaign.description}
                         disabled={!permissions.canManageVouchers}
@@ -1811,13 +1818,14 @@ export default function AdminDashboard({
                     </label>
                     {permissions.canManageVouchers ? (
                       <div className={styles.detailActions}>
-                        <button
+                        <Button
                           type="button"
+                          variant="destructive"
                           className={styles.deleteButton}
                           onClick={() => deleteVoucherCampaignEntry(selectedVoucherCampaign.id)}
                         >
                           Xóa campaign
-                        </button>
+                        </Button>
                       </div>
                     ) : null}
                   </div>
@@ -1831,18 +1839,19 @@ export default function AdminDashboard({
                   actions={(
                     <div className={styles.detailActions}>
                       {permissions.canManageVouchers ? (
-                        <button
+                        <Button
                           type="button"
                           className={styles.saveButton}
                           onClick={() => redeemVoucher(selectedVoucher)}
                           disabled={voucherSaving}
                         >
                           {voucherSaving ? "Đang xử lý..." : "Redeem + tích điểm"}
-                        </button>
+                        </Button>
                       ) : null}
                       {permissions.canManageVouchers ? (
-                        <button
+                        <Button
                           className={styles.deleteButton}
+                          variant="destructive"
                           type="button"
                           onClick={async () => {
                             if (!window.confirm("Xóa lead voucher này?")) return;
@@ -1860,7 +1869,7 @@ export default function AdminDashboard({
                           }}
                         >
                           Xóa lead
-                        </button>
+                        </Button>
                       ) : null}
                     </div>
                   )}
@@ -1871,8 +1880,9 @@ export default function AdminDashboard({
                       {voucherStatuses
                         .filter((item) => item.value !== "all")
                         .map((item) => (
-                          <button
+                          <Button
                             type="button"
+                            variant={selectedVoucher.status === item.value ? "default" : "outline"}
                             key={item.value}
                             className={selectedVoucher.status === item.value ? styles.quickActive : ""}
                             onClick={() =>
@@ -1883,7 +1893,7 @@ export default function AdminDashboard({
                             }
                           >
                             {item.label}
-                          </button>
+                          </Button>
                         ))}
                     </div>
                   ) : null}
@@ -1916,7 +1926,7 @@ export default function AdminDashboard({
                   <div className={styles.editGrid}>
                     <label>
                       <span>Nguồn</span>
-                      <input
+                      <Input
                         type="text"
                         defaultValue={selectedVoucher.source || ""}
                         disabled={!permissions.canManageVouchers}
@@ -1930,7 +1940,7 @@ export default function AdminDashboard({
                     </label>
                     <label>
                       <span>Mô tả ưu đãi</span>
-                      <input
+                      <Input
                         type="text"
                         defaultValue={selectedVoucher.voucherDescription || ""}
                         disabled={!permissions.canManageVouchers}
@@ -1944,7 +1954,7 @@ export default function AdminDashboard({
                     </label>
                     <label className={styles.fullWidth}>
                       <span>Ghi chú</span>
-                      <textarea
+                      <Textarea
                         rows={6}
                         defaultValue={selectedVoucher.notes || ""}
                         disabled={!permissions.canManageVouchers}
@@ -2221,23 +2231,23 @@ export default function AdminDashboard({
                   <AdminSurfaceCard
                     kicker="Hợp đồng"
                     title="Chính sách áp dụng"
-                    actions={permissions.canManagePartnerContracts ? <button type="button" onClick={() => setPartnerContractCreateOpen((prev) => !prev)}>{partnerContractCreateOpen ? "Đóng form" : "Thêm hợp đồng"}</button> : null}
+                    actions={permissions.canManagePartnerContracts ? <Button type="button" variant="secondary" onClick={() => setPartnerContractCreateOpen((prev) => !prev)}>{partnerContractCreateOpen ? "Đóng form" : "Thêm hợp đồng"}</Button> : null}
                     className={styles.subsectionCard}
                   >
                     {partnerContractCreateOpen && permissions.canManagePartnerContracts ? (
                       <form className={styles.inlineForm} onSubmit={createPartnerContractEntry}>
-                        <input type="text" placeholder="Tên hợp đồng" value={partnerContractDraft.title} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, title: event.target.value }))} required />
+                        <Input type="text" placeholder="Tên hợp đồng" value={partnerContractDraft.title} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, title: event.target.value }))} required />
                         <div className={styles.inlineRow}>
-                          <input type="number" min="0" placeholder="% chiết khấu" value={partnerContractDraft.discountPercent} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, discountPercent: Number(event.target.value) }))} />
-                          <input type="number" min="0" placeholder="% hoa hồng" value={partnerContractDraft.commissionPercent} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, commissionPercent: Number(event.target.value) }))} />
+                          <Input type="number" min="0" placeholder="% chiết khấu" value={partnerContractDraft.discountPercent} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, discountPercent: Number(event.target.value) }))} />
+                          <Input type="number" min="0" placeholder="% hoa hồng" value={partnerContractDraft.commissionPercent} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, commissionPercent: Number(event.target.value) }))} />
                         </div>
                         <div className={styles.inlineRow}>
                           <select value={partnerContractDraft.status} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, status: event.target.value }))}>{partnerContractStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select>
-                          <input type="datetime-local" value={partnerContractDraft.startsAt} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, startsAt: event.target.value }))} />
+                          <Input type="datetime-local" value={partnerContractDraft.startsAt} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, startsAt: event.target.value }))} />
                         </div>
-                        <input type="datetime-local" value={partnerContractDraft.endsAt} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, endsAt: event.target.value }))} />
-                        <textarea placeholder="Điều khoản thanh toán / ghi chú" rows={3} value={partnerContractDraft.paymentTerms} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, paymentTerms: event.target.value }))} />
-                        <button type="submit" disabled={partnerSaving}>{partnerSaving ? "Đang tạo..." : "Lưu hợp đồng"}</button>
+                        <Input type="datetime-local" value={partnerContractDraft.endsAt} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, endsAt: event.target.value }))} />
+                        <Textarea placeholder="Điều khoản thanh toán / ghi chú" rows={3} value={partnerContractDraft.paymentTerms} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, paymentTerms: event.target.value }))} />
+                        <Button type="submit" disabled={partnerSaving}>{partnerSaving ? "Đang tạo..." : "Lưu hợp đồng"}</Button>
                       </form>
                     ) : null}
                     <div className={styles.logList}>
@@ -2254,32 +2264,32 @@ export default function AdminDashboard({
                   <AdminSurfaceCard
                     kicker="Booking đoàn"
                     title="Đơn từ đối tác / HDV"
-                    actions={permissions.canManagePartnerBookings ? <button type="button" onClick={() => setPartnerBookingCreateOpen((prev) => !prev)}>{partnerBookingCreateOpen ? "Đóng form" : "Tạo booking đoàn"}</button> : null}
+                    actions={permissions.canManagePartnerBookings ? <Button type="button" variant="secondary" onClick={() => setPartnerBookingCreateOpen((prev) => !prev)}>{partnerBookingCreateOpen ? "Đóng form" : "Tạo booking đoàn"}</Button> : null}
                     className={styles.subsectionCard}
                   >
                     {partnerBookingCreateOpen && permissions.canManagePartnerBookings ? (
                       <form className={styles.inlineForm} onSubmit={createPartnerBookingEntry}>
-                        <input type="text" placeholder="Mã booking" value={partnerBookingDraft.code} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, code: event.target.value }))} />
-                        <input type="text" placeholder="Tên trưởng đoàn / khách" value={partnerBookingDraft.customerName} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, customerName: event.target.value }))} required />
+                        <Input type="text" placeholder="Mã booking" value={partnerBookingDraft.code} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, code: event.target.value }))} />
+                        <Input type="text" placeholder="Tên trưởng đoàn / khách" value={partnerBookingDraft.customerName} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, customerName: event.target.value }))} required />
                         <div className={styles.inlineRow}>
-                          <input type="tel" placeholder="SĐT" value={partnerBookingDraft.customerPhone} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, customerPhone: event.target.value }))} required />
-                          <input type="number" min="1" placeholder="Số khách" value={partnerBookingDraft.groupSize} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, groupSize: Number(event.target.value) }))} />
+                          <Input type="tel" placeholder="SĐT" value={partnerBookingDraft.customerPhone} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, customerPhone: event.target.value }))} required />
+                          <Input type="number" min="1" placeholder="Số khách" value={partnerBookingDraft.groupSize} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, groupSize: Number(event.target.value) }))} />
                         </div>
                         <div className={styles.inlineRow}>
-                          <input type="datetime-local" value={partnerBookingDraft.bookingAt} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, bookingAt: event.target.value }))} required />
+                          <Input type="datetime-local" value={partnerBookingDraft.bookingAt} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, bookingAt: event.target.value }))} required />
                           <select value={partnerBookingDraft.status} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, status: event.target.value }))}>{partnerBookingStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select>
                         </div>
                         <div className={styles.inlineRow}>
-                          <input type="text" placeholder="Set menu / package" value={partnerBookingDraft.packageName} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, packageName: event.target.value }))} />
-                          <input type="number" min="0" placeholder="Ngân sách menu" value={partnerBookingDraft.menuBudget} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, menuBudget: Number(event.target.value) }))} />
+                          <Input type="text" placeholder="Set menu / package" value={partnerBookingDraft.packageName} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, packageName: event.target.value }))} />
+                          <Input type="number" min="0" placeholder="Ngân sách menu" value={partnerBookingDraft.menuBudget} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, menuBudget: Number(event.target.value) }))} />
                         </div>
                         <div className={styles.inlineRow}>
-                          <input type="number" min="0" placeholder="Chiết khấu" value={partnerBookingDraft.discountAmount} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, discountAmount: Number(event.target.value) }))} />
-                          <input type="number" min="0" placeholder="Hoa hồng" value={partnerBookingDraft.commissionAmount} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, commissionAmount: Number(event.target.value) }))} />
+                          <Input type="number" min="0" placeholder="Chiết khấu" value={partnerBookingDraft.discountAmount} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, discountAmount: Number(event.target.value) }))} />
+                          <Input type="number" min="0" placeholder="Hoa hồng" value={partnerBookingDraft.commissionAmount} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, commissionAmount: Number(event.target.value) }))} />
                         </div>
-                        <input type="url" placeholder="Link manifest / danh sách khách" value={partnerBookingDraft.guestManifestUrl} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, guestManifestUrl: event.target.value }))} />
-                        <textarea placeholder="Ghi chú" rows={3} value={partnerBookingDraft.notes} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, notes: event.target.value }))} />
-                        <button type="submit" disabled={partnerSaving}>{partnerSaving ? "Đang tạo..." : "Lưu booking đoàn"}</button>
+                        <Input type="url" placeholder="Link manifest / danh sách khách" value={partnerBookingDraft.guestManifestUrl} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, guestManifestUrl: event.target.value }))} />
+                        <Textarea placeholder="Ghi chú" rows={3} value={partnerBookingDraft.notes} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, notes: event.target.value }))} />
+                        <Button type="submit" disabled={partnerSaving}>{partnerSaving ? "Đang tạo..." : "Lưu booking đoàn"}</Button>
                       </form>
                     ) : null}
                     <div className={styles.logList}>
@@ -2290,7 +2300,7 @@ export default function AdminDashboard({
                           <p>{item.packageName || "Chưa chọn set menu"} • Budget {formatCurrency(item.menuBudget)} • Commission {formatCurrency(item.commissionAmount)}</p>
                           <div className={styles.inlineRow}>
                             <select value={item.status} disabled={!permissions.canManagePartnerBookings} onChange={(event) => patchPartnerBooking(item.id, { ...item, status: event.target.value })}>{partnerBookingStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select>
-                            {permissions.canManagePartnerBookings ? <button type="button" className={styles.deleteButton} onClick={() => deletePartnerBookingEntry(item.id)}>Xóa</button> : null}
+                            {permissions.canManagePartnerBookings ? <Button type="button" variant="destructive" className={styles.deleteButton} onClick={() => deletePartnerBookingEntry(item.id)}>Xóa</Button> : null}
                           </div>
                         </article>
                       ))}
