@@ -2,9 +2,7 @@
 
 import { Bell, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import styles from "../admin.module.css";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export default function AdminHeader({
   title,
@@ -14,31 +12,28 @@ export default function AdminHeader({
   notificationCount = 0
 }) {
   return (
-    <Card className={styles.topbar}>
-      <CardContent className="flex items-start justify-between gap-5 p-5 md:p-6">
+    <header className="flex items-center justify-between gap-4 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm md:px-5">
+      <div className="flex items-center gap-3">
+        <SidebarTrigger className="shrink-0" />
         <div>
-          <span className={styles.kicker}>Studio Admin</span>
-          <h1>{title}</h1>
-          <p>
+          <h1 className="text-lg font-semibold text-zinc-950 md:text-xl">{title}</h1>
+          <p className="text-sm text-zinc-500">
             {description}
-            {selectedBranch ? ` Đang xem dữ liệu cho ${selectedBranch.name}.` : ""}
+            {selectedBranch ? ` ${selectedBranch.name}.` : ""}
           </p>
         </div>
-        <div className={styles.topbarActions}>
-          <div className={styles.headerChip}>
-            <Search size={15} />
-            <span>Tìm kiếm module</span>
-          </div>
-          <Separator orientation="vertical" className="hidden h-8 md:block" />
-          <div className={styles.headerChip}>
-            <Bell size={15} />
-            <span>{notificationCount} thông báo mới</span>
-          </div>
-          <Badge variant="secondary" className={styles.adminBadge}>
-            {adminProfile?.email || "admin"} • {adminProfile?.role || "admin"}
-          </Badge>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="hidden items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 lg:flex">
+          <Search className="size-4" />
+          <span>Search</span>
         </div>
-      </CardContent>
-    </Card>
+        <div className="hidden items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 lg:flex">
+          <Bell className="size-4" />
+          <span>{notificationCount}</span>
+        </div>
+        <Badge variant="secondary" className="hidden md:inline-flex">{adminProfile?.role || "admin"}</Badge>
+      </div>
+    </header>
   );
 }

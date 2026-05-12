@@ -18,7 +18,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import styles from "../admin.module.css";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar
+} from "@/components/ui/sidebar";
 
 const TAB_ICONS = {
   overview: LayoutDashboard,
@@ -31,6 +42,11 @@ const TAB_ICONS = {
   partners: Handshake,
   integrations: Cable
 };
+
+function NavLabel({ children }) {
+  const { state } = useSidebar();
+  return <>{state === "expanded" ? children : null}</>;
+}
 
 export default function AppSidebar({
   visibleSections,
@@ -51,33 +67,27 @@ export default function AppSidebar({
   branchFilterId,
   onLogout
 }) {
-  return (
-    <aside className={styles.sidebar}>
-      <div className={styles.sidebarBrand}>
-        <span className={styles.kicker}>San Hô Đỏ Admin</span>
-        <h1>Operations Dashboard</h1>
-        <p>
-          Vận hành nhà hàng theo mô hình module, với shell và control bám sát dashboard shadcn hiện đại.
-        </p>
-      </div>
+  const { state } = useSidebar();
 
-      <div className={styles.sidebarSection}>
-        <span className={styles.sidebarLabel}>Workspace</span>
-        <Card className={styles.sidebarIdentity}>
-          <CardContent className="grid gap-1.5 p-4">
-            <div className={styles.sidebarIdentityHead}>
-              <LayoutDashboard size={18} />
-              <strong>{adminProfile?.full_name || adminProfile?.email || "Admin"}</strong>
-            </div>
-            <Badge variant="outline" className="w-fit">
-              {roleLabels[adminProfile?.role] || adminProfile?.role || "Admin"}
-            </Badge>
-            {selectedBranch ? <small>Đang xem: {selectedBranch.name}</small> : null}
-          </CardContent>
-        </Card>
+  return (
+    <Sidebar>
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive size="lg">
+              <Link href={withBranchQuery("/admin/overview", branchFilterId)}>
+                <LayoutDashboard className="size-4" />
+                <NavLabel>San Hô Đỏ Admin</NavLabel>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+
+      <SidebarContent>
         {branches?.length ? (
-          <label className={styles.branchControl}>
-            <span>Chi nhánh</span>
+          <SidebarGroup>
+            <SidebarGroupLabel>Chi nhánh</SidebarGroupLabel>
             <Select
               value={activeBranchId || "all"}
               onValueChange={(value) => onBranchChange({ target: { value } })}
@@ -95,58 +105,69 @@ export default function AppSidebar({
                 ))}
               </SelectContent>
             </Select>
-          </label>
+          </SidebarGroup>
         ) : null}
-      </div>
 
-      <nav className={styles.sidebarNav}>
-        {visibleSections.map((key) => {
-          const Icon = TAB_ICONS[key] || LayoutDashboard;
-          return (
-            <Button
-              key={key}
-              asChild
-              variant={activeSection === key ? "default" : "ghost"}
-              className={activeSection === key ? styles.sidebarTabActive : styles.sidebarTab}
-            >
-              <Link href={withBranchQuery(`/admin/${key}`, branchFilterId)}>
-                <div className={styles.sidebarTabInner}>
-                  <Icon size={17} />
-                  <span>{ADMIN_SECTIONS.find((item) => item.key === key)?.label || key}</span>
-                </div>
-                {key === "reservations" && reservationStats.pending ? <Badge variant="secondary">{reservationStats.pending}</Badge> : null}
-                {key === "orders" && orderStats.active ? <Badge variant="secondary">{orderStats.active}</Badge> : null}
-                {key === "vouchers" && voucherStats.recent ? <Badge variant="secondary">{voucherStats.recent}</Badge> : null}
-                {key === "drivers" && driverStats.pendingCommissions ? <Badge variant="secondary">{driverStats.pendingCommissions}</Badge> : null}
-                {key === "partners" && partnerStats.openBookings ? <Badge variant="secondary">{partnerStats.openBookings}</Badge> : null}
-              </Link>
-            </Button>
-          );
-        })}
-      </nav>
+        <SidebarGroup>
+          <SidebarGroupLabel>Điều hướng</SidebarGroupLabel>
+          <SidebarMenu>
+            {visibleSections.map((key) => {
+              const Icon = TAB_ICONS[key] || LayoutDashboard;
+              return (
+                <SidebarMenuItem key={key}>
+                  <SidebarMenuButton asChild isActive={activeSection === key}>
+                    <Link href={withBranchQuery(`/admin/${key}`, branchFilterId)}>
+                      <Icon className="size-4" />
+                      <NavLabel>{ADMIN_SECTIONS.find((item) => item.key === key)?.label || key}</NavLabel>
+                      {state === "expanded" && key === "reservations" && reservationStats.pending ? <Badge variant="secondary" className="ml-auto">{reservationStats.pending}</Badge> : null}
+                      {state === "expanded" && key === "orders" && orderStats.active ? <Badge variant="secondary" className="ml-auto">{orderStats.active}</Badge> : null}
+                      {state === "expanded" && key === "vouchers" && voucherStats.recent ? <Badge variant="secondary" className="ml-auto">{voucherStats.recent}</Badge> : null}
+                      {state === "expanded" && key === "drivers" && driverStats.pendingCommissions ? <Badge variant="secondary" className="ml-auto">{driverStats.pendingCommissions}</Badge> : null}
+                      {state === "expanded" && key === "partners" && partnerStats.openBookings ? <Badge variant="secondary" className="ml-auto">{partnerStats.openBookings}</Badge> : null}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
+          </SidebarMenu>
+        </SidebarGroup>
 
-      <div className={styles.sidebarSection}>
-        <span className={styles.sidebarLabel}>Xuất dữ liệu</span>
-        <div className={styles.sidebarActions}>
-          {canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=reservations", branchFilterId)}>Export đặt bàn</a> : null}
-          {canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=vouchers", branchFilterId)}>Export voucher</a> : null}
-          {canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=driver-commissions", branchFilterId)}>Export hoa hồng</a> : null}
-          {canExport ? <a className={styles.exportButton} href={withBranchQuery("/api/admin/export?type=partner-bookings", branchFilterId)}>Export booking đoàn</a> : null}
-        </div>
-      </div>
+        {state === "expanded" ? (
+          <SidebarGroup>
+            <SidebarGroupLabel>Tóm tắt</SidebarGroupLabel>
+            <Card>
+              <CardContent className="grid gap-3 p-4 text-sm">
+                <div className="flex items-center justify-between gap-3"><span className="text-zinc-500">Lead chờ</span><strong>{reservationStats.pending}</strong></div>
+                <div className="flex items-center justify-between gap-3"><span className="text-zinc-500">Order active</span><strong>{orderStats.active}</strong></div>
+                <div className="flex items-center justify-between gap-3"><span className="text-zinc-500">Pending payout</span><strong>{driverStats.pendingCommissions}</strong></div>
+                <div className="flex items-center justify-between gap-3"><span className="text-zinc-500">Booking đoàn</span><strong>{partnerStats.openBookings}</strong></div>
+              </CardContent>
+            </Card>
+          </SidebarGroup>
+        ) : null}
+      </SidebarContent>
 
-      <div className={styles.sidebarMiniGrid}>
-        <Card className={styles.sidebarMiniCard}><CardContent className="grid gap-1.5 p-4"><span>Lead chờ</span><strong>{reservationStats.pending}</strong></CardContent></Card>
-        <Card className={styles.sidebarMiniCard}><CardContent className="grid gap-1.5 p-4"><span>Order active</span><strong>{orderStats.active}</strong></CardContent></Card>
-        <Card className={styles.sidebarMiniCard}><CardContent className="grid gap-1.5 p-4"><span>Pending payout</span><strong>{driverStats.pendingCommissions}</strong></CardContent></Card>
-        <Card className={styles.sidebarMiniCard}><CardContent className="grid gap-1.5 p-4"><span>Booking đoàn</span><strong>{partnerStats.openBookings}</strong></CardContent></Card>
-      </div>
-
-      <Button className={styles.logoutButton} type="button" onClick={onLogout}>
-        <LogOut size={16} />
-        <span>Đăng xuất</span>
-      </Button>
-    </aside>
+      <SidebarFooter>
+        {state === "expanded" ? (
+          <Card>
+            <CardContent className="grid gap-1.5 p-4 text-sm">
+              <strong className="text-zinc-900">{adminProfile?.full_name || adminProfile?.email || "Admin"}</strong>
+              <span className="text-zinc-500">{roleLabels[adminProfile?.role] || adminProfile?.role || "Admin"}</span>
+              {selectedBranch ? <span className="text-zinc-500">{selectedBranch.name}</span> : null}
+            </CardContent>
+          </Card>
+        ) : null}
+        {canExport && state === "expanded" ? (
+          <Button asChild variant="outline" className="justify-start">
+            <a href={withBranchQuery("/api/admin/export?type=reservations", branchFilterId)}>Export đặt bàn</a>
+          </Button>
+        ) : null}
+        <Button type="button" variant="outline" className="justify-start" onClick={onLogout}>
+          <LogOut className="size-4" />
+          <NavLabel>Đăng xuất</NavLabel>
+        </Button>
+      </SidebarFooter>
+    </Sidebar>
   );
 }
 

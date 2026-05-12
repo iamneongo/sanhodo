@@ -11,6 +11,7 @@ import AdminSurfaceCard from "./admin/admin-surface-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Textarea } from "@/components/ui/textarea";
 import { ADMIN_SECTIONS, getAdminSectionDescription, getAdminSectionLabel } from "../lib/admin-sections";
 import { formatVoucherBenefit } from "../lib/business-rules";
@@ -1295,8 +1296,8 @@ export default function AdminDashboard({
   const currentSectionDescription = getAdminSectionDescription(currentSection);
 
   return (
-    <main className={styles.dashboardPage}>
-      <div className={styles.shell}>
+    <SidebarProvider defaultOpen>
+      <div className={styles.dashboardPage}>
         <AppSidebar
           visibleSections={visibleSections}
           activeSection={currentSection}
@@ -1317,6 +1318,7 @@ export default function AdminDashboard({
           onLogout={logout}
         />
 
+        <SidebarInset>
         <section className={styles.contentShell}>
         <AdminHeader
           title={currentSectionLabel}
@@ -2332,9 +2334,10 @@ export default function AdminDashboard({
             </div>
           </section>
         ) : null}
-      </section>
+        </section>
+        </SidebarInset>
       </div>
-    </main>
+    </SidebarProvider>
   );
 }
 
