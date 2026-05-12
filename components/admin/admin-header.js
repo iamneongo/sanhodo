@@ -1,7 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator
+} from "@/components/ui/breadcrumb";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export default function AdminHeader({ title, adminProfile, selectedBranch, notificationCount = 0 }) {
@@ -10,6 +19,19 @@ export default function AdminHeader({ title, adminProfile, selectedBranch, notif
       <div className="flex items-center gap-3">
         <SidebarTrigger className="shrink-0" />
         <div>
+          <Breadcrumb className="mb-1">
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/admin/overview">Dashboard</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{title}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
           <h1 className="text-lg font-semibold text-zinc-950 md:text-xl">{title}</h1>
           {selectedBranch ? <p className="text-sm text-zinc-500">{selectedBranch.name}</p> : null}
         </div>
