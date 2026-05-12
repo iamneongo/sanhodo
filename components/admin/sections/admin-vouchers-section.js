@@ -2,6 +2,7 @@
 
 import AdminEmptyState from "../admin-empty-state";
 import AdminActiveFilters from "../admin-active-filters";
+import AdminFormDialog from "../admin-form-dialog";
 import AdminPageToolbar from "../admin-page-toolbar";
 import AdminStatCard from "../admin-stat-card";
 import AdminSurfaceCard from "../admin-surface-card";
@@ -187,14 +188,21 @@ export default function AdminVouchersSection({
             title="Quản lý chiến dịch và loyalty"
             actions={
               permissions.canManageVouchers ? (
-                <Button type="button" variant="secondary" onClick={() => setCampaignCreateOpen((prev) => !prev)}>
-                  {campaignCreateOpen ? "Đóng form" : "Tạo chiến dịch"}
+                <Button type="button" variant="secondary" onClick={() => setCampaignCreateOpen(true)}>
+                  Tạo chiến dịch
                 </Button>
               ) : null
             }
             className={styles.subsectionCard}
           >
-            {campaignCreateOpen && permissions.canManageVouchers ? (
+            {permissions.canManageVouchers ? (
+              <AdminFormDialog
+                open={campaignCreateOpen}
+                onOpenChange={setCampaignCreateOpen}
+                title="Tạo chiến dịch voucher"
+                description="Thiết lập ưu đãi mới cho landing page và loyalty flow."
+                size="medium"
+              >
               <form className={styles.inlineForm} onSubmit={createVoucherCampaignEntry}>
                 <Input
                   type="text"
@@ -256,6 +264,7 @@ export default function AdminVouchersSection({
                   {voucherSaving ? "Đang tạo..." : "Lưu chiến dịch"}
                 </Button>
               </form>
+              </AdminFormDialog>
             ) : null}
 
             <div className={styles.campaignRail}>

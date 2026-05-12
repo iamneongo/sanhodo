@@ -1,6 +1,7 @@
 "use client";
 
 import AdminDetailHeader from "../admin-detail-header";
+import AdminFormDialog from "../admin-form-dialog";
 import AdminActiveFilters from "../admin-active-filters";
 import AdminEmptyState from "../admin-empty-state";
 import AdminPageToolbar from "../admin-page-toolbar";
@@ -74,8 +75,8 @@ export default function AdminDriversSection({
           <AdminPageToolbar
             actions={
               permissions.canManageDrivers ? (
-                <Button type="button" variant="secondary" onClick={() => setDriverCreateOpen((prev) => !prev)}>
-                  {driverCreateOpen ? "Đóng form" : "Tạo tài xế"}
+                <Button type="button" variant="secondary" onClick={() => setDriverCreateOpen(true)}>
+                  Tạo tài xế
                 </Button>
               ) : null
             }
@@ -105,7 +106,14 @@ export default function AdminDriversSection({
             <FormSelect value={driverSort} onValueChange={setDriverSort} options={driverSortOptions} placeholder="Sắp xếp" />
           </AdminPageToolbar>
 
-          {driverCreateOpen && permissions.canManageDrivers ? (
+          {permissions.canManageDrivers ? (
+            <AdminFormDialog
+              open={driverCreateOpen}
+              onOpenChange={setDriverCreateOpen}
+              title="Tạo tài xế / mã giới thiệu"
+              description="Khai báo tài xế, mã giới thiệu và tỷ lệ hoa hồng."
+              size="medium"
+            >
             <form className={styles.inlineForm} onSubmit={createDriverEntry}>
               <Input
                 type="text"
@@ -161,6 +169,7 @@ export default function AdminDriversSection({
                 {tableSaving ? "Đang tạo..." : "Lưu tài xế"}
               </Button>
             </form>
+            </AdminFormDialog>
           ) : null}
 
           <div className={styles.tableWrap}>

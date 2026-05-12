@@ -1,6 +1,7 @@
 "use client";
 
 import AdminDetailHeader from "../admin-detail-header";
+import AdminFormDialog from "../admin-form-dialog";
 import AdminActiveFilters from "../admin-active-filters";
 import AdminEmptyState from "../admin-empty-state";
 import AdminPageToolbar from "../admin-page-toolbar";
@@ -88,8 +89,8 @@ export default function AdminOrdersSection({
           <AdminPageToolbar
             actions={
               permissions.canManageOrders ? (
-                <Button type="button" variant="secondary" onClick={() => setOrderCreateOpen((prev) => !prev)}>
-                  {orderCreateOpen ? "Đóng form" : "Tạo đơn hàng"}
+                <Button type="button" variant="secondary" onClick={() => setOrderCreateOpen(true)}>
+                  Tạo đơn hàng
                 </Button>
               ) : null
             }
@@ -136,7 +137,14 @@ export default function AdminOrdersSection({
             </Select>
           </AdminPageToolbar>
 
-          {orderCreateOpen && permissions.canManageOrders ? (
+          {permissions.canManageOrders ? (
+            <AdminFormDialog
+              open={orderCreateOpen}
+              onOpenChange={setOrderCreateOpen}
+              title="Tạo đơn hàng"
+              description="Tạo nhanh đơn món nội bộ cho khách đặt bàn, khách gọi điện hoặc khách vãng lai."
+              size="wide"
+            >
             <form className={styles.inlineForm} onSubmit={createManualOrder}>
               <Input
                 type="text"
@@ -250,6 +258,7 @@ export default function AdminOrdersSection({
                 {orderSaving ? "Đang tạo..." : "Lưu đơn hàng"}
               </Button>
             </form>
+            </AdminFormDialog>
           ) : null}
 
           <Table>

@@ -14,7 +14,19 @@ import {
 } from "@/components/ui/breadcrumb";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
-export default function AdminHeader({ title, adminProfile, selectedBranch, notificationCount = 0 }) {
+export default function AdminHeader({
+  title,
+  adminProfile,
+  selectedBranch,
+  notificationCount = 0,
+  currentSection = "overview",
+  detailMode = false,
+  detailTitle = "",
+  branchFilterId = ""
+}) {
+  const sectionHref = withBranchQuery(`/admin/${currentSection}`, branchFilterId);
+  const overviewHref = withBranchQuery("/admin/overview", branchFilterId);
+
   return (
     <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-zinc-200 bg-white/90 px-4 backdrop-blur md:px-6">
       <div className="flex min-w-0 items-center gap-2">
@@ -23,15 +35,37 @@ export default function AdminHeader({ title, adminProfile, selectedBranch, notif
         <div className="min-w-0">
           <Breadcrumb className="hidden md:block">
             <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="/admin/overview">Dashboard</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{title}</BreadcrumbPage>
-              </BreadcrumbItem>
+              {currentSection === "overview" && !detailMode ? (
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Tổng quan</BreadcrumbPage>
+                </BreadcrumbItem>
+              ) : (
+                <>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link href={overviewHref}>Tổng quan</Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    {detailMode ? (
+                      <BreadcrumbLink asChild>
+                        <Link href={sectionHref}>{title}</Link>
+                      </BreadcrumbLink>
+                    ) : (
+                      <BreadcrumbPage>{title}</BreadcrumbPage>
+                    )}
+                  </BreadcrumbItem>
+                  {detailMode ? (
+                    <>
+                      <BreadcrumbSeparator />
+                      <BreadcrumbItem>
+                        <BreadcrumbPage>{detailTitle || "Chi tiết"}</BreadcrumbPage>
+                      </BreadcrumbItem>
+                    </>
+                  ) : null}
+                </>
+              )}
             </BreadcrumbList>
           </Breadcrumb>
           <h1 className="truncate text-sm font-semibold text-zinc-950 md:text-base">{title}</h1>
@@ -51,4 +85,13 @@ export default function AdminHeader({ title, adminProfile, selectedBranch, notif
       </div>
     </header>
   );
+}
+
+function withBranchQuery(url, branchId) {
+  if (!branchId) {
+    return url;
+  }
+
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}branchId=${encodeURIComponent(branchId)}`;
 }

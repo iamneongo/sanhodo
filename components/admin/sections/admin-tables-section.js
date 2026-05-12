@@ -1,6 +1,7 @@
 "use client";
 
 import AdminEmptyState from "../admin-empty-state";
+import AdminFormDialog from "../admin-form-dialog";
 import AdminActiveFilters from "../admin-active-filters";
 import AdminPageToolbar from "../admin-page-toolbar";
 import AdminSurfaceCard from "../admin-surface-card";
@@ -71,8 +72,8 @@ export default function AdminTablesSection({
           <AdminPageToolbar
             actions={
               permissions.canManageTables ? (
-                <Button type="button" variant="secondary" onClick={() => setTableCreateOpen((prev) => !prev)}>
-                  {tableCreateOpen ? "Đóng form" : "Tạo bàn"}
+                <Button type="button" variant="secondary" onClick={() => setTableCreateOpen(true)}>
+                  Tạo bàn
                 </Button>
               ) : null
             }
@@ -91,7 +92,14 @@ export default function AdminTablesSection({
             <FormSelect value={tableStatusFilter} onValueChange={setTableStatusFilter} options={[{ value: "all", label: "Tất cả trạng thái" }, ...tableStatuses]} placeholder="Lọc trạng thái" />
             <FormSelect value={tableSort} onValueChange={setTableSort} options={tableSortOptions} placeholder="Sắp xếp" />
           </AdminPageToolbar>
-          {tableCreateOpen && permissions.canManageTables ? (
+          {permissions.canManageTables ? (
+            <AdminFormDialog
+              open={tableCreateOpen}
+              onOpenChange={setTableCreateOpen}
+              title="Tạo bàn mới"
+              description="Thiết lập nhanh bàn, khu vực và sức chứa."
+              size="default"
+            >
             <form className={styles.inlineForm} onSubmit={createTableEntry}>
               <Input type="text" placeholder="Tên bàn" value={tableDraft.name} onChange={(event) => setTableDraft((prev) => ({ ...prev, name: event.target.value }))} required />
               <Input type="text" placeholder="Khu vực" value={tableDraft.area} onChange={(event) => setTableDraft((prev) => ({ ...prev, area: event.target.value }))} />
@@ -102,6 +110,7 @@ export default function AdminTablesSection({
               <Textarea placeholder="Ghi chú" rows={3} value={tableDraft.notes} onChange={(event) => setTableDraft((prev) => ({ ...prev, notes: event.target.value }))} />
               <Button type="submit" disabled={tableSaving}>{tableSaving ? "Đang tạo..." : "Lưu bàn"}</Button>
             </form>
+            </AdminFormDialog>
           ) : null}
           <Table>
             <TableHeader>

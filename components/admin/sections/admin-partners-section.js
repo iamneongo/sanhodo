@@ -1,6 +1,7 @@
 "use client";
 
 import AdminDetailHeader from "../admin-detail-header";
+import AdminFormDialog from "../admin-form-dialog";
 import AdminActiveFilters from "../admin-active-filters";
 import AdminEmptyState from "../admin-empty-state";
 import AdminPageToolbar from "../admin-page-toolbar";
@@ -90,8 +91,8 @@ export default function AdminPartnersSection({
           <AdminPageToolbar
             actions={
               permissions.canManagePartners ? (
-                <Button type="button" variant="secondary" onClick={() => setPartnerCreateOpen((prev) => !prev)}>
-                  {partnerCreateOpen ? "Đóng form" : "Tạo đối tác"}
+                <Button type="button" variant="secondary" onClick={() => setPartnerCreateOpen(true)}>
+                  Tạo đối tác
                 </Button>
               ) : null
             }
@@ -121,7 +122,14 @@ export default function AdminPartnersSection({
             <FormSelect value={partnerSort} onValueChange={setPartnerSort} options={partnerSortOptions} placeholder="Sắp xếp" />
           </AdminPageToolbar>
 
-          {partnerCreateOpen && permissions.canManagePartners ? (
+          {permissions.canManagePartners ? (
+            <AdminFormDialog
+              open={partnerCreateOpen}
+              onOpenChange={setPartnerCreateOpen}
+              title="Tạo đối tác / HDV"
+              description="Khai báo đối tác mới, loại hợp tác và chính sách chiết khấu cơ bản."
+              size="wide"
+            >
             <form className={styles.inlineForm} onSubmit={createPartnerEntry}>
               <Input type="text" placeholder="Mã đối tác" value={partnerDraft.code} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, code: event.target.value }))} required />
               <Input type="text" placeholder="Tên đối tác / HDV" value={partnerDraft.name} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, name: event.target.value }))} required />
@@ -145,6 +153,7 @@ export default function AdminPartnersSection({
               <Textarea placeholder="Ghi chú" rows={3} value={partnerDraft.notes} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, notes: event.target.value }))} />
               <Button type="submit" disabled={partnerSaving}>{partnerSaving ? "Đang tạo..." : "Lưu đối tác"}</Button>
             </form>
+            </AdminFormDialog>
           ) : null}
 
           <div className={styles.tableWrap}>
@@ -204,8 +213,15 @@ export default function AdminPartnersSection({
               </div>
               {permissions.canManagePartners ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={savePartnerEdit} disabled={partnerSaving}>{partnerSaving ? "Đang lưu..." : "Lưu đối tác"}</Button></div> : null}
 
-              <AdminSurfaceCard kicker="Hợp đồng" title="Chính sách áp dụng" actions={permissions.canManagePartnerContracts ? <Button type="button" variant="secondary" onClick={() => setPartnerContractCreateOpen((prev) => !prev)}>{partnerContractCreateOpen ? "Đóng form" : "Thêm hợp đồng"}</Button> : null} className={styles.subsectionCard}>
-                {partnerContractCreateOpen && permissions.canManagePartnerContracts ? (
+              <AdminSurfaceCard kicker="Hợp đồng" title="Chính sách áp dụng" actions={permissions.canManagePartnerContracts ? <Button type="button" variant="secondary" onClick={() => setPartnerContractCreateOpen(true)}>Thêm hợp đồng</Button> : null} className={styles.subsectionCard}>
+                {permissions.canManagePartnerContracts ? (
+                  <AdminFormDialog
+                    open={partnerContractCreateOpen}
+                    onOpenChange={setPartnerContractCreateOpen}
+                    title="Tạo hợp đồng đối tác"
+                    description="Thiết lập chính sách chiết khấu, hoa hồng và thời gian hiệu lực."
+                    size="medium"
+                  >
                   <form className={styles.inlineForm} onSubmit={createPartnerContractEntry}>
                     <Input type="text" placeholder="Tên hợp đồng" value={partnerContractDraft.title} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, title: event.target.value }))} required />
                     <div className={styles.inlineRow}>
@@ -220,6 +236,7 @@ export default function AdminPartnersSection({
                     <Textarea placeholder="Điều khoản thanh toán / ghi chú" rows={3} value={partnerContractDraft.paymentTerms} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, paymentTerms: event.target.value }))} />
                     <Button type="submit" disabled={partnerSaving}>{partnerSaving ? "Đang tạo..." : "Lưu hợp đồng"}</Button>
                   </form>
+                  </AdminFormDialog>
                 ) : null}
                 <div className={styles.logList}>
                   {partnerContracts.filter((item) => item.partnerId === selectedPartner.id).slice(0, 6).map((item) => (
@@ -233,8 +250,15 @@ export default function AdminPartnersSection({
                 </div>
               </AdminSurfaceCard>
 
-              <AdminSurfaceCard kicker="Booking đoàn" title="Đơn từ đối tác / HDV" actions={permissions.canManagePartnerBookings ? <Button type="button" variant="secondary" onClick={() => setPartnerBookingCreateOpen((prev) => !prev)}>{partnerBookingCreateOpen ? "Đóng form" : "Tạo booking đoàn"}</Button> : null} className={styles.subsectionCard}>
-                {partnerBookingCreateOpen && permissions.canManagePartnerBookings ? (
+              <AdminSurfaceCard kicker="Booking đoàn" title="Đơn từ đối tác / HDV" actions={permissions.canManagePartnerBookings ? <Button type="button" variant="secondary" onClick={() => setPartnerBookingCreateOpen(true)}>Tạo booking đoàn</Button> : null} className={styles.subsectionCard}>
+                {permissions.canManagePartnerBookings ? (
+                  <AdminFormDialog
+                    open={partnerBookingCreateOpen}
+                    onOpenChange={setPartnerBookingCreateOpen}
+                    title="Tạo booking đoàn"
+                    description="Tạo booking từ HDV hoặc đối tác với số khách, ngân sách và mức hoa hồng."
+                    size="wide"
+                  >
                   <form className={styles.inlineForm} onSubmit={createPartnerBookingEntry}>
                     <Input type="text" placeholder="Mã booking" value={partnerBookingDraft.code} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, code: event.target.value }))} />
                     <Input type="text" placeholder="Tên trưởng đoàn / khách" value={partnerBookingDraft.customerName} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, customerName: event.target.value }))} required />
@@ -258,6 +282,7 @@ export default function AdminPartnersSection({
                     <Textarea placeholder="Ghi chú" rows={3} value={partnerBookingDraft.notes} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, notes: event.target.value }))} />
                     <Button type="submit" disabled={partnerSaving}>{partnerSaving ? "Đang tạo..." : "Lưu booking đoàn"}</Button>
                   </form>
+                  </AdminFormDialog>
                 ) : null}
                 <div className={styles.logList}>
                   {partnerBookings.filter((item) => item.partnerId === selectedPartner.id).slice(0, 8).map((item) => (

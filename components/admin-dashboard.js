@@ -200,6 +200,32 @@ function formatVoucherValue(voucher) {
   return `${voucher.voucherDiscountValue || 0}%`;
 }
 
+function getDetailTitle({
+  currentSection,
+  detailOnlyLayout,
+  selectedReservation,
+  selectedOrder,
+  selectedTable,
+  selectedMenuItem,
+  selectedVoucher,
+  selectedDriver,
+  selectedPartner,
+  selectedIntegration
+}) {
+  if (!detailOnlyLayout) return "";
+
+  if (currentSection === "reservations") return selectedReservation?.name || "Chi tiết";
+  if (currentSection === "orders") return selectedOrder?.customerName || "Chi tiết";
+  if (currentSection === "tables") return selectedTable?.name || "Chi tiết";
+  if (currentSection === "menu") return selectedMenuItem?.name || "Chi tiết";
+  if (currentSection === "vouchers") return selectedVoucher?.voucherCode || selectedVoucher?.phone || "Chi tiết";
+  if (currentSection === "drivers") return selectedDriver?.fullName || "Chi tiết";
+  if (currentSection === "partners") return selectedPartner?.name || "Chi tiết";
+  if (currentSection === "integrations") return selectedIntegration?.name || "Chi tiết";
+
+  return "Chi tiết";
+}
+
 function isRecentItem(value, hours = 24) {
   if (!value) return false;
   const createdAt = new Date(value).getTime();
@@ -1581,6 +1607,18 @@ export default function AdminDashboard({
   const orderDraftTotals = computeOrderTotals(orderDraft);
   const orderEditTotals = computeOrderTotals(orderEdit);
   const currentSectionLabel = getAdminSectionLabel(currentSection);
+  const currentDetailTitle = getDetailTitle({
+    currentSection,
+    detailOnlyLayout,
+    selectedReservation,
+    selectedOrder,
+    selectedTable,
+    selectedMenuItem,
+    selectedVoucher,
+    selectedDriver,
+    selectedPartner,
+    selectedIntegration
+  });
 
   return (
     <SidebarProvider
@@ -1618,6 +1656,10 @@ export default function AdminDashboard({
           adminProfile={adminProfile}
           selectedBranch={selectedBranch}
           notificationCount={notificationFeed.length}
+          currentSection={currentSection}
+          detailMode={detailOnlyLayout}
+          detailTitle={currentDetailTitle}
+          branchFilterId={branchFilterId}
         />
 
         <div className="flex-1 w-full min-w-0 p-4 md:p-6">

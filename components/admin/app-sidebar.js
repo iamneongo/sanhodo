@@ -114,7 +114,7 @@ export default function AppSidebar({
         ) : null}
 
         <SidebarGroup>
-          <SidebarGroupLabel>Quản trị</SidebarGroupLabel>
+          <SidebarGroupLabel>Điều hướng</SidebarGroupLabel>
           <SidebarMenu>
             {visibleSections.map((key) => {
               const Icon = TAB_ICONS[key] || LayoutDashboard;

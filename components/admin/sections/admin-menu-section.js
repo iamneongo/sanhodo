@@ -1,6 +1,7 @@
 "use client";
 
 import AdminEmptyState from "../admin-empty-state";
+import AdminFormDialog from "../admin-form-dialog";
 import AdminActiveFilters from "../admin-active-filters";
 import AdminPageToolbar from "../admin-page-toolbar";
 import AdminSurfaceCard from "../admin-surface-card";
@@ -72,8 +73,8 @@ export default function AdminMenuSection({
           <AdminPageToolbar
             actions={
               permissions.canManageMenu ? (
-                <Button type="button" variant="secondary" onClick={() => setMenuCreateOpen((prev) => !prev)}>
-                  {menuCreateOpen ? "Đóng form" : "Tạo món"}
+                <Button type="button" variant="secondary" onClick={() => setMenuCreateOpen(true)}>
+                  Tạo món
                 </Button>
               ) : null
             }
@@ -92,7 +93,14 @@ export default function AdminMenuSection({
             <FormSelect value={menuStatusFilter} onValueChange={setMenuStatusFilter} options={[{ value: "all", label: "Tất cả trạng thái" }, ...availabilityStatuses]} placeholder="Lọc trạng thái" />
             <FormSelect value={menuSort} onValueChange={setMenuSort} options={menuSortOptions} placeholder="Sắp xếp" />
           </AdminPageToolbar>
-          {menuCreateOpen && permissions.canManageMenu ? (
+          {permissions.canManageMenu ? (
+            <AdminFormDialog
+              open={menuCreateOpen}
+              onOpenChange={setMenuCreateOpen}
+              title="Tạo món mới"
+              description="Thêm món mới vào thực đơn với giá, trạng thái phục vụ và ghi chú theo mùa."
+              size="wide"
+            >
             <form className={styles.inlineForm} onSubmit={createMenuItemEntry}>
               <Input type="text" placeholder="Tên món" value={menuDraft.name} onChange={(event) => setMenuDraft((prev) => ({ ...prev, name: event.target.value }))} required />
               <Input type="text" placeholder="Danh mục" value={menuDraft.category} onChange={(event) => setMenuDraft((prev) => ({ ...prev, category: event.target.value }))} />
@@ -109,6 +117,7 @@ export default function AdminMenuSection({
               <Textarea placeholder="Mô tả" rows={3} value={menuDraft.description} onChange={(event) => setMenuDraft((prev) => ({ ...prev, description: event.target.value }))} />
               <Button type="submit" disabled={menuSaving}>{menuSaving ? "Đang tạo..." : "Lưu món"}</Button>
             </form>
+            </AdminFormDialog>
           ) : null}
           <Table>
             <TableHeader>

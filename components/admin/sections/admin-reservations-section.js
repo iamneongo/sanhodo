@@ -1,6 +1,7 @@
 "use client";
 
 import AdminDetailHeader from "../admin-detail-header";
+import AdminFormDialog from "../admin-form-dialog";
 import AdminActiveFilters from "../admin-active-filters";
 import AdminEmptyState from "../admin-empty-state";
 import AdminPageToolbar from "../admin-page-toolbar";
@@ -78,8 +79,8 @@ export default function AdminReservationsSection({
           <AdminPageToolbar
             actions={
               permissions.canManageReservations ? (
-                <Button type="button" variant="secondary" onClick={() => setManualOpen((prev) => !prev)}>
-                  {manualOpen ? "Đóng form" : "Thêm đặt bàn"}
+                <Button type="button" variant="secondary" onClick={() => setManualOpen(true)}>
+                  Tạo đặt bàn
                 </Button>
               ) : null
             }
@@ -126,7 +127,14 @@ export default function AdminReservationsSection({
             </Select>
           </AdminPageToolbar>
 
-          {manualOpen && permissions.canManageReservations ? (
+          {permissions.canManageReservations ? (
+            <AdminFormDialog
+              open={manualOpen}
+              onOpenChange={setManualOpen}
+              title="Tạo đặt bàn mới"
+              description="Nhập nhanh thông tin khách để tạo lead đặt bàn thủ công."
+              size="medium"
+            >
             <form className={styles.inlineForm} onSubmit={createManualReservation}>
               <Input
                 type="text"
@@ -187,6 +195,7 @@ export default function AdminReservationsSection({
                 {reservationSaving ? "Đang lưu..." : "Lưu đặt bàn"}
               </Button>
             </form>
+            </AdminFormDialog>
           ) : null}
 
           <Table>

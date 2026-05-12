@@ -1,9 +1,9 @@
 "use client";
 
 import AdminEmptyState from "../admin-empty-state";
+import AdminBarChart from "../admin-bar-chart";
 import AdminStatCard from "../admin-stat-card";
 import AdminSurfaceCard from "../admin-surface-card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import styles from "../../admin.module.css";
 
 export default function AdminOverviewSection({
@@ -28,8 +28,7 @@ export default function AdminOverviewSection({
         <AdminStatCard label="Thực đơn" value={menuStats.total} detail={`${menuStats.featured} món nổi bật • ${menuStats.lowStock} món cần chú ý`} />
         <AdminStatCard label="Bàn" value={tableStats.total} detail={`${tableStats.available} bàn còn trống`} />
         <AdminStatCard label="Voucher" value={voucherStats.total} detail={`${voucherStats.activeCodes} mã đã phát • ${voucherStats.recent} lead trong 24h`} accent="soft" />
-        <AdminStatCard label="Tài xế" value={driverStats.total} detail={`${driverStats.active} đang hoạt động • ${driverStats.pendingCommissions} khoản chờ duyệt`} />
-        <AdminStatCard label="Đối tác" value={partnerStats.total} detail={`${partnerStats.openBookings} booking đoàn đang mở • ${partnerStats.active} đối tác hoạt động`} accent="ocean" />
+        <AdminStatCard label="Đối tác & giới thiệu" value={partnerStats.total + driverStats.total} detail={`${partnerStats.openBookings} booking đoàn mở • ${driverStats.pendingCommissions} khoản chờ duyệt`} accent="ocean" />
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
@@ -95,31 +94,20 @@ export default function AdminOverviewSection({
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
         <AdminSurfaceCard
-          kicker="Top món"
-          title="Món bán tốt"
-          description="Dựa trên dữ liệu order hiện có của chi nhánh đang xem."
+          kicker="Biểu đồ"
+          title="Top món theo doanh thu"
+          description="So sánh nhanh các món đang đóng góp doanh thu tốt nhất."
           className={styles.insightCard}
-          bodyClassName="p-0"
         >
           {topSellingItems.length ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Món ăn</TableHead>
-                  <TableHead>Số lượng</TableHead>
-                  <TableHead>Doanh thu</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {topSellingItems.map((item) => (
-                  <TableRow key={item.name}>
-                    <TableCell className="font-medium text-zinc-900">{item.name}</TableCell>
-                    <TableCell>{item.quantity} phần</TableCell>
-                    <TableCell>{formatCurrency(item.revenue)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <AdminBarChart
+              items={topSellingItems.map((item) => ({
+                label: item.name,
+                value: item.revenue,
+                helper: `${item.quantity} phần đã bán`
+              }))}
+              formatValue={formatCurrency}
+            />
           ) : (
             <div className="p-5">
               <AdminEmptyState title="Chưa đủ dữ liệu order." description="Khi có thêm order, khối top món sẽ tự cập nhật." />
