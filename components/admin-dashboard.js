@@ -298,6 +298,8 @@ function withBranchQuery(url, branchId) {
 
 export default function AdminDashboard({
   activeSection = "overview",
+  detailMode = false,
+  detailId = "",
   initialBranches,
   initialReservations,
   initialVouchers,
@@ -366,17 +368,33 @@ export default function AdminDashboard({
   const [driverQuery, setDriverQuery] = useState("");
   const [partnerQuery, setPartnerQuery] = useState("");
 
-  const [selectedReservationId, setSelectedReservationId] = useState(initialReservations[0]?.id || "");
-  const [selectedVoucherId, setSelectedVoucherId] = useState(initialVouchers[0]?.id || "");
+  const [selectedReservationId, setSelectedReservationId] = useState(
+    activeSection === "reservations" && detailId ? detailId : initialReservations[0]?.id || ""
+  );
+  const [selectedVoucherId, setSelectedVoucherId] = useState(
+    activeSection === "vouchers" && detailId ? detailId : initialVouchers[0]?.id || ""
+  );
   const [selectedVoucherCampaignId, setSelectedVoucherCampaignId] = useState(
     initialVoucherCampaigns?.[0]?.id || ""
   );
-  const [selectedDriverId, setSelectedDriverId] = useState(initialDrivers?.[0]?.id || "");
-  const [selectedPartnerId, setSelectedPartnerId] = useState(initialTravelPartners?.[0]?.id || "");
-  const [selectedOrderId, setSelectedOrderId] = useState(initialOrders[0]?.id || "");
-  const [selectedMenuId, setSelectedMenuId] = useState(initialMenuItems[0]?.id || "");
-  const [selectedTableId, setSelectedTableId] = useState(initialTables[0]?.id || "");
-  const [selectedIntegrationId, setSelectedIntegrationId] = useState(initialIntegrations[0]?.id || "");
+  const [selectedDriverId, setSelectedDriverId] = useState(
+    activeSection === "drivers" && detailId ? detailId : initialDrivers?.[0]?.id || ""
+  );
+  const [selectedPartnerId, setSelectedPartnerId] = useState(
+    activeSection === "partners" && detailId ? detailId : initialTravelPartners?.[0]?.id || ""
+  );
+  const [selectedOrderId, setSelectedOrderId] = useState(
+    activeSection === "orders" && detailId ? detailId : initialOrders[0]?.id || ""
+  );
+  const [selectedMenuId, setSelectedMenuId] = useState(
+    activeSection === "menu" && detailId ? detailId : initialMenuItems[0]?.id || ""
+  );
+  const [selectedTableId, setSelectedTableId] = useState(
+    activeSection === "tables" && detailId ? detailId : initialTables[0]?.id || ""
+  );
+  const [selectedIntegrationId, setSelectedIntegrationId] = useState(
+    activeSection === "integrations" && detailId ? detailId : initialIntegrations[0]?.id || ""
+  );
   const selectedBranch =
     (initialBranches || []).find((item) => item.id === branchFilterId) ||
     (initialBranches || []).find((item) => item.code === adminProfile?.branch_code) ||
@@ -470,10 +488,34 @@ export default function AdminDashboard({
     [currentRole]
   );
   const currentSection = visibleSections.includes(activeSection) ? activeSection : visibleSections[0] || "overview";
+  const branchQuery = branchFilterId ? `?branch=${encodeURIComponent(branchFilterId)}` : "";
+  const buildAdminHref = (section, itemId = "") => `/admin/${section}${itemId ? `/${itemId}` : ""}${branchQuery}`;
+  const openSectionDetail = (section, itemId) => router.push(buildAdminHref(section, itemId));
+  const backToSection = (section = currentSection) => router.push(buildAdminHref(section));
+  const detailOnlyLayout = detailMode && currentSection !== "overview";
+  const detailHeaderActions = (section, extra = null) => (
+    <div className={styles.detailActions}>
+      <Button type="button" variant="outline" onClick={() => backToSection(section)}>Quay lại danh sách</Button>
+      {extra}
+    </div>
+  );
   const attachBranchToPayload = (payload) => ({
     ...payload,
     branchId: payload?.branchId || branchFilterId || ""
   });
+
+  useEffect(() => {
+    if (!detailMode || !detailId) return;
+
+    if (currentSection === "reservations") setSelectedReservationId(detailId);
+    if (currentSection === "orders") setSelectedOrderId(detailId);
+    if (currentSection === "tables") setSelectedTableId(detailId);
+    if (currentSection === "menu") setSelectedMenuId(detailId);
+    if (currentSection === "vouchers") setSelectedVoucherId(detailId);
+    if (currentSection === "drivers") setSelectedDriverId(detailId);
+    if (currentSection === "partners") setSelectedPartnerId(detailId);
+    if (currentSection === "integrations") setSelectedIntegrationId(detailId);
+  }, [currentSection, detailId, detailMode]);
 
   useEffect(() => {
     setOrderEdit(cloneOrder(selectedOrder));
@@ -518,7 +560,8 @@ export default function AdminDashboard({
       params.set("branch", nextBranchId);
     }
     const query = params.toString();
-    router.replace(query ? `/admin/${currentSection}?${query}` : `/admin/${currentSection}`);
+    const basePath = detailOnlyLayout && detailId ? `/admin/${currentSection}/${detailId}` : `/admin/${currentSection}`;
+    router.replace(query ? `${basePath}?${query}` : basePath);
     router.refresh();
   };
 
@@ -1405,8 +1448,8 @@ export default function AdminDashboard({
         </section> : null}
 
         {currentSection === "reservations" ? (
-          <section className={styles.adminGrid}>
-            <AdminListShell>
+          <section className={detailOnlyLayout ? "grid gap-4" : styles.adminGrid}>
+            {!detailOnlyLayout ? <AdminListShell>
               <div className={styles.panelToolbar}>
                 <Input type="search" placeholder="Tìm khách đặt bàn..." value={reservationQuery} onChange={(event) => setReservationQuery(event.target.value)} />
                 <Select value={reservationStatus} onValueChange={setReservationStatus}>
@@ -1449,7 +1492,7 @@ export default function AdminDashboard({
                 </TableHeader>
                 <TableBody>
                   {filteredReservations.map((item) => (
-                    <TableRow key={item.id} className={item.id === selectedReservation?.id ? styles.activeRow : ""} onClick={() => setSelectedReservationId(item.id)}>
+                    <TableRow key={item.id} className={detailOnlyLayout && item.id === selectedReservation?.id ? styles.activeRow : ""} onClick={() => openSectionDetail("reservations", item.id)}>
                       <TableCell><strong>{item.name}</strong><span>{item.guests} khách</span></TableCell>
                       <TableCell>{item.phone}</TableCell>
                       <TableCell>{formatDate(item.datetime)}</TableCell>
@@ -1459,15 +1502,15 @@ export default function AdminDashboard({
                   ))}
                 </TableBody>
               </Table>
-            </AdminListShell>
+            </AdminListShell> : null}
 
-            <AdminDetailShell>
+            {detailOnlyLayout ? <AdminDetailShell>
               {selectedReservation ? (
                 <div>
                   <AdminDetailHeader
                     kicker="Chi tiết đặt bàn"
                     title={selectedReservation.name}
-                    actions={permissions.canManageReservations ? <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteReservation(selectedReservation.id)}>Xóa lead</Button> : null}
+                    actions={detailHeaderActions("reservations", permissions.canManageReservations ? <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteReservation(selectedReservation.id)}>Xóa lead</Button> : null)}
                   />
                   {permissions.canManageReservations ? <div className={styles.quickStatusRow}>{reservationStatuses.filter((item) => item.value !== "all").map((item) => <Button type="button" variant={selectedReservation.status === item.value ? "default" : "outline"} key={item.value} className={selectedReservation.status === item.value ? styles.quickActive : ""} onClick={() => patchReservation(selectedReservation.id, { ...selectedReservation, status: item.value })}>{item.label}</Button>)}</div> : null}
                   <div className={styles.editGrid}>
@@ -1479,14 +1522,14 @@ export default function AdminDashboard({
                   </div>
                   {permissions.canViewIntegrations ? <div className={styles.syncBox}><div><span className={styles.kicker}>Sync POS/PMS</span><p>Đồng bộ lead này sang hệ POS/PMS.</p></div><div className={styles.syncActions}><Select value={selectedIntegrationId} onValueChange={setSelectedIntegrationId} disabled={!permissions.canManageIntegrations}><SelectTrigger><SelectValue placeholder="Chọn tích hợp" /></SelectTrigger><SelectContent>{integrations.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select>{permissions.canSyncIntegrations ? <Button type="button" onClick={() => syncReservation(selectedReservation.id, selectedIntegrationId)} disabled={integrationSaving}>{integrationSaving ? "Đang sync..." : "Sync ngay"}</Button> : null}</div></div> : null}
                 </div>
-              ) : <div className={styles.emptyState}>Chưa có lead đặt bàn.</div>}
-            </AdminDetailShell>
+              ) : <div className={styles.emptyState}>Không tìm thấy lead đặt bàn.</div>}
+            </AdminDetailShell> : null}
           </section>
         ) : null}
 
         {currentSection === "orders" ? (
-          <section className={styles.adminGrid}>
-            <AdminListShell>
+          <section className={detailOnlyLayout ? "grid gap-4" : styles.adminGrid}>
+            {!detailOnlyLayout ? <AdminListShell>
               <div className={styles.panelToolbar}>
                 <Input type="search" placeholder="Tìm khách order..." value={orderQuery} onChange={(event) => setOrderQuery(event.target.value)} />
                 <Select value={orderStatus} onValueChange={setOrderStatus}>
@@ -1525,15 +1568,15 @@ export default function AdminDashboard({
                   <TableRow><TableHead>Khách</TableHead><TableHead>Bàn</TableHead><TableHead>Món</TableHead><TableHead>Tổng</TableHead><TableHead>Trạng thái</TableHead></TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredOrders.map((item) => <TableRow key={item.id} className={item.id === selectedOrder?.id ? styles.activeRow : ""} onClick={() => setSelectedOrderId(item.id)}><TableCell><strong>{item.customerName}</strong><span>{formatDate(item.createdAt)}</span></TableCell><TableCell>{findTableName(item.tableId)}</TableCell><TableCell>{item.items.length}</TableCell><TableCell>{formatCurrency(item.totalAmount)}</TableCell><TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_contacted}`}>{item.status}</span></TableCell></TableRow>)}
+                  {filteredOrders.map((item) => <TableRow key={item.id} className={detailOnlyLayout && item.id === selectedOrder?.id ? styles.activeRow : ""} onClick={() => openSectionDetail("orders", item.id)}><TableCell><strong>{item.customerName}</strong><span>{formatDate(item.createdAt)}</span></TableCell><TableCell>{findTableName(item.tableId)}</TableCell><TableCell>{item.items.length}</TableCell><TableCell>{formatCurrency(item.totalAmount)}</TableCell><TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_contacted}`}>{item.status}</span></TableCell></TableRow>)}
                 </TableBody>
               </Table>
-            </AdminListShell>
+            </AdminListShell> : null}
 
-            <AdminDetailShell>
+            {detailOnlyLayout ? <AdminDetailShell>
               {selectedOrder ? (
                 <div>
-                  <AdminDetailHeader kicker="Chi tiết order" title={selectedOrder.customerName} actions={permissions.canManageOrders ? <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteOrder(selectedOrder.id)}>Xóa order</Button> : null} />
+                  <AdminDetailHeader kicker="Chi tiết order" title={selectedOrder.customerName} actions={detailHeaderActions("orders", permissions.canManageOrders ? <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteOrder(selectedOrder.id)}>Xóa order</Button> : null)} />
                   {permissions.canManageOrders ? <div className={styles.quickStatusRow}>{orderStatuses.filter((item) => item.value !== "all").map((item) => <Button type="button" variant={orderEdit.status === item.value ? "default" : "outline"} key={item.value} className={orderEdit.status === item.value ? styles.quickActive : ""} onClick={() => setOrderEdit((prev) => ({ ...prev, status: item.value }))}>{item.label}</Button>)}</div> : null}
                   <div className={styles.editGrid}>
                     <label><span>Tên khách</span><Input type="text" value={orderEdit.customerName} onChange={(event) => setOrderEdit((prev) => ({ ...prev, customerName: event.target.value }))} /></label>
@@ -1550,36 +1593,36 @@ export default function AdminDashboard({
                   <div className={styles.summaryRow}><span>Tạm tính: {formatCurrency(orderEditTotals.subtotal)}</span><span>Tổng: {formatCurrency(orderEditTotals.total)}</span></div>
                   {permissions.canManageOrders ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveOrderEdit} disabled={orderSaving}>{orderSaving ? "Đang lưu..." : "Lưu order"}</Button></div> : null}
                 </div>
-              ) : <div className={styles.emptyState}>Chưa có order.</div>}
-            </AdminDetailShell>
+              ) : <div className={styles.emptyState}>Không tìm thấy order.</div>}
+            </AdminDetailShell> : null}
           </section>
         ) : null}
 
         {currentSection === "tables" ? (
-          <section className={styles.adminGrid}>
-            <AdminListShell>
+          <section className={detailOnlyLayout ? "grid gap-4" : styles.adminGrid}>
+            {!detailOnlyLayout ? <AdminListShell>
               <div className={styles.panelToolbar}><Input type="search" placeholder="Tìm bàn..." value={tableQuery} onChange={(event) => setTableQuery(event.target.value)} /><div></div>{permissions.canManageTables ? <Button type="button" variant="secondary" onClick={() => setTableCreateOpen((prev) => !prev)}>{tableCreateOpen ? "Đóng form" : "Tạo bàn"}</Button> : <div></div>}</div>
               {tableCreateOpen && permissions.canManageTables ? <form className={styles.inlineForm} onSubmit={createTableEntry}><Input type="text" placeholder="Tên bàn" value={tableDraft.name} onChange={(event) => setTableDraft((prev) => ({ ...prev, name: event.target.value }))} required /><Input type="text" placeholder="Khu vực" value={tableDraft.area} onChange={(event) => setTableDraft((prev) => ({ ...prev, area: event.target.value }))} /><div className={styles.inlineRow}><Input type="number" min="1" placeholder="Sức chứa" value={tableDraft.capacity} onChange={(event) => setTableDraft((prev) => ({ ...prev, capacity: Number(event.target.value) }))} /><select value={tableDraft.status} onChange={(event) => setTableDraft((prev) => ({ ...prev, status: event.target.value }))}>{tableStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></div><Textarea placeholder="Ghi chú" rows={3} value={tableDraft.notes} onChange={(event) => setTableDraft((prev) => ({ ...prev, notes: event.target.value }))} /><Button type="submit" disabled={tableSaving}>{tableSaving ? "Đang tạo..." : "Lưu bàn"}</Button></form> : null}
-              <Table><TableHeader><TableRow><TableHead>Bàn</TableHead><TableHead>Khu vực</TableHead><TableHead>Sức chứa</TableHead><TableHead>Trạng thái</TableHead></TableRow></TableHeader><TableBody>{filteredTables.map((item) => <TableRow key={item.id} className={item.id === selectedTable?.id ? styles.activeRow : ""} onClick={() => setSelectedTableId(item.id)}><TableCell><strong>{item.name}</strong><span>{formatCurrency(item.minSpend)}</span></TableCell><TableCell>{item.area}</TableCell><TableCell>{item.capacity}</TableCell><TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{item.status}</span></TableCell></TableRow>)}</TableBody></Table>
-            </AdminListShell>
-            <AdminDetailShell>{selectedTable ? <AdminSurfaceCard kicker="Chi tiết bàn" title={selectedTable.name} actions={permissions.canManageTables ? <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteTableEntry(selectedTable.id)}>Xóa bàn</Button> : null} className={styles.subsectionCard}><div className={styles.editGrid}><label><span>Tên bàn</span><Input type="text" value={tableEdit.name} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, name: event.target.value }))} /></label><label><span>Khu vực</span><Input type="text" value={tableEdit.area} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, area: event.target.value }))} /></label><label><span>Sức chứa</span><Input type="number" min="1" value={tableEdit.capacity} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, capacity: Number(event.target.value) }))} /></label><label><span>Trạng thái</span><select value={tableEdit.status} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, status: event.target.value }))}>{tableStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></label><label className={styles.fullWidth}><span>Ghi chú</span><Textarea rows={5} value={tableEdit.notes} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, notes: event.target.value }))} /></label></div>{permissions.canManageTables ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveTableEdit} disabled={tableSaving}>{tableSaving ? "Đang lưu..." : "Lưu bàn"}</Button></div> : null}</AdminSurfaceCard> : <div className={styles.emptyState}>Chưa có bàn.</div>}</AdminDetailShell>
+              <Table><TableHeader><TableRow><TableHead>Bàn</TableHead><TableHead>Khu vực</TableHead><TableHead>Sức chứa</TableHead><TableHead>Trạng thái</TableHead></TableRow></TableHeader><TableBody>{filteredTables.map((item) => <TableRow key={item.id} className={detailOnlyLayout && item.id === selectedTable?.id ? styles.activeRow : ""} onClick={() => openSectionDetail("tables", item.id)}><TableCell><strong>{item.name}</strong><span>{formatCurrency(item.minSpend)}</span></TableCell><TableCell>{item.area}</TableCell><TableCell>{item.capacity}</TableCell><TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{item.status}</span></TableCell></TableRow>)}</TableBody></Table>
+            </AdminListShell> : null}
+            {detailOnlyLayout ? <AdminDetailShell>{selectedTable ? <AdminSurfaceCard kicker="Chi tiết bàn" title={selectedTable.name} actions={detailHeaderActions("tables", permissions.canManageTables ? <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteTableEntry(selectedTable.id)}>Xóa bàn</Button> : null)} className={styles.subsectionCard}><div className={styles.editGrid}><label><span>Tên bàn</span><Input type="text" value={tableEdit.name} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, name: event.target.value }))} /></label><label><span>Khu vực</span><Input type="text" value={tableEdit.area} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, area: event.target.value }))} /></label><label><span>Sức chứa</span><Input type="number" min="1" value={tableEdit.capacity} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, capacity: Number(event.target.value) }))} /></label><label><span>Trạng thái</span><select value={tableEdit.status} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, status: event.target.value }))}>{tableStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></label><label className={styles.fullWidth}><span>Ghi chú</span><Textarea rows={5} value={tableEdit.notes} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, notes: event.target.value }))} /></label></div>{permissions.canManageTables ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveTableEdit} disabled={tableSaving}>{tableSaving ? "Đang lưu..." : "Lưu bàn"}</Button></div> : null}</AdminSurfaceCard> : <div className={styles.emptyState}>Không tìm thấy bàn.</div>}</AdminDetailShell> : null}
           </section>
         ) : null}
 
         {currentSection === "menu" ? (
-          <section className={styles.adminGrid}>
-            <AdminListShell>
+          <section className={detailOnlyLayout ? "grid gap-4" : styles.adminGrid}>
+            {!detailOnlyLayout ? <AdminListShell>
               <div className={styles.panelToolbar}><Input type="search" placeholder="Tìm món..." value={menuQuery} onChange={(event) => setMenuQuery(event.target.value)} /><div></div>{permissions.canManageMenu ? <Button type="button" variant="secondary" onClick={() => setMenuCreateOpen((prev) => !prev)}>{menuCreateOpen ? "Đóng form" : "Tạo món"}</Button> : <div></div>}</div>
               {menuCreateOpen && permissions.canManageMenu ? <form className={styles.inlineForm} onSubmit={createMenuItemEntry}><Input type="text" placeholder="Tên món" value={menuDraft.name} onChange={(event) => setMenuDraft((prev) => ({ ...prev, name: event.target.value }))} required /><Input type="text" placeholder="Danh mục" value={menuDraft.category} onChange={(event) => setMenuDraft((prev) => ({ ...prev, category: event.target.value }))} /><div className={styles.inlineRow}><Input type="number" min="0" placeholder="Giá" value={menuDraft.price} onChange={(event) => setMenuDraft((prev) => ({ ...prev, price: Number(event.target.value) }))} /><select value={menuDraft.spicyLevel} onChange={(event) => setMenuDraft((prev) => ({ ...prev, spicyLevel: event.target.value }))}>{spicyLevels.map((item) => <option key={item} value={item}>{item}</option>)}</select></div><div className={styles.inlineRow}><select value={menuDraft.availabilityStatus} onChange={(event) => setMenuDraft((prev) => ({ ...prev, availabilityStatus: event.target.value }))}>{availabilityStatuses.map((item) => <option key={item} value={item}>{item}</option>)}</select><select value={menuDraft.isFeatured ? "yes" : "no"} onChange={(event) => setMenuDraft((prev) => ({ ...prev, isFeatured: event.target.value === "yes" }))}><option value="yes">featured</option><option value="no">normal</option></select></div><Input type="text" placeholder="Image URL" value={menuDraft.imageUrl} onChange={(event) => setMenuDraft((prev) => ({ ...prev, imageUrl: event.target.value }))} /><Textarea placeholder="Ghi chú theo mùa / tồn kho" rows={2} value={menuDraft.seasonNote} onChange={(event) => setMenuDraft((prev) => ({ ...prev, seasonNote: event.target.value }))} /><Textarea placeholder="Mô tả" rows={3} value={menuDraft.description} onChange={(event) => setMenuDraft((prev) => ({ ...prev, description: event.target.value }))} /><Button type="submit" disabled={menuSaving}>{menuSaving ? "Đang tạo..." : "Lưu món"}</Button></form> : null}
-              <Table><TableHeader><TableRow><TableHead>Món</TableHead><TableHead>Danh mục</TableHead><TableHead>Giá</TableHead><TableHead>Trạng thái</TableHead></TableRow></TableHeader><TableBody>{filteredMenuItems.map((item) => <TableRow key={item.id} className={item.id === selectedMenuItem?.id ? styles.activeRow : ""} onClick={() => setSelectedMenuId(item.id)}><TableCell><strong>{item.name}</strong><span>{item.slug}</span></TableCell><TableCell>{item.category}</TableCell><TableCell>{formatCurrency(item.price)}</TableCell><TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.availabilityStatus || (item.isAvailable ? "confirmed" : "cancelled")}`] || styles.status_confirmed}`}>{item.availabilityStatus || (item.isAvailable ? "available" : "hidden")}</span></TableCell></TableRow>)}</TableBody></Table>
-            </AdminListShell>
-            <AdminDetailShell>{selectedMenuItem ? <AdminSurfaceCard kicker="Chi tiết món ăn" title={selectedMenuItem.name} actions={permissions.canManageMenu ? <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteMenuItemEntry(selectedMenuItem.id)}>Xóa món</Button> : null} className={styles.subsectionCard}><div className={styles.editGrid}><label><span>Tên món</span><Input type="text" value={menuEdit.name} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, name: event.target.value }))} /></label><label><span>Slug</span><Input type="text" value={menuEdit.slug} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, slug: event.target.value }))} /></label><label><span>Danh mục</span><Input type="text" value={menuEdit.category} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, category: event.target.value }))} /></label><label><span>Giá</span><Input type="number" min="0" value={menuEdit.price} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, price: Number(event.target.value) }))} /></label><label><span>Image URL</span><Input type="text" value={menuEdit.imageUrl} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, imageUrl: event.target.value }))} /></label><label><span>Available</span><select value={menuEdit.isAvailable ? "yes" : "no"} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, isAvailable: event.target.value === "yes" }))}><option value="yes">yes</option><option value="no">no</option></select></label><label><span>Featured</span><select value={menuEdit.isFeatured ? "yes" : "no"} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, isFeatured: event.target.value === "yes" }))}><option value="yes">yes</option><option value="no">no</option></select></label><label><span>Spicy level</span><select value={menuEdit.spicyLevel} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, spicyLevel: event.target.value }))}>{spicyLevels.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><label><span>Trạng thái món</span><select value={menuEdit.availabilityStatus || "available"} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, availabilityStatus: event.target.value }))}>{availabilityStatuses.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><label className={styles.fullWidth}><span>Ghi chú theo mùa / tồn kho</span><Textarea rows={3} value={menuEdit.seasonNote || ""} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, seasonNote: event.target.value }))} /></label><label className={styles.fullWidth}><span>Mô tả</span><Textarea rows={5} value={menuEdit.description} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, description: event.target.value }))} /></label></div>{permissions.canManageMenu ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveMenuEdit} disabled={menuSaving}>{menuSaving ? "Đang lưu..." : "Lưu món"}</Button></div> : null}</AdminSurfaceCard> : <div className={styles.emptyState}>Chưa có món ăn.</div>}</AdminDetailShell>
+              <Table><TableHeader><TableRow><TableHead>Món</TableHead><TableHead>Danh mục</TableHead><TableHead>Giá</TableHead><TableHead>Trạng thái</TableHead></TableRow></TableHeader><TableBody>{filteredMenuItems.map((item) => <TableRow key={item.id} className={detailOnlyLayout && item.id === selectedMenuItem?.id ? styles.activeRow : ""} onClick={() => openSectionDetail("menu", item.id)}><TableCell><strong>{item.name}</strong><span>{item.slug}</span></TableCell><TableCell>{item.category}</TableCell><TableCell>{formatCurrency(item.price)}</TableCell><TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.availabilityStatus || (item.isAvailable ? "confirmed" : "cancelled")}`] || styles.status_confirmed}`}>{item.availabilityStatus || (item.isAvailable ? "available" : "hidden")}</span></TableCell></TableRow>)}</TableBody></Table>
+            </AdminListShell> : null}
+            {detailOnlyLayout ? <AdminDetailShell>{selectedMenuItem ? <AdminSurfaceCard kicker="Chi tiết món ăn" title={selectedMenuItem.name} actions={detailHeaderActions("menu", permissions.canManageMenu ? <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteMenuItemEntry(selectedMenuItem.id)}>Xóa món</Button> : null)} className={styles.subsectionCard}><div className={styles.editGrid}><label><span>Tên món</span><Input type="text" value={menuEdit.name} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, name: event.target.value }))} /></label><label><span>Slug</span><Input type="text" value={menuEdit.slug} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, slug: event.target.value }))} /></label><label><span>Danh mục</span><Input type="text" value={menuEdit.category} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, category: event.target.value }))} /></label><label><span>Giá</span><Input type="number" min="0" value={menuEdit.price} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, price: Number(event.target.value) }))} /></label><label><span>Image URL</span><Input type="text" value={menuEdit.imageUrl} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, imageUrl: event.target.value }))} /></label><label><span>Available</span><select value={menuEdit.isAvailable ? "yes" : "no"} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, isAvailable: event.target.value === "yes" }))}><option value="yes">yes</option><option value="no">no</option></select></label><label><span>Featured</span><select value={menuEdit.isFeatured ? "yes" : "no"} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, isFeatured: event.target.value === "yes" }))}><option value="yes">yes</option><option value="no">no</option></select></label><label><span>Spicy level</span><select value={menuEdit.spicyLevel} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, spicyLevel: event.target.value }))}>{spicyLevels.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><label><span>Trạng thái món</span><select value={menuEdit.availabilityStatus || "available"} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, availabilityStatus: event.target.value }))}>{availabilityStatuses.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><label className={styles.fullWidth}><span>Ghi chú theo mùa / tồn kho</span><Textarea rows={3} value={menuEdit.seasonNote || ""} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, seasonNote: event.target.value }))} /></label><label className={styles.fullWidth}><span>Mô tả</span><Textarea rows={5} value={menuEdit.description} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, description: event.target.value }))} /></label></div>{permissions.canManageMenu ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveMenuEdit} disabled={menuSaving}>{menuSaving ? "Đang lưu..." : "Lưu món"}</Button></div> : null}</AdminSurfaceCard> : <div className={styles.emptyState}>Không tìm thấy món ăn.</div>}</AdminDetailShell> : null}
           </section>
         ) : null}
 
         {currentSection === "vouchers" ? (
-          <section className={styles.adminGrid}>
-            <AdminListShell>
+          <section className={detailOnlyLayout ? "grid gap-4" : styles.adminGrid}>
+            {!detailOnlyLayout ? <AdminListShell>
               <div className={styles.panelToolbar}>
                 <Input
                   type="search"
@@ -1627,8 +1670,8 @@ export default function AdminDashboard({
                     {filteredVouchers.map((item) => (
                       <tr
                         key={item.id}
-                        className={item.id === selectedVoucher?.id ? styles.activeRow : ""}
-                        onClick={() => setSelectedVoucherId(item.id)}
+                        className={detailOnlyLayout && item.id === selectedVoucher?.id ? styles.activeRow : ""}
+                        onClick={() => openSectionDetail("vouchers", item.id)}
                       >
                         <td>{item.phone}</td>
                         <td>{item.voucherCode || "-"}</td>
@@ -1648,8 +1691,8 @@ export default function AdminDashboard({
                   </tbody>
                 </table>
               </div>
-            </AdminListShell>
-            <AdminDetailShell>
+            </AdminListShell> : null}
+            {detailOnlyLayout ? <AdminDetailShell>
               <AdminSurfaceCard
                 kicker="Voucher campaigns"
                 title="Campaign & loyalty"
@@ -1838,6 +1881,9 @@ export default function AdminDashboard({
                   title={selectedVoucher.phone}
                   actions={(
                     <div className={styles.detailActions}>
+                      <Button type="button" variant="outline" onClick={() => backToSection("vouchers")}>
+                        Quay lại danh sách
+                      </Button>
                       {permissions.canManageVouchers ? (
                         <Button
                           type="button"
@@ -1969,7 +2015,7 @@ export default function AdminDashboard({
                   </div>
                 </AdminSurfaceCard>
               ) : (
-                <div className={styles.emptyState}>Chưa có voucher.</div>
+                <div className={styles.emptyState}>{detailOnlyLayout ? "Không tìm thấy voucher." : "Chưa có voucher."}</div>
               )}
 
               <AdminSurfaceCard
@@ -2010,13 +2056,13 @@ export default function AdminDashboard({
                   ) : null}
                 </div>
               </AdminSurfaceCard>
-            </AdminDetailShell>
+            </AdminDetailShell> : null}
           </section>
         ) : null}
 
         {currentSection === "drivers" && permissions.canViewDrivers ? (
-          <section className={styles.adminGrid}>
-            <AdminListShell>
+          <section className={detailOnlyLayout ? "grid gap-4" : styles.adminGrid}>
+            {!detailOnlyLayout ? <AdminListShell>
               <div className={styles.panelToolbar}>
                 <Input
                   type="search"
@@ -2054,7 +2100,7 @@ export default function AdminDashboard({
                   <thead><tr><th>Tài xế</th><th>Mã giới thiệu</th><th>Hoa hồng</th><th>Trạng thái</th></tr></thead>
                   <tbody>
                     {filteredDrivers.map((item) => (
-                      <tr key={item.id} className={item.id === selectedDriver?.id ? styles.activeRow : ""} onClick={() => setSelectedDriverId(item.id)}>
+                      <tr key={item.id} className={detailOnlyLayout && item.id === selectedDriver?.id ? styles.activeRow : ""} onClick={() => openSectionDetail("drivers", item.id)}>
                         <td><strong>{item.fullName}</strong><span>{item.phone}</span></td>
                         <td>{item.referralCode || "-"}</td>
                         <td>{item.commissionRate}%</td>
@@ -2064,18 +2110,18 @@ export default function AdminDashboard({
                   </tbody>
                 </table>
               </div>
-            </AdminListShell>
-            <AdminDetailShell>
+            </AdminListShell> : null}
+            {detailOnlyLayout ? <AdminDetailShell>
               {selectedDriver ? (
                 <div>
                   <AdminDetailHeader
                     kicker="Driver / Referral"
                     title={selectedDriver.fullName}
-                    actions={permissions.canManageDrivers ? (
+                    actions={detailHeaderActions("drivers", permissions.canManageDrivers ? (
                       <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteDriverEntry(selectedDriver.id)}>
                         Xóa tài xế
                       </Button>
-                    ) : null}
+                    ) : null)}
                   />
                   <div className={styles.metaGrid}>
                     <div><span>Mã tài xế</span><strong>{selectedDriver.code}</strong></div>
@@ -2129,13 +2175,13 @@ export default function AdminDashboard({
               ) : (
                 <div className={styles.emptyState}>Chưa có tài xế.</div>
               )}
-            </AdminDetailShell>
+            </AdminDetailShell> : null}
           </section>
         ) : null}
 
         {currentSection === "partners" && permissions.canViewPartners ? (
-          <section className={styles.adminGrid}>
-            <AdminListShell>
+          <section className={detailOnlyLayout ? "grid gap-4" : styles.adminGrid}>
+            {!detailOnlyLayout ? <AdminListShell>
               <div className={styles.panelToolbar}>
                 <Input
                   type="search"
@@ -2185,7 +2231,7 @@ export default function AdminDashboard({
                   <thead><tr><th>Đối tác</th><th>Loại</th><th>Hoa hồng</th><th>Trạng thái</th></tr></thead>
                   <tbody>
                     {filteredPartners.map((item) => (
-                      <tr key={item.id} className={item.id === selectedPartner?.id ? styles.activeRow : ""} onClick={() => setSelectedPartnerId(item.id)}>
+                      <tr key={item.id} className={detailOnlyLayout && item.id === selectedPartner?.id ? styles.activeRow : ""} onClick={() => openSectionDetail("partners", item.id)}>
                         <td><strong>{item.name}</strong><span>{item.contactName || item.phone}</span></td>
                         <td>{item.partnerType}</td>
                         <td>{item.commissionType === "amount" ? formatCurrency(item.commissionValue) : `${item.commissionValue}%`}</td>
@@ -2195,16 +2241,22 @@ export default function AdminDashboard({
                   </tbody>
                 </table>
               </div>
-            </AdminListShell>
-            <AdminDetailShell>
+            </AdminListShell> : null}
+            {detailOnlyLayout ? <AdminDetailShell>
               {selectedPartner ? (
                 <div>
                   <AdminDetailHeader
                     kicker="Travel partner / HDV"
                     title={selectedPartner.name}
+                    actions={detailHeaderActions("partners")}
                   />
-                  {permissions.canManagePartners ? (
+                  {permissions.canManagePartners ? !detailOnlyLayout ? (
                     <div className={styles.detailHeading} style={{ justifyContent: "flex-end", marginTop: "-16px" }}>
+                      <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deletePartnerEntry(selectedPartner.id)}>Xóa đối tác</Button>
+                    </div>
+                  ) : null : null}
+                  {permissions.canManagePartners && detailOnlyLayout ? (
+                    <div className={styles.detailActions}>
                       <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deletePartnerEntry(selectedPartner.id)}>Xóa đối tác</Button>
                     </div>
                   ) : null}
@@ -2311,27 +2363,28 @@ export default function AdminDashboard({
               ) : (
                 <div className={styles.emptyState}>Chưa có đối tác / HDV.</div>
               )}
-            </AdminDetailShell>
+            </AdminDetailShell> : null}
           </section>
         ) : null}
 
         {currentSection === "integrations" && permissions.canViewIntegrations ? (
-          <section className={styles.integrationLayout}>
-            <div className={styles.integrationList}>
+          <section className={detailOnlyLayout ? "grid gap-4" : styles.integrationLayout}>
+            {!detailOnlyLayout ? <div className={styles.integrationList}>
               {integrations.map((item) => (
-                <Button type="button" variant="ghost" key={item.id} className={`${styles.integrationCard} ${item.id === selectedIntegration?.id ? styles.integrationCardActive : ""}`} onClick={() => setSelectedIntegrationId(item.id)}>
+                <Button type="button" variant="ghost" key={item.id} className={`${detailOnlyLayout && item.id === selectedIntegration?.id ? styles.integrationCardActive : ""} ${styles.integrationCard}`} onClick={() => openSectionDetail("integrations", item.id)}>
                   <div className={styles.integrationCardTop}><strong>{item.name}</strong><span className={`${styles.statusBadge} ${item.enabled ? styles.status_confirmed : styles.status_cancelled}`}>{item.enabled ? "enabled" : "disabled"}</span></div>
                   <small>{item.category.toUpperCase()} • {item.market}</small>
                   <p>{item.description}</p>
                   <span className={styles.integrationMeta}>{item.syncMode === "auto" ? "Tự động đồng bộ" : "Đồng bộ thủ công"}</span>
                 </Button>
               ))}
-            </div>
+            </div> : null}
             <div className={styles.integrationDetail}>
               {selectedIntegration ? (
                 <AdminSurfaceCard
                   kicker="Tích hợp POS/PMS"
                   title={selectedIntegration.name}
+                  actions={detailOnlyLayout ? detailHeaderActions("integrations") : null}
                   className={styles.subsectionCard}
                 >
                   <div className={styles.editGrid}>
@@ -2345,7 +2398,7 @@ export default function AdminDashboard({
                     <label className={styles.fullWidth}><span>Ghi chú</span><Textarea rows={5} defaultValue={selectedIntegration.notes} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { notes: event.target.value })} /></label>
                   </div>
                 </AdminSurfaceCard>
-              ) : null}
+              ) : detailOnlyLayout ? <div className={styles.emptyState}>Không tìm thấy tích hợp.</div> : null}
               <AdminSurfaceCard
                 kicker="Nhật ký đồng bộ"
                 title="Lịch sử sync gần đây"
