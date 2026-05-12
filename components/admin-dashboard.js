@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import AdminBranchesSection from "./admin/sections/admin-branches-section";
 import AdminHeader from "./admin/admin-header";
 import AdminIntegrationsSection from "./admin/sections/admin-integrations-section";
 import AdminMenuSection from "./admin/sections/admin-menu-section";
@@ -147,6 +148,12 @@ const partnerSortOptions = [
   { value: "commission_desc", label: "Hoa hồng cao nhất" }
 ];
 
+const branchSortOptions = [
+  { value: "sort_asc", label: "Thứ tự hiển thị" },
+  { value: "name_asc", label: "Tên A-Z" },
+  { value: "newest", label: "Mới tạo gần đây" }
+];
+
 const tableStatuses = ["available", "reserved", "occupied", "cleaning", "inactive"];
 const orderChannels = ["admin", "website", "reservation", "walk-in", "phone", "zalo"];
 const spicyLevels = ["none", "mild", "medium", "hot"];
@@ -203,6 +210,7 @@ function formatVoucherValue(voucher) {
 function getDetailTitle({
   currentSection,
   detailOnlyLayout,
+  selectedManagedBranch,
   selectedReservation,
   selectedOrder,
   selectedTable,
@@ -214,6 +222,7 @@ function getDetailTitle({
 }) {
   if (!detailOnlyLayout) return "";
 
+  if (currentSection === "branches") return selectedManagedBranch?.name || "Chi tiết";
   if (currentSection === "reservations") return selectedReservation?.name || "Chi tiết";
   if (currentSection === "orders") return selectedOrder?.customerName || "Chi tiết";
   if (currentSection === "tables") return selectedTable?.name || "Chi tiết";
@@ -245,6 +254,14 @@ function sortByCreatedDesc(items) {
 
 function sortByName(items, field = "name") {
   return [...items].sort((a, b) => String(a[field] || "").localeCompare(String(b[field] || ""), "vi"));
+}
+
+function sortBranches(items = []) {
+  return [...items].sort((a, b) => {
+    const sortDiff = Number(a.sortOrder || 0) - Number(b.sortOrder || 0);
+    if (sortDiff !== 0) return sortDiff;
+    return String(a.name || "").localeCompare(String(b.name || ""), "vi");
+  });
 }
 
 function sortItems(items, mode, comparators) {
@@ -296,6 +313,18 @@ function createEmptyOrderDraft() {
     discountAmount: 0,
     serviceCharge: 0,
     items: []
+  };
+}
+
+function createEmptyBranchDraft() {
+  return {
+    code: "",
+    name: "",
+    shortName: "",
+    address: "",
+    phone: "",
+    isActive: true,
+    sortOrder: 0
   };
 }
 
@@ -491,6 +520,7 @@ export default function AdminDashboard({
   const currentRole = adminProfile?.role || "admin";
   const branchFilterId = activeBranchId && activeBranchId !== "all" ? activeBranchId : "";
   const [message, setMessage] = useState("");
+  const [branches, setBranches] = useState(sortBranches(initialBranches || []));
 
   const [reservations, setReservations] = useState(sortByCreatedDesc(initialReservations));
   const [vouchers, setVouchers] = useState(sortByCreatedDesc(initialVouchers));
@@ -544,7 +574,13 @@ export default function AdminDashboard({
   const [partnerQuery, setPartnerQuery] = useState("");
   const [partnerStatusFilter, setPartnerStatusFilter] = useState("all");
   const [partnerSort, setPartnerSort] = useState("name_asc");
+  const [branchQuery, setBranchQuery] = useState("");
+  const [branchStatusFilter, setBranchStatusFilter] = useState("all");
+  const [branchSort, setBranchSort] = useState("sort_asc");
 
+  const [selectedManagedBranchId, setSelectedManagedBranchId] = useState(
+    activeSection === "branches" && detailId ? detailId : initialBranches?.[0]?.id || ""
+  );
   const [selectedReservationId, setSelectedReservationId] = useState(
     activeSection === "reservations" && detailId ? detailId : initialReservations[0]?.id || ""
   );
@@ -573,11 +609,12 @@ export default function AdminDashboard({
     activeSection === "integrations" && detailId ? detailId : initialIntegrations[0]?.id || ""
   );
   const selectedBranch =
-    (initialBranches || []).find((item) => item.id === branchFilterId) ||
-    (initialBranches || []).find((item) => item.code === adminProfile?.branch_code) ||
-    (initialBranches || [])[0] ||
+    branches.find((item) => item.id === branchFilterId) ||
+    branches.find((item) => item.code === adminProfile?.branch_code) ||
+    branches[0] ||
     null;
 
+  const [branchCreateOpen, setBranchCreateOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const [orderCreateOpen, setOrderCreateOpen] = useState(false);
   const [menuCreateOpen, setMenuCreateOpen] = useState(false);
@@ -588,6 +625,7 @@ export default function AdminDashboard({
   const [partnerContractCreateOpen, setPartnerContractCreateOpen] = useState(false);
   const [partnerBookingCreateOpen, setPartnerBookingCreateOpen] = useState(false);
 
+  const [branchSaving, setBranchSaving] = useState(false);
   const [reservationSaving, setReservationSaving] = useState(false);
   const [voucherSaving, setVoucherSaving] = useState(false);
   const [orderSaving, setOrderSaving] = useState(false);
@@ -608,6 +646,8 @@ export default function AdminDashboard({
     referralCode: "",
     tableId: ""
   });
+  const [branchDraft, setBranchDraft] = useState(createEmptyBranchDraft());
+  const [branchEdit, setBranchEdit] = useState(createEmptyBranchDraft());
   const [orderDraft, setOrderDraft] = useState(createEmptyOrderDraft());
   const [orderEdit, setOrderEdit] = useState(createEmptyOrderDraft());
   const [menuDraft, setMenuDraft] = useState(createEmptyMenuDraft());
@@ -628,6 +668,7 @@ export default function AdminDashboard({
   const selectedVoucher = vouchers.find((item) => item.id === selectedVoucherId) || null;
   const selectedVoucherCampaign =
     voucherCampaigns.find((item) => item.id === selectedVoucherCampaignId) || null;
+  const selectedManagedBranch = branches.find((item) => item.id === selectedManagedBranchId) || null;
   const selectedVoucherCustomer =
     customerProfiles.find(
       (item) =>
@@ -643,6 +684,8 @@ export default function AdminDashboard({
   const permissions = useMemo(
     () => ({
       canExport: hasAdminPermission(currentRole, "dashboard.export"),
+      canViewBranches: hasAdminPermission(currentRole, "branches.view"),
+      canManageBranches: hasAdminPermission(currentRole, "branches.manage"),
       canManageReservations: hasAdminPermission(currentRole, "reservations.manage"),
       canManageOrders: hasAdminPermission(currentRole, "orders.manage"),
       canManageTables: hasAdminPermission(currentRole, "tables.manage"),
@@ -667,8 +710,9 @@ export default function AdminDashboard({
     [currentRole]
   );
   const currentSection = visibleSections.includes(activeSection) ? activeSection : visibleSections[0] || "overview";
-  const branchQuery = branchFilterId ? `?branch=${encodeURIComponent(branchFilterId)}` : "";
-  const buildAdminHref = (section, itemId = "") => `/admin/${section}${itemId ? `/${itemId}` : ""}${branchQuery}`;
+  const branchQueryString = branchFilterId ? `?branch=${encodeURIComponent(branchFilterId)}` : "";
+  const buildAdminHref = (section, itemId = "") =>
+    `/admin/${section}${itemId ? `/${itemId}` : ""}${branchQueryString}`;
   const openSectionDetail = (section, itemId) => router.push(buildAdminHref(section, itemId));
   const backToSection = (section = currentSection) => router.push(buildAdminHref(section));
   const detailOnlyLayout = detailMode && currentSection !== "overview";
@@ -686,6 +730,7 @@ export default function AdminDashboard({
   useEffect(() => {
     if (!detailMode || !detailId) return;
 
+    if (currentSection === "branches") setSelectedManagedBranchId(detailId);
     if (currentSection === "reservations") setSelectedReservationId(detailId);
     if (currentSection === "orders") setSelectedOrderId(detailId);
     if (currentSection === "tables") setSelectedTableId(detailId);
@@ -695,6 +740,10 @@ export default function AdminDashboard({
     if (currentSection === "partners") setSelectedPartnerId(detailId);
     if (currentSection === "integrations") setSelectedIntegrationId(detailId);
   }, [currentSection, detailId, detailMode]);
+
+  useEffect(() => {
+    setBranchEdit(selectedManagedBranch ? { ...selectedManagedBranch } : createEmptyBranchDraft());
+  }, [selectedManagedBranchId, selectedManagedBranch]);
 
   useEffect(() => {
     setOrderEdit(cloneOrder(selectedOrder));
@@ -725,6 +774,12 @@ export default function AdminDashboard({
   }, [selectedPartnerId, selectedPartner]);
 
   useEffect(() => {
+    if (!selectedManagedBranchId && branches.length) {
+      setSelectedManagedBranchId(branches[0].id);
+    }
+  }, [selectedManagedBranchId, branches]);
+
+  useEffect(() => {
     if (!selectedVoucherCampaignId && voucherCampaigns.length) {
       setSelectedVoucherCampaignId(voucherCampaigns[0].id);
     }
@@ -743,6 +798,29 @@ export default function AdminDashboard({
     router.replace(query ? `${basePath}?${query}` : basePath);
     router.refresh();
   };
+
+  const filteredBranches = useMemo(
+    () =>
+      sortItems(
+        branches.filter((item) => {
+          const statusMatch =
+            branchStatusFilter === "all" ||
+            (branchStatusFilter === "active" ? item.isActive : !item.isActive);
+          return (
+            statusMatch &&
+            matchesSearch(item, branchQuery, ["name", "shortName", "code", "address", "phone"])
+          );
+        }),
+        branchSort,
+        {
+          default: (a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0),
+          sort_asc: (a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0),
+          name_asc: (a, b) => String(a.name || "").localeCompare(String(b.name || ""), "vi"),
+          newest: (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+        }
+      ),
+    [branches, branchQuery, branchStatusFilter, branchSort]
+  );
 
   const filteredReservations = useMemo(
     () =>
@@ -911,6 +989,49 @@ export default function AdminDashboard({
       ...prev,
       items: (prev.items || []).filter((_, itemIndex) => itemIndex !== index)
     }));
+  };
+
+  const createBranchEntry = async (event) => {
+    event.preventDefault();
+    setBranchSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson("/api/admin/branches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(branchDraft)
+      });
+      setBranches((prev) => sortBranches([data.data, ...prev]));
+      setSelectedManagedBranchId(data.data.id);
+      setBranchDraft(createEmptyBranchDraft());
+      setBranchCreateOpen(false);
+      setMessage("Đã tạo chi nhánh mới.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setBranchSaving(false);
+    }
+  };
+
+  const saveBranchEdit = async () => {
+    if (!selectedManagedBranch) return;
+    setBranchSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(`/api/admin/branches/${selectedManagedBranch.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(branchEdit)
+      });
+      setBranches((prev) =>
+        sortBranches(prev.map((item) => (item.id === selectedManagedBranch.id ? data.data : item)))
+      );
+      setMessage("Đã cập nhật chi nhánh.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setBranchSaving(false);
+    }
   };
 
   const patchReservation = async (id, payload) => {
@@ -1610,6 +1731,7 @@ export default function AdminDashboard({
   const currentDetailTitle = getDetailTitle({
     currentSection,
     detailOnlyLayout,
+    selectedManagedBranch,
     selectedReservation,
     selectedOrder,
     selectedTable,
@@ -1639,7 +1761,7 @@ export default function AdminDashboard({
           partnerStats={partnerStats}
           adminProfile={adminProfile}
           roleLabels={roleLabels}
-          branches={initialBranches || []}
+          branches={branches}
           activeBranchId={activeBranchId || "all"}
           canViewAllBranches={canViewAllBranches}
           selectedBranch={selectedBranch}
@@ -1684,6 +1806,34 @@ export default function AdminDashboard({
             formatDate={formatDate}
             formatCurrency={formatCurrency}
             formatLabel={formatLabel}
+          />
+        ) : null}
+
+        {currentSection === "branches" && permissions.canViewBranches ? (
+          <AdminBranchesSection
+            detailOnlyLayout={detailOnlyLayout}
+            permissions={permissions}
+            branchCreateOpen={branchCreateOpen}
+            setBranchCreateOpen={setBranchCreateOpen}
+            branchQuery={branchQuery}
+            setBranchQuery={setBranchQuery}
+            branchStatusFilter={branchStatusFilter}
+            setBranchStatusFilter={setBranchStatusFilter}
+            branchSort={branchSort}
+            setBranchSort={setBranchSort}
+            branchSortOptions={branchSortOptions}
+            createBranchEntry={createBranchEntry}
+            branchDraft={branchDraft}
+            setBranchDraft={setBranchDraft}
+            branchSaving={branchSaving}
+            filteredBranches={filteredBranches}
+            selectedManagedBranch={selectedManagedBranch}
+            openSectionDetail={openSectionDetail}
+            detailHeaderActions={detailHeaderActions}
+            branchEdit={branchEdit}
+            setBranchEdit={setBranchEdit}
+            saveBranchEdit={saveBranchEdit}
+            FormSelect={FormSelect}
           />
         ) : null}
 

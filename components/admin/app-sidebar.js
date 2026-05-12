@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {
+  Building2,
   BookOpenText,
   Cable,
   CarFront,
@@ -33,6 +34,7 @@ import {
 
 const TAB_ICONS = {
   overview: LayoutDashboard,
+  branches: Building2,
   reservations: ClipboardList,
   orders: UtensilsCrossed,
   tables: BookOpenText,
