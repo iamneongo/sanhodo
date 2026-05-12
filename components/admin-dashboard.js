@@ -116,6 +116,33 @@ function sortByName(items, field = "name") {
   return [...items].sort((a, b) => String(a[field] || "").localeCompare(String(b[field] || ""), "vi"));
 }
 
+function FormSelect({
+  value,
+  onValueChange,
+  options,
+  placeholder = "Chọn giá trị",
+  disabled = false,
+  className = ""
+}) {
+  return (
+    <Select value={value ?? ""} onValueChange={onValueChange} disabled={disabled}>
+      <SelectTrigger className={className}>
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((option) => {
+          const normalized = typeof option === "string" ? { value: option, label: option } : option;
+          return (
+            <SelectItem key={normalized.value} value={String(normalized.value)}>
+              {normalized.label}
+            </SelectItem>
+          );
+        })}
+      </SelectContent>
+    </Select>
+  );
+}
+
 function createEmptyOrderDraft() {
   return {
     customerName: "",
@@ -444,6 +471,8 @@ export default function AdminDashboard({
   const [partnerEdit, setPartnerEdit] = useState(createEmptyPartnerDraft());
   const [partnerContractDraft, setPartnerContractDraft] = useState(createEmptyPartnerContractDraft());
   const [partnerBookingDraft, setPartnerBookingDraft] = useState(createEmptyPartnerBookingDraft());
+  const [orderDraftMenuItemId, setOrderDraftMenuItemId] = useState("placeholder");
+  const [orderEditMenuItemId, setOrderEditMenuItemId] = useState("placeholder");
 
   const selectedReservation = reservations.find((item) => item.id === selectedReservationId) || null;
   const selectedVoucher = vouchers.find((item) => item.id === selectedVoucherId) || null;
@@ -1468,13 +1497,20 @@ export default function AdminDashboard({
                     <Input type="datetime-local" value={manualForm.datetime} onChange={(event) => setManualForm((prev) => ({ ...prev, datetime: event.target.value }))} required />
                   </div>
                   <div className={styles.inlineRow}>
-                    <select value={manualForm.driverId} onChange={(event) => setManualForm((prev) => ({ ...prev, driverId: event.target.value }))}>
-                      <option value="">Chưa gán tài xế</option>
-                      {drivers.map((driver) => <option key={driver.id} value={driver.id}>{driver.fullName}</option>)}
-                    </select>
+                    <FormSelect
+                      value={manualForm.driverId || "none"}
+                      onValueChange={(value) => setManualForm((prev) => ({ ...prev, driverId: value === "none" ? "" : value }))}
+                      options={[{ value: "none", label: "Chưa gán tài xế" }, ...drivers.map((driver) => ({ value: driver.id, label: driver.fullName }))]}
+                      placeholder="Chưa gán tài xế"
+                    />
                     <Input type="text" placeholder="Mã giới thiệu" value={manualForm.referralCode} onChange={(event) => setManualForm((prev) => ({ ...prev, referralCode: event.target.value }))} />
                   </div>
-                  <select value={manualForm.tableId} onChange={(event) => setManualForm((prev) => ({ ...prev, tableId: event.target.value }))}><option value="">Chưa gán bàn</option>{restaurantTables.map((table) => <option key={table.id} value={table.id}>{table.name}</option>)}</select>
+                  <FormSelect
+                    value={manualForm.tableId || "none"}
+                    onValueChange={(value) => setManualForm((prev) => ({ ...prev, tableId: value === "none" ? "" : value }))}
+                    options={[{ value: "none", label: "Chưa gán bàn" }, ...restaurantTables.map((table) => ({ value: table.id, label: table.name }))]}
+                    placeholder="Chưa gán bàn"
+                  />
                   <Textarea placeholder="Ghi chú" value={manualForm.notes} onChange={(event) => setManualForm((prev) => ({ ...prev, notes: event.target.value }))} rows={3} />
                   <Button type="submit" disabled={reservationSaving}>{reservationSaving ? "Đang lưu..." : "Lưu đặt bàn"}</Button>
                 </form>
@@ -1492,7 +1528,7 @@ export default function AdminDashboard({
                 </TableHeader>
                 <TableBody>
                   {filteredReservations.map((item) => (
-                    <TableRow key={item.id} className={detailOnlyLayout && item.id === selectedReservation?.id ? styles.activeRow : ""} onClick={() => openSectionDetail("reservations", item.id)}>
+                    <TableRow key={item.id} className={`${styles.interactiveRow} ${detailOnlyLayout && item.id === selectedReservation?.id ? styles.activeRow : ""}`} onClick={() => openSectionDetail("reservations", item.id)}>
                       <TableCell><strong>{item.name}</strong><span>{item.guests} khách</span></TableCell>
                       <TableCell>{item.phone}</TableCell>
                       <TableCell>{formatDate(item.datetime)}</TableCell>
@@ -1517,7 +1553,7 @@ export default function AdminDashboard({
                     <label><span>SĐT</span><Input type="text" defaultValue={selectedReservation.phone} disabled={!permissions.canManageReservations} onBlur={(event) => patchReservation(selectedReservation.id, { ...selectedReservation, phone: event.target.value })} /></label>
                     <label><span>Số khách</span><Input type="text" defaultValue={selectedReservation.guests} disabled={!permissions.canManageReservations} onBlur={(event) => patchReservation(selectedReservation.id, { ...selectedReservation, guests: event.target.value })} /></label>
                     <label><span>Thời gian</span><Input type="datetime-local" defaultValue={selectedReservation.datetime} disabled={!permissions.canManageReservations} onBlur={(event) => patchReservation(selectedReservation.id, { ...selectedReservation, datetime: event.target.value })} /></label>
-                    <label><span>Gán bàn</span><select defaultValue={selectedReservation.tableId || ""} disabled={!permissions.canManageReservations} onBlur={(event) => patchReservation(selectedReservation.id, { ...selectedReservation, tableId: event.target.value })}><option value="">Chưa gán bàn</option>{restaurantTables.map((table) => <option key={table.id} value={table.id}>{table.name}</option>)}</select></label>
+                    <label><span>Gán bàn</span><FormSelect value={selectedReservation.tableId || "none"} disabled={!permissions.canManageReservations} onValueChange={(value) => patchReservation(selectedReservation.id, { ...selectedReservation, tableId: value === "none" ? "" : value })} options={[{ value: "none", label: "Chưa gán bàn" }, ...restaurantTables.map((table) => ({ value: table.id, label: table.name }))]} placeholder="Chưa gán bàn" /></label>
                     <label className={styles.fullWidth}><span>Ghi chú</span><Textarea rows={5} defaultValue={selectedReservation.notes || ""} disabled={!permissions.canManageReservations} onBlur={(event) => patchReservation(selectedReservation.id, { ...selectedReservation, notes: event.target.value })} /></label>
                   </div>
                   {permissions.canViewIntegrations ? <div className={styles.syncBox}><div><span className={styles.kicker}>Sync POS/PMS</span><p>Đồng bộ lead này sang hệ POS/PMS.</p></div><div className={styles.syncActions}><Select value={selectedIntegrationId} onValueChange={setSelectedIntegrationId} disabled={!permissions.canManageIntegrations}><SelectTrigger><SelectValue placeholder="Chọn tích hợp" /></SelectTrigger><SelectContent>{integrations.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select>{permissions.canSyncIntegrations ? <Button type="button" onClick={() => syncReservation(selectedReservation.id, selectedIntegrationId)} disabled={integrationSaving}>{integrationSaving ? "Đang sync..." : "Sync ngay"}</Button> : null}</div></div> : null}
@@ -1544,17 +1580,14 @@ export default function AdminDashboard({
                   <Input type="text" placeholder="Tên khách" value={orderDraft.customerName} onChange={(event) => setOrderDraft((prev) => ({ ...prev, customerName: event.target.value }))} required />
                   <Input type="tel" placeholder="SĐT" value={orderDraft.customerPhone} onChange={(event) => setOrderDraft((prev) => ({ ...prev, customerPhone: event.target.value }))} required />
                   <div className={styles.inlineRow}>
-                    <select value={orderDraft.tableId} onChange={(event) => setOrderDraft((prev) => ({ ...prev, tableId: event.target.value }))}><option value="">Chọn bàn</option>{restaurantTables.map((table) => <option key={table.id} value={table.id}>{table.name}</option>)}</select>
-                    <select value={orderDraft.orderChannel} onChange={(event) => setOrderDraft((prev) => ({ ...prev, orderChannel: event.target.value }))}>{orderChannels.map((item) => <option key={item} value={item}>{item}</option>)}</select>
+                    <FormSelect value={orderDraft.tableId || "none"} onValueChange={(value) => setOrderDraft((prev) => ({ ...prev, tableId: value === "none" ? "" : value }))} options={[{ value: "none", label: "Chọn bàn" }, ...restaurantTables.map((table) => ({ value: table.id, label: table.name }))]} placeholder="Chọn bàn" />
+                    <FormSelect value={orderDraft.orderChannel} onValueChange={(value) => setOrderDraft((prev) => ({ ...prev, orderChannel: value }))} options={orderChannels} placeholder="Order channel" />
                   </div>
                   <div className={styles.inlineRow}>
-                    <select value={orderDraft.driverId} onChange={(event) => setOrderDraft((prev) => ({ ...prev, driverId: event.target.value }))}>
-                      <option value="">Chưa gán tài xế</option>
-                      {drivers.map((driver) => <option key={driver.id} value={driver.id}>{driver.fullName}</option>)}
-                    </select>
+                    <FormSelect value={orderDraft.driverId || "none"} onValueChange={(value) => setOrderDraft((prev) => ({ ...prev, driverId: value === "none" ? "" : value }))} options={[{ value: "none", label: "Chưa gán tài xế" }, ...drivers.map((driver) => ({ value: driver.id, label: driver.fullName }))]} placeholder="Chưa gán tài xế" />
                     <Input type="text" placeholder="Mã giới thiệu" value={orderDraft.referralCode} onChange={(event) => setOrderDraft((prev) => ({ ...prev, referralCode: event.target.value }))} />
                   </div>
-                  <div className={styles.inlineAddRow}><select defaultValue="" onChange={(event) => { if (event.target.value) { addItemToState(event.target.value, setOrderDraft); event.target.value = ""; } }}><option value="">Thêm món vào order</option>{menuItems.filter((item) => item.isAvailable).map((item) => <option key={item.id} value={item.id}>{item.name} - {formatCurrency(item.price)}</option>)}</select></div>
+                  <div className={styles.inlineAddRow}><FormSelect value={orderDraftMenuItemId} onValueChange={(value) => { if (value !== "placeholder") { addItemToState(value, setOrderDraft); setOrderDraftMenuItemId("placeholder"); } }} options={[{ value: "placeholder", label: "Thêm món vào order" }, ...menuItems.filter((item) => item.isAvailable).map((item) => ({ value: item.id, label: `${item.name} - ${formatCurrency(item.price)}` }))]} placeholder="Thêm món vào order" /></div>
                   <div className={styles.lineItemList}>{orderDraft.items.map((item, index) => <div key={`${item.menuItemId}-${index}`} className={styles.lineItemRow}><strong>{item.itemName}</strong><Input type="number" min="1" value={item.quantity} onChange={(event) => updateLineItem(setOrderDraft, index, "quantity", event.target.value)} /><Input type="number" min="0" value={item.unitPrice} onChange={(event) => updateLineItem(setOrderDraft, index, "unitPrice", event.target.value)} /><Button type="button" variant="outline" onClick={() => removeLineItem(setOrderDraft, index)}>Xóa</Button></div>)}</div>
                   <div className={styles.inlineRow}><Input type="number" min="0" placeholder="Discount" value={orderDraft.discountAmount} onChange={(event) => setOrderDraft((prev) => ({ ...prev, discountAmount: Number(event.target.value) }))} /><Input type="number" min="0" placeholder="Service charge" value={orderDraft.serviceCharge} onChange={(event) => setOrderDraft((prev) => ({ ...prev, serviceCharge: Number(event.target.value) }))} /></div>
                   <Textarea placeholder="Ghi chú order" rows={3} value={orderDraft.notes} onChange={(event) => setOrderDraft((prev) => ({ ...prev, notes: event.target.value }))} />
@@ -1568,7 +1601,7 @@ export default function AdminDashboard({
                   <TableRow><TableHead>Khách</TableHead><TableHead>Bàn</TableHead><TableHead>Món</TableHead><TableHead>Tổng</TableHead><TableHead>Trạng thái</TableHead></TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredOrders.map((item) => <TableRow key={item.id} className={detailOnlyLayout && item.id === selectedOrder?.id ? styles.activeRow : ""} onClick={() => openSectionDetail("orders", item.id)}><TableCell><strong>{item.customerName}</strong><span>{formatDate(item.createdAt)}</span></TableCell><TableCell>{findTableName(item.tableId)}</TableCell><TableCell>{item.items.length}</TableCell><TableCell>{formatCurrency(item.totalAmount)}</TableCell><TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_contacted}`}>{item.status}</span></TableCell></TableRow>)}
+                  {filteredOrders.map((item) => <TableRow key={item.id} className={`${styles.interactiveRow} ${detailOnlyLayout && item.id === selectedOrder?.id ? styles.activeRow : ""}`} onClick={() => openSectionDetail("orders", item.id)}><TableCell><strong>{item.customerName}</strong><span>{formatDate(item.createdAt)}</span></TableCell><TableCell>{findTableName(item.tableId)}</TableCell><TableCell>{item.items.length}</TableCell><TableCell>{formatCurrency(item.totalAmount)}</TableCell><TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_contacted}`}>{item.status}</span></TableCell></TableRow>)}
                 </TableBody>
               </Table>
             </AdminListShell> : null}
@@ -1581,14 +1614,14 @@ export default function AdminDashboard({
                   <div className={styles.editGrid}>
                     <label><span>Tên khách</span><Input type="text" value={orderEdit.customerName} onChange={(event) => setOrderEdit((prev) => ({ ...prev, customerName: event.target.value }))} /></label>
                     <label><span>SĐT</span><Input type="text" value={orderEdit.customerPhone} onChange={(event) => setOrderEdit((prev) => ({ ...prev, customerPhone: event.target.value }))} /></label>
-                    <label><span>Reservation</span><select value={orderEdit.reservationId} onChange={(event) => setOrderEdit((prev) => ({ ...prev, reservationId: event.target.value }))}><option value="">Không gắn</option>{reservations.map((reservation) => <option key={reservation.id} value={reservation.id}>{reservation.name}</option>)}</select></label>
-                    <label><span>Bàn</span><select value={orderEdit.tableId} onChange={(event) => setOrderEdit((prev) => ({ ...prev, tableId: event.target.value }))}><option value="">Không gắn</option>{restaurantTables.map((table) => <option key={table.id} value={table.id}>{table.name}</option>)}</select></label>
-                    <label><span>Order channel</span><select value={orderEdit.orderChannel} onChange={(event) => setOrderEdit((prev) => ({ ...prev, orderChannel: event.target.value }))}>{orderChannels.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+                    <label><span>Reservation</span><FormSelect value={orderEdit.reservationId || "none"} onValueChange={(value) => setOrderEdit((prev) => ({ ...prev, reservationId: value === "none" ? "" : value }))} options={[{ value: "none", label: "Không gắn" }, ...reservations.map((reservation) => ({ value: reservation.id, label: reservation.name }))]} placeholder="Không gắn" /></label>
+                    <label><span>Bàn</span><FormSelect value={orderEdit.tableId || "none"} onValueChange={(value) => setOrderEdit((prev) => ({ ...prev, tableId: value === "none" ? "" : value }))} options={[{ value: "none", label: "Không gắn" }, ...restaurantTables.map((table) => ({ value: table.id, label: table.name }))]} placeholder="Không gắn" /></label>
+                    <label><span>Order channel</span><FormSelect value={orderEdit.orderChannel} onValueChange={(value) => setOrderEdit((prev) => ({ ...prev, orderChannel: value }))} options={orderChannels} placeholder="Order channel" /></label>
                     <label><span>Discount</span><Input type="number" min="0" value={orderEdit.discountAmount} onChange={(event) => setOrderEdit((prev) => ({ ...prev, discountAmount: Number(event.target.value) }))} /></label>
                     <label><span>Service charge</span><Input type="number" min="0" value={orderEdit.serviceCharge} onChange={(event) => setOrderEdit((prev) => ({ ...prev, serviceCharge: Number(event.target.value) }))} /></label>
                     <label className={styles.fullWidth}><span>Ghi chú</span><Textarea rows={4} value={orderEdit.notes} onChange={(event) => setOrderEdit((prev) => ({ ...prev, notes: event.target.value }))} /></label>
                   </div>
-                  <div className={styles.inlineAddRow}><select defaultValue="" onChange={(event) => { if (event.target.value) { addItemToState(event.target.value, setOrderEdit); event.target.value = ""; } }}><option value="">Thêm món vào order</option>{menuItems.filter((item) => item.isAvailable).map((item) => <option key={item.id} value={item.id}>{item.name} - {formatCurrency(item.price)}</option>)}</select></div>
+                  <div className={styles.inlineAddRow}><FormSelect value={orderEditMenuItemId} onValueChange={(value) => { if (value !== "placeholder") { addItemToState(value, setOrderEdit); setOrderEditMenuItemId("placeholder"); } }} options={[{ value: "placeholder", label: "Thêm món vào order" }, ...menuItems.filter((item) => item.isAvailable).map((item) => ({ value: item.id, label: `${item.name} - ${formatCurrency(item.price)}` }))]} placeholder="Thêm món vào order" /></div>
                   <div className={styles.lineItemList}>{orderEdit.items.map((item, index) => <div key={`${item.menuItemId || item.id}-${index}`} className={styles.lineItemRow}><strong>{item.itemName}</strong><Input type="number" min="1" value={item.quantity} onChange={(event) => updateLineItem(setOrderEdit, index, "quantity", event.target.value)} /><Input type="number" min="0" value={item.unitPrice} onChange={(event) => updateLineItem(setOrderEdit, index, "unitPrice", event.target.value)} /><Button type="button" variant="outline" onClick={() => removeLineItem(setOrderEdit, index)}>Xóa</Button></div>)}</div>
                   <div className={styles.summaryRow}><span>Tạm tính: {formatCurrency(orderEditTotals.subtotal)}</span><span>Tổng: {formatCurrency(orderEditTotals.total)}</span></div>
                   {permissions.canManageOrders ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveOrderEdit} disabled={orderSaving}>{orderSaving ? "Đang lưu..." : "Lưu order"}</Button></div> : null}
@@ -1602,10 +1635,10 @@ export default function AdminDashboard({
           <section className={detailOnlyLayout ? "grid gap-4" : styles.adminGrid}>
             {!detailOnlyLayout ? <AdminListShell>
               <div className={styles.panelToolbar}><Input type="search" placeholder="Tìm bàn..." value={tableQuery} onChange={(event) => setTableQuery(event.target.value)} /><div></div>{permissions.canManageTables ? <Button type="button" variant="secondary" onClick={() => setTableCreateOpen((prev) => !prev)}>{tableCreateOpen ? "Đóng form" : "Tạo bàn"}</Button> : <div></div>}</div>
-              {tableCreateOpen && permissions.canManageTables ? <form className={styles.inlineForm} onSubmit={createTableEntry}><Input type="text" placeholder="Tên bàn" value={tableDraft.name} onChange={(event) => setTableDraft((prev) => ({ ...prev, name: event.target.value }))} required /><Input type="text" placeholder="Khu vực" value={tableDraft.area} onChange={(event) => setTableDraft((prev) => ({ ...prev, area: event.target.value }))} /><div className={styles.inlineRow}><Input type="number" min="1" placeholder="Sức chứa" value={tableDraft.capacity} onChange={(event) => setTableDraft((prev) => ({ ...prev, capacity: Number(event.target.value) }))} /><select value={tableDraft.status} onChange={(event) => setTableDraft((prev) => ({ ...prev, status: event.target.value }))}>{tableStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></div><Textarea placeholder="Ghi chú" rows={3} value={tableDraft.notes} onChange={(event) => setTableDraft((prev) => ({ ...prev, notes: event.target.value }))} /><Button type="submit" disabled={tableSaving}>{tableSaving ? "Đang tạo..." : "Lưu bàn"}</Button></form> : null}
-              <Table><TableHeader><TableRow><TableHead>Bàn</TableHead><TableHead>Khu vực</TableHead><TableHead>Sức chứa</TableHead><TableHead>Trạng thái</TableHead></TableRow></TableHeader><TableBody>{filteredTables.map((item) => <TableRow key={item.id} className={detailOnlyLayout && item.id === selectedTable?.id ? styles.activeRow : ""} onClick={() => openSectionDetail("tables", item.id)}><TableCell><strong>{item.name}</strong><span>{formatCurrency(item.minSpend)}</span></TableCell><TableCell>{item.area}</TableCell><TableCell>{item.capacity}</TableCell><TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{item.status}</span></TableCell></TableRow>)}</TableBody></Table>
+              {tableCreateOpen && permissions.canManageTables ? <form className={styles.inlineForm} onSubmit={createTableEntry}><Input type="text" placeholder="Tên bàn" value={tableDraft.name} onChange={(event) => setTableDraft((prev) => ({ ...prev, name: event.target.value }))} required /><Input type="text" placeholder="Khu vực" value={tableDraft.area} onChange={(event) => setTableDraft((prev) => ({ ...prev, area: event.target.value }))} /><div className={styles.inlineRow}><Input type="number" min="1" placeholder="Sức chứa" value={tableDraft.capacity} onChange={(event) => setTableDraft((prev) => ({ ...prev, capacity: Number(event.target.value) }))} /><FormSelect value={tableDraft.status} onValueChange={(value) => setTableDraft((prev) => ({ ...prev, status: value }))} options={tableStatuses} placeholder="Trạng thái" /></div><Textarea placeholder="Ghi chú" rows={3} value={tableDraft.notes} onChange={(event) => setTableDraft((prev) => ({ ...prev, notes: event.target.value }))} /><Button type="submit" disabled={tableSaving}>{tableSaving ? "Đang tạo..." : "Lưu bàn"}</Button></form> : null}
+              <Table><TableHeader><TableRow><TableHead>Bàn</TableHead><TableHead>Khu vực</TableHead><TableHead>Sức chứa</TableHead><TableHead>Trạng thái</TableHead></TableRow></TableHeader><TableBody>{filteredTables.map((item) => <TableRow key={item.id} className={`${styles.interactiveRow} ${detailOnlyLayout && item.id === selectedTable?.id ? styles.activeRow : ""}`} onClick={() => openSectionDetail("tables", item.id)}><TableCell><strong>{item.name}</strong><span>{formatCurrency(item.minSpend)}</span></TableCell><TableCell>{item.area}</TableCell><TableCell>{item.capacity}</TableCell><TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{item.status}</span></TableCell></TableRow>)}</TableBody></Table>
             </AdminListShell> : null}
-            {detailOnlyLayout ? <AdminDetailShell>{selectedTable ? <AdminSurfaceCard kicker="Chi tiết bàn" title={selectedTable.name} actions={detailHeaderActions("tables", permissions.canManageTables ? <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteTableEntry(selectedTable.id)}>Xóa bàn</Button> : null)} className={styles.subsectionCard}><div className={styles.editGrid}><label><span>Tên bàn</span><Input type="text" value={tableEdit.name} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, name: event.target.value }))} /></label><label><span>Khu vực</span><Input type="text" value={tableEdit.area} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, area: event.target.value }))} /></label><label><span>Sức chứa</span><Input type="number" min="1" value={tableEdit.capacity} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, capacity: Number(event.target.value) }))} /></label><label><span>Trạng thái</span><select value={tableEdit.status} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, status: event.target.value }))}>{tableStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></label><label className={styles.fullWidth}><span>Ghi chú</span><Textarea rows={5} value={tableEdit.notes} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, notes: event.target.value }))} /></label></div>{permissions.canManageTables ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveTableEdit} disabled={tableSaving}>{tableSaving ? "Đang lưu..." : "Lưu bàn"}</Button></div> : null}</AdminSurfaceCard> : <div className={styles.emptyState}>Không tìm thấy bàn.</div>}</AdminDetailShell> : null}
+            {detailOnlyLayout ? <AdminDetailShell>{selectedTable ? <AdminSurfaceCard kicker="Chi tiết bàn" title={selectedTable.name} actions={detailHeaderActions("tables", permissions.canManageTables ? <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteTableEntry(selectedTable.id)}>Xóa bàn</Button> : null)} className={styles.subsectionCard}><div className={styles.editGrid}><label><span>Tên bàn</span><Input type="text" value={tableEdit.name} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, name: event.target.value }))} /></label><label><span>Khu vực</span><Input type="text" value={tableEdit.area} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, area: event.target.value }))} /></label><label><span>Sức chứa</span><Input type="number" min="1" value={tableEdit.capacity} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, capacity: Number(event.target.value) }))} /></label><label><span>Trạng thái</span><FormSelect value={tableEdit.status} disabled={!permissions.canManageTables} onValueChange={(value) => setTableEdit((prev) => ({ ...prev, status: value }))} options={tableStatuses} placeholder="Trạng thái" /></label><label className={styles.fullWidth}><span>Ghi chú</span><Textarea rows={5} value={tableEdit.notes} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, notes: event.target.value }))} /></label></div>{permissions.canManageTables ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveTableEdit} disabled={tableSaving}>{tableSaving ? "Đang lưu..." : "Lưu bàn"}</Button></div> : null}</AdminSurfaceCard> : <div className={styles.emptyState}>Không tìm thấy bàn.</div>}</AdminDetailShell> : null}
           </section>
         ) : null}
 
@@ -1613,10 +1646,10 @@ export default function AdminDashboard({
           <section className={detailOnlyLayout ? "grid gap-4" : styles.adminGrid}>
             {!detailOnlyLayout ? <AdminListShell>
               <div className={styles.panelToolbar}><Input type="search" placeholder="Tìm món..." value={menuQuery} onChange={(event) => setMenuQuery(event.target.value)} /><div></div>{permissions.canManageMenu ? <Button type="button" variant="secondary" onClick={() => setMenuCreateOpen((prev) => !prev)}>{menuCreateOpen ? "Đóng form" : "Tạo món"}</Button> : <div></div>}</div>
-              {menuCreateOpen && permissions.canManageMenu ? <form className={styles.inlineForm} onSubmit={createMenuItemEntry}><Input type="text" placeholder="Tên món" value={menuDraft.name} onChange={(event) => setMenuDraft((prev) => ({ ...prev, name: event.target.value }))} required /><Input type="text" placeholder="Danh mục" value={menuDraft.category} onChange={(event) => setMenuDraft((prev) => ({ ...prev, category: event.target.value }))} /><div className={styles.inlineRow}><Input type="number" min="0" placeholder="Giá" value={menuDraft.price} onChange={(event) => setMenuDraft((prev) => ({ ...prev, price: Number(event.target.value) }))} /><select value={menuDraft.spicyLevel} onChange={(event) => setMenuDraft((prev) => ({ ...prev, spicyLevel: event.target.value }))}>{spicyLevels.map((item) => <option key={item} value={item}>{item}</option>)}</select></div><div className={styles.inlineRow}><select value={menuDraft.availabilityStatus} onChange={(event) => setMenuDraft((prev) => ({ ...prev, availabilityStatus: event.target.value }))}>{availabilityStatuses.map((item) => <option key={item} value={item}>{item}</option>)}</select><select value={menuDraft.isFeatured ? "yes" : "no"} onChange={(event) => setMenuDraft((prev) => ({ ...prev, isFeatured: event.target.value === "yes" }))}><option value="yes">featured</option><option value="no">normal</option></select></div><Input type="text" placeholder="Image URL" value={menuDraft.imageUrl} onChange={(event) => setMenuDraft((prev) => ({ ...prev, imageUrl: event.target.value }))} /><Textarea placeholder="Ghi chú theo mùa / tồn kho" rows={2} value={menuDraft.seasonNote} onChange={(event) => setMenuDraft((prev) => ({ ...prev, seasonNote: event.target.value }))} /><Textarea placeholder="Mô tả" rows={3} value={menuDraft.description} onChange={(event) => setMenuDraft((prev) => ({ ...prev, description: event.target.value }))} /><Button type="submit" disabled={menuSaving}>{menuSaving ? "Đang tạo..." : "Lưu món"}</Button></form> : null}
-              <Table><TableHeader><TableRow><TableHead>Món</TableHead><TableHead>Danh mục</TableHead><TableHead>Giá</TableHead><TableHead>Trạng thái</TableHead></TableRow></TableHeader><TableBody>{filteredMenuItems.map((item) => <TableRow key={item.id} className={detailOnlyLayout && item.id === selectedMenuItem?.id ? styles.activeRow : ""} onClick={() => openSectionDetail("menu", item.id)}><TableCell><strong>{item.name}</strong><span>{item.slug}</span></TableCell><TableCell>{item.category}</TableCell><TableCell>{formatCurrency(item.price)}</TableCell><TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.availabilityStatus || (item.isAvailable ? "confirmed" : "cancelled")}`] || styles.status_confirmed}`}>{item.availabilityStatus || (item.isAvailable ? "available" : "hidden")}</span></TableCell></TableRow>)}</TableBody></Table>
+              {menuCreateOpen && permissions.canManageMenu ? <form className={styles.inlineForm} onSubmit={createMenuItemEntry}><Input type="text" placeholder="Tên món" value={menuDraft.name} onChange={(event) => setMenuDraft((prev) => ({ ...prev, name: event.target.value }))} required /><Input type="text" placeholder="Danh mục" value={menuDraft.category} onChange={(event) => setMenuDraft((prev) => ({ ...prev, category: event.target.value }))} /><div className={styles.inlineRow}><Input type="number" min="0" placeholder="Giá" value={menuDraft.price} onChange={(event) => setMenuDraft((prev) => ({ ...prev, price: Number(event.target.value) }))} /><FormSelect value={menuDraft.spicyLevel} onValueChange={(value) => setMenuDraft((prev) => ({ ...prev, spicyLevel: value }))} options={spicyLevels} placeholder="Spicy level" /></div><div className={styles.inlineRow}><FormSelect value={menuDraft.availabilityStatus} onValueChange={(value) => setMenuDraft((prev) => ({ ...prev, availabilityStatus: value }))} options={availabilityStatuses} placeholder="Trạng thái món" /><FormSelect value={menuDraft.isFeatured ? "yes" : "no"} onValueChange={(value) => setMenuDraft((prev) => ({ ...prev, isFeatured: value === "yes" }))} options={[{ value: "yes", label: "featured" }, { value: "no", label: "normal" }]} placeholder="Featured" /></div><Input type="text" placeholder="Image URL" value={menuDraft.imageUrl} onChange={(event) => setMenuDraft((prev) => ({ ...prev, imageUrl: event.target.value }))} /><Textarea placeholder="Ghi chú theo mùa / tồn kho" rows={2} value={menuDraft.seasonNote} onChange={(event) => setMenuDraft((prev) => ({ ...prev, seasonNote: event.target.value }))} /><Textarea placeholder="Mô tả" rows={3} value={menuDraft.description} onChange={(event) => setMenuDraft((prev) => ({ ...prev, description: event.target.value }))} /><Button type="submit" disabled={menuSaving}>{menuSaving ? "Đang tạo..." : "Lưu món"}</Button></form> : null}
+              <Table><TableHeader><TableRow><TableHead>Món</TableHead><TableHead>Danh mục</TableHead><TableHead>Giá</TableHead><TableHead>Trạng thái</TableHead></TableRow></TableHeader><TableBody>{filteredMenuItems.map((item) => <TableRow key={item.id} className={`${styles.interactiveRow} ${detailOnlyLayout && item.id === selectedMenuItem?.id ? styles.activeRow : ""}`} onClick={() => openSectionDetail("menu", item.id)}><TableCell><strong>{item.name}</strong><span>{item.slug}</span></TableCell><TableCell>{item.category}</TableCell><TableCell>{formatCurrency(item.price)}</TableCell><TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.availabilityStatus || (item.isAvailable ? "confirmed" : "cancelled")}`] || styles.status_confirmed}`}>{item.availabilityStatus || (item.isAvailable ? "available" : "hidden")}</span></TableCell></TableRow>)}</TableBody></Table>
             </AdminListShell> : null}
-            {detailOnlyLayout ? <AdminDetailShell>{selectedMenuItem ? <AdminSurfaceCard kicker="Chi tiết món ăn" title={selectedMenuItem.name} actions={detailHeaderActions("menu", permissions.canManageMenu ? <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteMenuItemEntry(selectedMenuItem.id)}>Xóa món</Button> : null)} className={styles.subsectionCard}><div className={styles.editGrid}><label><span>Tên món</span><Input type="text" value={menuEdit.name} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, name: event.target.value }))} /></label><label><span>Slug</span><Input type="text" value={menuEdit.slug} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, slug: event.target.value }))} /></label><label><span>Danh mục</span><Input type="text" value={menuEdit.category} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, category: event.target.value }))} /></label><label><span>Giá</span><Input type="number" min="0" value={menuEdit.price} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, price: Number(event.target.value) }))} /></label><label><span>Image URL</span><Input type="text" value={menuEdit.imageUrl} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, imageUrl: event.target.value }))} /></label><label><span>Available</span><select value={menuEdit.isAvailable ? "yes" : "no"} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, isAvailable: event.target.value === "yes" }))}><option value="yes">yes</option><option value="no">no</option></select></label><label><span>Featured</span><select value={menuEdit.isFeatured ? "yes" : "no"} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, isFeatured: event.target.value === "yes" }))}><option value="yes">yes</option><option value="no">no</option></select></label><label><span>Spicy level</span><select value={menuEdit.spicyLevel} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, spicyLevel: event.target.value }))}>{spicyLevels.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><label><span>Trạng thái món</span><select value={menuEdit.availabilityStatus || "available"} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, availabilityStatus: event.target.value }))}>{availabilityStatuses.map((item) => <option key={item} value={item}>{item}</option>)}</select></label><label className={styles.fullWidth}><span>Ghi chú theo mùa / tồn kho</span><Textarea rows={3} value={menuEdit.seasonNote || ""} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, seasonNote: event.target.value }))} /></label><label className={styles.fullWidth}><span>Mô tả</span><Textarea rows={5} value={menuEdit.description} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, description: event.target.value }))} /></label></div>{permissions.canManageMenu ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveMenuEdit} disabled={menuSaving}>{menuSaving ? "Đang lưu..." : "Lưu món"}</Button></div> : null}</AdminSurfaceCard> : <div className={styles.emptyState}>Không tìm thấy món ăn.</div>}</AdminDetailShell> : null}
+            {detailOnlyLayout ? <AdminDetailShell>{selectedMenuItem ? <AdminSurfaceCard kicker="Chi tiết món ăn" title={selectedMenuItem.name} actions={detailHeaderActions("menu", permissions.canManageMenu ? <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteMenuItemEntry(selectedMenuItem.id)}>Xóa món</Button> : null)} className={styles.subsectionCard}><div className={styles.editGrid}><label><span>Tên món</span><Input type="text" value={menuEdit.name} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, name: event.target.value }))} /></label><label><span>Slug</span><Input type="text" value={menuEdit.slug} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, slug: event.target.value }))} /></label><label><span>Danh mục</span><Input type="text" value={menuEdit.category} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, category: event.target.value }))} /></label><label><span>Giá</span><Input type="number" min="0" value={menuEdit.price} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, price: Number(event.target.value) }))} /></label><label><span>Image URL</span><Input type="text" value={menuEdit.imageUrl} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, imageUrl: event.target.value }))} /></label><label><span>Available</span><FormSelect value={menuEdit.isAvailable ? "yes" : "no"} disabled={!permissions.canManageMenu} onValueChange={(value) => setMenuEdit((prev) => ({ ...prev, isAvailable: value === "yes" }))} options={[{ value: "yes", label: "yes" }, { value: "no", label: "no" }]} placeholder="Available" /></label><label><span>Featured</span><FormSelect value={menuEdit.isFeatured ? "yes" : "no"} disabled={!permissions.canManageMenu} onValueChange={(value) => setMenuEdit((prev) => ({ ...prev, isFeatured: value === "yes" }))} options={[{ value: "yes", label: "yes" }, { value: "no", label: "no" }]} placeholder="Featured" /></label><label><span>Spicy level</span><FormSelect value={menuEdit.spicyLevel} disabled={!permissions.canManageMenu} onValueChange={(value) => setMenuEdit((prev) => ({ ...prev, spicyLevel: value }))} options={spicyLevels} placeholder="Spicy level" /></label><label><span>Trạng thái món</span><FormSelect value={menuEdit.availabilityStatus || "available"} disabled={!permissions.canManageMenu} onValueChange={(value) => setMenuEdit((prev) => ({ ...prev, availabilityStatus: value }))} options={availabilityStatuses} placeholder="Trạng thái món" /></label><label className={styles.fullWidth}><span>Ghi chú theo mùa / tồn kho</span><Textarea rows={3} value={menuEdit.seasonNote || ""} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, seasonNote: event.target.value }))} /></label><label className={styles.fullWidth}><span>Mô tả</span><Textarea rows={5} value={menuEdit.description} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, description: event.target.value }))} /></label></div>{permissions.canManageMenu ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveMenuEdit} disabled={menuSaving}>{menuSaving ? "Đang lưu..." : "Lưu món"}</Button></div> : null}</AdminSurfaceCard> : <div className={styles.emptyState}>Không tìm thấy món ăn.</div>}</AdminDetailShell> : null}
           </section>
         ) : null}
 
@@ -1656,27 +1689,27 @@ export default function AdminDashboard({
                 />
               </div>
               <div className={styles.tableWrap}>
-                <table className={styles.dataTable}>
-                  <thead>
-                    <tr>
-                      <th>SĐT</th>
-                      <th>Mã</th>
-                      <th>Campaign</th>
-                      <th>Trạng thái</th>
-                      <th>Tạo lúc</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>SĐT</TableHead>
+                      <TableHead>Mã</TableHead>
+                      <TableHead>Campaign</TableHead>
+                      <TableHead>Trạng thái</TableHead>
+                      <TableHead>Tạo lúc</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {filteredVouchers.map((item) => (
-                      <tr
+                      <TableRow
                         key={item.id}
-                        className={detailOnlyLayout && item.id === selectedVoucher?.id ? styles.activeRow : ""}
+                        className={`${styles.interactiveRow} ${detailOnlyLayout && item.id === selectedVoucher?.id ? styles.activeRow : ""}`}
                         onClick={() => openSectionDetail("vouchers", item.id)}
                       >
-                        <td>{item.phone}</td>
-                        <td>{item.voucherCode || "-"}</td>
-                        <td>{item.voucherTitle || "-"}</td>
-                        <td>
+                        <TableCell>{item.phone}</TableCell>
+                        <TableCell>{item.voucherCode || "-"}</TableCell>
+                        <TableCell>{item.voucherTitle || "-"}</TableCell>
+                        <TableCell>
                           <span
                             className={`${styles.statusBadge} ${
                               styles[`status_${item.status}`] || styles.status_new
@@ -1684,12 +1717,12 @@ export default function AdminDashboard({
                           >
                             {item.status}
                           </span>
-                        </td>
-                        <td>{formatDate(item.createdAt)}</td>
-                      </tr>
+                        </TableCell>
+                        <TableCell>{formatDate(item.createdAt)}</TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             </AdminListShell> : null}
             {detailOnlyLayout ? <AdminDetailShell>
@@ -2096,19 +2129,26 @@ export default function AdminDashboard({
                 </form>
               ) : null}
               <div className={styles.tableWrap}>
-                <table className={styles.dataTable}>
-                  <thead><tr><th>Tài xế</th><th>Mã giới thiệu</th><th>Hoa hồng</th><th>Trạng thái</th></tr></thead>
-                  <tbody>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Tài xế</TableHead>
+                      <TableHead>Mã giới thiệu</TableHead>
+                      <TableHead>Hoa hồng</TableHead>
+                      <TableHead>Trạng thái</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {filteredDrivers.map((item) => (
-                      <tr key={item.id} className={detailOnlyLayout && item.id === selectedDriver?.id ? styles.activeRow : ""} onClick={() => openSectionDetail("drivers", item.id)}>
-                        <td><strong>{item.fullName}</strong><span>{item.phone}</span></td>
-                        <td>{item.referralCode || "-"}</td>
-                        <td>{item.commissionRate}%</td>
-                        <td><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_confirmed}`}>{item.status}</span></td>
-                      </tr>
+                      <TableRow key={item.id} className={`${styles.interactiveRow} ${detailOnlyLayout && item.id === selectedDriver?.id ? styles.activeRow : ""}`} onClick={() => openSectionDetail("drivers", item.id)}>
+                        <TableCell><strong>{item.fullName}</strong><span>{item.phone}</span></TableCell>
+                        <TableCell>{item.referralCode || "-"}</TableCell>
+                        <TableCell>{item.commissionRate}%</TableCell>
+                        <TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_confirmed}`}>{item.status}</span></TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             </AdminListShell> : null}
             {detailOnlyLayout ? <AdminDetailShell>
@@ -2135,7 +2175,7 @@ export default function AdminDashboard({
                     <label><span>Loại xe</span><Input type="text" value={driverEdit.vehicleType} disabled={!permissions.canManageDrivers} onChange={(event) => setDriverEdit((prev) => ({ ...prev, vehicleType: event.target.value }))} /></label>
                     <label><span>% hoa hồng</span><Input type="number" min="0" value={driverEdit.commissionRate} disabled={!permissions.canManageDrivers} onChange={(event) => setDriverEdit((prev) => ({ ...prev, commissionRate: Number(event.target.value) }))} /></label>
                     <label><span>Mã giới thiệu</span><Input type="text" value={driverEdit.referralCode} disabled={!permissions.canManageDrivers} onChange={(event) => setDriverEdit((prev) => ({ ...prev, referralCode: event.target.value }))} /></label>
-                    <label><span>Trạng thái</span><select value={driverEdit.status} disabled={!permissions.canManageDrivers} onChange={(event) => setDriverEdit((prev) => ({ ...prev, status: event.target.value }))}>{driverStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></label>
+                    <label><span>Trạng thái</span><FormSelect value={driverEdit.status} disabled={!permissions.canManageDrivers} onValueChange={(value) => setDriverEdit((prev) => ({ ...prev, status: value }))} options={driverStatuses} /></label>
                     <label className={styles.fullWidth}><span>Ghi chú</span><Textarea rows={4} value={driverEdit.notes} disabled={!permissions.canManageDrivers} onChange={(event) => setDriverEdit((prev) => ({ ...prev, notes: event.target.value }))} /></label>
                   </div>
                   {permissions.canManageDrivers ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveDriverEdit} disabled={tableSaving}>{tableSaving ? "Đang lưu..." : "Lưu tài xế"}</Button></div> : null}
@@ -2203,8 +2243,8 @@ export default function AdminDashboard({
                   <Input type="text" placeholder="Mã đối tác" value={partnerDraft.code} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, code: event.target.value }))} required />
                   <Input type="text" placeholder="Tên đối tác / HDV" value={partnerDraft.name} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, name: event.target.value }))} required />
                   <div className={styles.inlineRow}>
-                    <select value={partnerDraft.partnerType} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, partnerType: event.target.value }))}>{partnerTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select>
-                    <select value={partnerDraft.status} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, status: event.target.value }))}>{partnerStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select>
+                    <FormSelect value={partnerDraft.partnerType} onValueChange={(value) => setPartnerDraft((prev) => ({ ...prev, partnerType: value }))} options={partnerTypes} />
+                    <FormSelect value={partnerDraft.status} onValueChange={(value) => setPartnerDraft((prev) => ({ ...prev, status: value }))} options={partnerStatuses} />
                   </div>
                   <div className={styles.inlineRow}>
                     <Input type="text" placeholder="Người liên hệ" value={partnerDraft.contactName} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, contactName: event.target.value }))} />
@@ -2215,10 +2255,7 @@ export default function AdminDashboard({
                     <Input type="number" min="0" placeholder="Hoa hồng / chiết khấu" value={partnerDraft.commissionValue} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, commissionValue: Number(event.target.value) }))} />
                   </div>
                   <div className={styles.inlineRow}>
-                    <select value={partnerDraft.commissionType} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, commissionType: event.target.value }))}>
-                      <option value="percent">percent</option>
-                      <option value="amount">amount</option>
-                    </select>
+                    <FormSelect value={partnerDraft.commissionType} onValueChange={(value) => setPartnerDraft((prev) => ({ ...prev, commissionType: value }))} options={[{ value: "percent", label: "percent" }, { value: "amount", label: "amount" }]} />
                     <Input type="datetime-local" placeholder="Bắt đầu hợp tác" value={partnerDraft.contractStartAt} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, contractStartAt: event.target.value }))} />
                   </div>
                   <Input type="datetime-local" placeholder="Kết thúc hợp tác" value={partnerDraft.contractEndAt} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, contractEndAt: event.target.value }))} />
@@ -2227,19 +2264,26 @@ export default function AdminDashboard({
                 </form>
               ) : null}
               <div className={styles.tableWrap}>
-                <table className={styles.dataTable}>
-                  <thead><tr><th>Đối tác</th><th>Loại</th><th>Hoa hồng</th><th>Trạng thái</th></tr></thead>
-                  <tbody>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Đối tác</TableHead>
+                      <TableHead>Loại</TableHead>
+                      <TableHead>Hoa hồng</TableHead>
+                      <TableHead>Trạng thái</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {filteredPartners.map((item) => (
-                      <tr key={item.id} className={detailOnlyLayout && item.id === selectedPartner?.id ? styles.activeRow : ""} onClick={() => openSectionDetail("partners", item.id)}>
-                        <td><strong>{item.name}</strong><span>{item.contactName || item.phone}</span></td>
-                        <td>{item.partnerType}</td>
-                        <td>{item.commissionType === "amount" ? formatCurrency(item.commissionValue) : `${item.commissionValue}%`}</td>
-                        <td><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_confirmed}`}>{item.status}</span></td>
-                      </tr>
+                      <TableRow key={item.id} className={`${styles.interactiveRow} ${detailOnlyLayout && item.id === selectedPartner?.id ? styles.activeRow : ""}`} onClick={() => openSectionDetail("partners", item.id)}>
+                        <TableCell><strong>{item.name}</strong><span>{item.contactName || item.phone}</span></TableCell>
+                        <TableCell>{item.partnerType}</TableCell>
+                        <TableCell>{item.commissionType === "amount" ? formatCurrency(item.commissionValue) : `${item.commissionValue}%`}</TableCell>
+                        <TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_confirmed}`}>{item.status}</span></TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             </AdminListShell> : null}
             {detailOnlyLayout ? <AdminDetailShell>
@@ -2271,9 +2315,9 @@ export default function AdminDashboard({
                     <label><span>Người liên hệ</span><Input type="text" value={partnerEdit.contactName} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, contactName: event.target.value }))} /></label>
                     <label><span>SĐT</span><Input type="text" value={partnerEdit.phone} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, phone: event.target.value }))} /></label>
                     <label><span>Email</span><Input type="text" value={partnerEdit.email} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, email: event.target.value }))} /></label>
-                    <label><span>Loại</span><select value={partnerEdit.partnerType} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, partnerType: event.target.value }))}>{partnerTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label>
-                    <label><span>Trạng thái</span><select value={partnerEdit.status} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, status: event.target.value }))}>{partnerStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></label>
-                    <label><span>Kiểu chiết khấu</span><select value={partnerEdit.commissionType} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, commissionType: event.target.value }))}><option value="percent">percent</option><option value="amount">amount</option></select></label>
+                    <label><span>Loại</span><FormSelect value={partnerEdit.partnerType} disabled={!permissions.canManagePartners} onValueChange={(value) => setPartnerEdit((prev) => ({ ...prev, partnerType: value }))} options={partnerTypes} /></label>
+                    <label><span>Trạng thái</span><FormSelect value={partnerEdit.status} disabled={!permissions.canManagePartners} onValueChange={(value) => setPartnerEdit((prev) => ({ ...prev, status: value }))} options={partnerStatuses} /></label>
+                    <label><span>Kiểu chiết khấu</span><FormSelect value={partnerEdit.commissionType} disabled={!permissions.canManagePartners} onValueChange={(value) => setPartnerEdit((prev) => ({ ...prev, commissionType: value }))} options={[{ value: "percent", label: "percent" }, { value: "amount", label: "amount" }]} /></label>
                     <label><span>Giá trị</span><Input type="number" min="0" value={partnerEdit.commissionValue} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, commissionValue: Number(event.target.value) }))} /></label>
                     <label><span>Bắt đầu hợp tác</span><Input type="datetime-local" value={partnerEdit.contractStartAt ? String(partnerEdit.contractStartAt).slice(0, 16) : ""} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, contractStartAt: event.target.value }))} /></label>
                     <label><span>Kết thúc hợp tác</span><Input type="datetime-local" value={partnerEdit.contractEndAt ? String(partnerEdit.contractEndAt).slice(0, 16) : ""} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, contractEndAt: event.target.value }))} /></label>
@@ -2294,7 +2338,7 @@ export default function AdminDashboard({
                           <Input type="number" min="0" placeholder="% hoa hồng" value={partnerContractDraft.commissionPercent} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, commissionPercent: Number(event.target.value) }))} />
                         </div>
                         <div className={styles.inlineRow}>
-                          <select value={partnerContractDraft.status} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, status: event.target.value }))}>{partnerContractStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select>
+                          <FormSelect value={partnerContractDraft.status} onValueChange={(value) => setPartnerContractDraft((prev) => ({ ...prev, status: value }))} options={partnerContractStatuses} />
                           <Input type="datetime-local" value={partnerContractDraft.startsAt} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, startsAt: event.target.value }))} />
                         </div>
                         <Input type="datetime-local" value={partnerContractDraft.endsAt} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, endsAt: event.target.value }))} />
@@ -2329,7 +2373,7 @@ export default function AdminDashboard({
                         </div>
                         <div className={styles.inlineRow}>
                           <Input type="datetime-local" value={partnerBookingDraft.bookingAt} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, bookingAt: event.target.value }))} required />
-                          <select value={partnerBookingDraft.status} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, status: event.target.value }))}>{partnerBookingStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select>
+                          <FormSelect value={partnerBookingDraft.status} onValueChange={(value) => setPartnerBookingDraft((prev) => ({ ...prev, status: value }))} options={partnerBookingStatuses} />
                         </div>
                         <div className={styles.inlineRow}>
                           <Input type="text" placeholder="Set menu / package" value={partnerBookingDraft.packageName} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, packageName: event.target.value }))} />
@@ -2351,7 +2395,7 @@ export default function AdminDashboard({
                           <small>{item.code || "Chưa có mã"} • {item.groupSize} khách • {formatDate(item.bookingAt)}</small>
                           <p>{item.packageName || "Chưa chọn set menu"} • Budget {formatCurrency(item.menuBudget)} • Commission {formatCurrency(item.commissionAmount)}</p>
                           <div className={styles.inlineRow}>
-                            <select value={item.status} disabled={!permissions.canManagePartnerBookings} onChange={(event) => patchPartnerBooking(item.id, { ...item, status: event.target.value })}>{partnerBookingStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select>
+                            <FormSelect value={item.status} disabled={!permissions.canManagePartnerBookings} onValueChange={(value) => patchPartnerBooking(item.id, { ...item, status: value })} options={partnerBookingStatuses} />
                             {permissions.canManagePartnerBookings ? <Button type="button" variant="destructive" className={styles.deleteButton} onClick={() => deletePartnerBookingEntry(item.id)}>Xóa</Button> : null}
                           </div>
                         </article>
@@ -2388,8 +2432,8 @@ export default function AdminDashboard({
                   className={styles.subsectionCard}
                 >
                   <div className={styles.editGrid}>
-                    <label><span>Trạng thái</span><select defaultValue={selectedIntegration.enabled ? "enabled" : "disabled"} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { enabled: event.target.value === "enabled" })}><option value="disabled">disabled</option><option value="enabled">enabled</option></select></label>
-                    <label><span>Sync mode</span><select defaultValue={selectedIntegration.syncMode} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { syncMode: event.target.value })}><option value="manual">manual</option><option value="auto">auto</option></select></label>
+                    <label><span>Trạng thái</span><FormSelect value={selectedIntegration.enabled ? "enabled" : "disabled"} disabled={!permissions.canManageIntegrations} onValueChange={(value) => patchIntegration(selectedIntegration.id, { enabled: value === "enabled" })} options={[{ value: "disabled", label: "disabled" }, { value: "enabled", label: "enabled" }]} /></label>
+                    <label><span>Sync mode</span><FormSelect value={selectedIntegration.syncMode} disabled={!permissions.canManageIntegrations} onValueChange={(value) => patchIntegration(selectedIntegration.id, { syncMode: value })} options={[{ value: "manual", label: "manual" }, { value: "auto", label: "auto" }]} /></label>
                     <label className={styles.fullWidth}><span>Endpoint</span><Input type="url" defaultValue={selectedIntegration.endpoint} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { endpoint: event.target.value })} /></label>
                     <label><span>API key</span><Input type="text" defaultValue={selectedIntegration.apiKey} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { apiKey: event.target.value })} /></label>
                     <label><span>API secret</span><Input type="text" defaultValue={selectedIntegration.apiSecret} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { apiSecret: event.target.value })} /></label>

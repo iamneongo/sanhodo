@@ -62,13 +62,14 @@
 
 .loginForm input,
 .panelToolbar input,
-.panelToolbar select,
+.panelToolbar [data-slot="select-trigger"],
 .inlineForm input,
+.inlineForm [data-slot="select-trigger"],
 .inlineForm textarea,
 .editGrid input,
-.editGrid select,
+.editGrid [data-slot="select-trigger"],
 .editGrid textarea,
-.syncActions select,
+.syncActions [data-slot="select-trigger"],
 .panelToolbar button,
 .inlineForm button {
   font: inherit;
@@ -76,31 +77,24 @@
 
 .loginForm input,
 .panelToolbar input,
-.panelToolbar select,
+.panelToolbar [data-slot="select-trigger"],
 .inlineForm input,
-.inlineForm select,
+.inlineForm [data-slot="select-trigger"],
 .inlineForm textarea,
 .editGrid input,
-.editGrid select,
+.editGrid [data-slot="select-trigger"],
 .editGrid textarea,
-.lineItemRow select,
-.syncActions select {
+.lineItemRow [data-slot="select-trigger"],
+.syncActions [data-slot="select-trigger"] {
   width: 100%;
 }
 
-.panelToolbar select,
-.inlineForm select,
-.editGrid select,
-.lineItemRow select,
-.syncActions select {
+.panelToolbar [data-slot="select-trigger"],
+.inlineForm [data-slot="select-trigger"],
+.editGrid [data-slot="select-trigger"],
+.lineItemRow [data-slot="select-trigger"],
+.syncActions [data-slot="select-trigger"] {
   min-height: 40px;
-  padding: 0 12px;
-  border: 1px solid #e4e4e7;
-  border-radius: 12px;
-  background: #ffffff;
-  color: #18181b;
-  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.04);
-  outline: none;
 }
 
 .inlineForm textarea,
@@ -146,7 +140,7 @@
   min-width: 0;
   display: grid;
   gap: 16px;
-  padding: 16px;
+  padding: clamp(12px, 1.8vw, 24px);
 }
 
 .surfaceCard {
@@ -618,7 +612,7 @@
 
 .adminGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr);
+  grid-template-columns: minmax(0, 1.18fr) minmax(360px, 0.82fr);
   gap: 20px;
   align-items: start;
 }
@@ -646,6 +640,7 @@
   grid-template-columns: minmax(0, 1fr) 180px auto;
   gap: 10px;
   margin-bottom: 14px;
+  align-items: start;
 }
 
 .inlineForm {
@@ -660,7 +655,7 @@
 
 .inlineRow {
   display: grid;
-  grid-template-columns: 150px 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -672,40 +667,23 @@
 
 .tableWrap {
   overflow: auto;
+  max-width: 100%;
 }
 
-.dataTable {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.dataTable th,
-.dataTable td {
-  padding: 12px 10px;
-  border-bottom: 1px solid #f0f0f2;
-  text-align: left;
-  vertical-align: top;
-}
-
-.dataTable th {
-  color: #71717a;
-  font-size: 0.84rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
+.tableWrap [data-slot="table-cell"] strong,
 .dataTable td strong {
   display: block;
   margin-bottom: 4px;
   color: #18181b;
 }
 
+.tableWrap [data-slot="table-cell"] span,
 .dataTable td span {
   color: #71717a;
   font-size: 0.84rem;
 }
 
+.interactiveRow,
 .dataTable tbody tr {
   cursor: pointer;
 }
@@ -985,7 +963,7 @@
 
 .integrationLayout {
   display: grid;
-  grid-template-columns: minmax(300px, 0.72fr) minmax(0, 1.28fr);
+  grid-template-columns: minmax(320px, 0.8fr) minmax(0, 1.2fr);
   gap: 20px;
   align-items: start;
 }
@@ -1170,6 +1148,26 @@
   color: #71717a;
 }
 
+@media (max-width: 1360px) {
+  .adminGrid,
+  .integrationLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .detailPanel {
+    position: static;
+  }
+
+  .panelToolbar {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 180px);
+  }
+
+  .panelToolbar > :last-child {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
 @media (max-width: 1180px) {
   .shell {
     grid-template-columns: 1fr;
@@ -1200,6 +1198,30 @@
 
   .detailPanel {
     position: static;
+  }
+}
+
+@media (max-width: 980px) {
+  .metaGrid,
+  .editGrid,
+  .inlineRow,
+  .lineItemRow {
+    grid-template-columns: 1fr;
+  }
+
+  .panelToolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .panelToolbar > :last-child {
+    grid-column: auto;
+    justify-self: stretch;
+  }
+
+  .summaryRow,
+  .detailActions {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 
@@ -1267,5 +1289,39 @@
 
   .notificationMeta {
     justify-items: start;
+  }
+}
+
+@media (max-width: 640px) {
+  .contentShell {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .surfaceCard,
+  .listPanel,
+  .detailPanel,
+  .inlineForm,
+  .syncBox,
+  .logItem,
+  .metaGrid div {
+    border-radius: 16px;
+  }
+
+  .surfaceCard,
+  .detailPanel {
+    padding: 16px;
+  }
+
+  .listPanel {
+    padding: 14px;
+  }
+
+  .topbar {
+    padding: 16px;
+  }
+
+  .tableWrap {
+    border-radius: 14px;
   }
 }

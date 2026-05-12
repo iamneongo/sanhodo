@@ -81,7 +81,7 @@ export function Sidebar({ className, children }) {
             aria-label="Close sidebar"
             onClick={() => setOpen(false)}
             className={cn(
-              "fixed inset-0 z-40 bg-zinc-950/40 transition-opacity md:hidden",
+              "fixed inset-0 z-40 cursor-pointer bg-zinc-950/40 transition-opacity md:hidden",
               open ? "opacity-100" : "pointer-events-none opacity-0"
             )}
           />
@@ -137,7 +137,7 @@ export function SidebarTrigger({ className, ...props }) {
       data-slot="sidebar-trigger"
       onClick={toggleSidebar}
       className={cn(
-        "inline-flex size-8 items-center justify-center rounded-md border border-transparent bg-transparent text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-950",
+        "inline-flex size-8 cursor-pointer items-center justify-center rounded-md border border-transparent bg-transparent text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-950",
         className
       )}
       {...props}
@@ -183,7 +183,7 @@ export function SidebarMenuItem({ className, ...props }) {
 }
 
 const sidebarMenuButtonVariants = cva(
-  "group/menu-button flex h-8 w-full items-center gap-2 overflow-hidden rounded-md px-2 text-left text-sm text-zinc-600 outline-none transition-[width,height,padding,color,background-color] hover:bg-zinc-100 hover:text-zinc-950 focus-visible:ring-2 focus-visible:ring-zinc-200 disabled:pointer-events-none disabled:opacity-50 data-[active=true]:bg-zinc-100 data-[active=true]:font-medium data-[active=true]:text-zinc-950",
+  "group/menu-button flex h-8 w-full cursor-pointer items-center gap-2 overflow-hidden rounded-md px-2 text-left text-sm text-zinc-600 outline-none transition-[width,height,padding,color,background-color] hover:bg-zinc-100 hover:text-zinc-950 focus-visible:ring-2 focus-visible:ring-zinc-200 disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50 data-[active=true]:bg-zinc-100 data-[active=true]:font-medium data-[active=true]:text-zinc-950",
   {
     variants: {
       size: {

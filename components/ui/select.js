@@ -19,6 +19,7 @@ function SelectTrigger({ className, children, ...props }) {
       data-slot="select-trigger"
       className={cn(
         "flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm outline-none focus:ring-2 focus:ring-zinc-200 disabled:cursor-not-allowed disabled:opacity-50",
+        "cursor-pointer",
         className
       )}
       {...props}

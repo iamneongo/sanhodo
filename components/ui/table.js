@@ -4,8 +4,15 @@ import { cn } from "@/lib/utils";
 
 function Table({ className, ...props }) {
   return (
-    <div data-slot="table-container" className="relative w-full overflow-x-auto">
-      <table data-slot="table" className={cn("w-full caption-bottom text-sm", className)} {...props} />
+    <div
+      data-slot="table-container"
+      className="relative w-full overflow-x-auto rounded-2xl border border-zinc-200 bg-white"
+    >
+      <table
+        data-slot="table"
+        className={cn("w-full caption-bottom text-sm", className)}
+        {...props}
+      />
     </div>
   );
 }
@@ -22,7 +29,10 @@ function TableRow({ className, ...props }) {
   return (
     <tr
       data-slot="table-row"
-      className={cn("border-b transition-colors hover:bg-zinc-50 data-[state=selected]:bg-zinc-100", className)}
+      className={cn(
+        "border-b border-zinc-100 transition-colors hover:bg-zinc-50 data-[state=selected]:bg-zinc-100",
+        className
+      )}
       {...props}
     />
   );
@@ -32,7 +42,10 @@ function TableHead({ className, ...props }) {
   return (
     <th
       data-slot="table-head"
-      className={cn("h-10 px-2 text-left align-middle text-xs font-medium uppercase tracking-[0.08em] text-zinc-500 whitespace-nowrap", className)}
+      className={cn(
+        "h-11 whitespace-nowrap px-4 text-left align-middle text-xs font-medium uppercase tracking-[0.08em] text-zinc-500",
+        className
+      )}
       {...props}
     />
   );
@@ -42,7 +55,7 @@ function TableCell({ className, ...props }) {
   return (
     <td
       data-slot="table-cell"
-      className={cn("p-2 align-middle whitespace-nowrap text-sm text-zinc-700", className)}
+      className={cn("whitespace-nowrap px-4 py-3 align-middle text-sm text-zinc-700", className)}
       {...props}
     />
   );
