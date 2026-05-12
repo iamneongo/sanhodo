@@ -68,6 +68,31 @@ export default function AdminLayout({ children }) {
     .admin-theme [data-slot="sidebar-wrapper"] {
       background: #f4f4f5;
     }
+
+    [data-slot="dialog-content"] {
+      font-family: var(--admin-font), sans-serif !important;
+    }
+
+    [data-slot="dialog-title"] {
+      margin: 0 !important;
+      color: #09090b !important;
+      font-family: var(--admin-font), sans-serif !important;
+      font-size: 1.5rem !important;
+      font-weight: 700 !important;
+      line-height: 1.2 !important;
+      letter-spacing: -0.02em !important;
+      text-transform: none !important;
+    }
+
+    [data-slot="dialog-description"] {
+      font-family: var(--admin-font), sans-serif !important;
+    }
+
+    @media (max-width: 640px) {
+      [data-slot="dialog-title"] {
+        font-size: 1.25rem !important;
+      }
+    }
   `;
 
   return (
