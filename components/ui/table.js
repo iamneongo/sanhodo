@@ -10,7 +10,7 @@ function Table({ className, ...props }) {
     >
       <table
         data-slot="table"
-        className={cn("w-full caption-bottom text-sm", className)}
+        className={cn("w-full table-fixed caption-bottom text-sm", className)}
         {...props}
       />
     </div>
@@ -43,7 +43,7 @@ function TableHead({ className, ...props }) {
     <th
       data-slot="table-head"
       className={cn(
-        "h-11 whitespace-nowrap px-4 text-left align-middle text-xs font-medium uppercase tracking-[0.08em] text-zinc-500",
+        "h-11 px-4 text-left align-middle text-xs font-medium uppercase tracking-[0.08em] text-zinc-500",
         className
       )}
       {...props}
@@ -55,7 +55,7 @@ function TableCell({ className, ...props }) {
   return (
     <td
       data-slot="table-cell"
-      className={cn("whitespace-nowrap px-4 py-3 align-middle text-sm text-zinc-700", className)}
+      className={cn("break-words px-4 py-3 align-top text-sm text-zinc-700", className)}
       {...props}
     />
   );

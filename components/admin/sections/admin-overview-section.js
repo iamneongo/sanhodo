@@ -3,6 +3,7 @@
 import AdminEmptyState from "../admin-empty-state";
 import AdminStatCard from "../admin-stat-card";
 import AdminSurfaceCard from "../admin-surface-card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import styles from "../../admin.module.css";
 
 export default function AdminOverviewSection({
@@ -20,7 +21,7 @@ export default function AdminOverviewSection({
   formatLabel
 }) {
   return (
-    <>
+    <div className="grid w-full min-w-0 gap-4">
       <section className={styles.statsGrid}>
         <AdminStatCard label="Đặt bàn" value={reservationStats.total} detail={`${reservationStats.pending} yêu cầu đang chờ xử lý`} accent="warm" />
         <AdminStatCard label="Đơn hàng" value={orderStats.total} detail={`${orderStats.active} đơn đang phục vụ`} />
@@ -31,58 +32,132 @@ export default function AdminOverviewSection({
         <AdminStatCard label="Đối tác" value={partnerStats.total} detail={`${partnerStats.openBookings} booking đoàn đang mở • ${partnerStats.active} đối tác hoạt động`} accent="ocean" />
       </section>
 
-      <section className={styles.insightsGrid}>
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
         <AdminSurfaceCard
-          kicker="Thông báo mới"
-          title="Lead trong 24 giờ gần nhất"
+          kicker="Theo dõi nhanh"
+          title="Lead và hoạt động mới"
+          description="Các phát sinh mới nhất trong 24 giờ gần đây theo chi nhánh đang xem."
           className={styles.insightCard}
+          bodyClassName="p-0"
         >
-          <div className={styles.notificationList}>
-            {notificationFeed.length ? (
-              notificationFeed.map((item) => (
-                <article key={item.id} className={styles.notificationItem}>
-                  <div>
-                    <strong>{item.title}</strong>
-                    <p>{item.subtitle}</p>
+          {notificationFeed.length ? (
+            <div className="divide-y divide-zinc-100">
+              {notificationFeed.map((item) => (
+                <article key={item.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <strong className="block text-sm font-semibold text-zinc-900">{item.title}</strong>
+                    <p className="mt-1 text-sm text-zinc-500">{item.subtitle}</p>
                   </div>
-                  <div className={styles.notificationMeta}>
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-500 sm:justify-end">
                     <span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{formatLabel(item.status)}</span>
-                    <small>{formatDate(item.createdAt)}</small>
+                    <span>{formatDate(item.createdAt)}</span>
                   </div>
                 </article>
-              ))
-            ) : (
+              ))}
+            </div>
+          ) : (
+            <div className="p-5">
               <AdminEmptyState title="Chưa có lead mới." description="24 giờ gần nhất chưa phát sinh lead mới trong chi nhánh đang xem." />
-            )}
-          </div>
+            </div>
+          )}
         </AdminSurfaceCard>
 
         <AdminSurfaceCard
-          kicker="Analytics cơ bản"
-          title="Top món và tình trạng thực đơn"
+          kicker="Hiệu suất vận hành"
+          title="Tổng quan nhanh theo nghiệp vụ"
+          description="Một vài chỉ số dễ đọc để nắm tình trạng vận hành trong ngày."
           className={styles.insightCard}
         >
-          <div className={styles.metricStack}>
-            {topSellingItems.length ? (
-              topSellingItems.map((item) => (
-                <div key={item.name} className={styles.metricRow}>
-                  <div>
-                    <strong>{item.name}</strong>
-                    <p>{item.quantity} phần đã bán</p>
-                  </div>
-                  <span>{formatCurrency(item.revenue)}</span>
-                </div>
-              ))
-            ) : (
-              <AdminEmptyState title="Chưa đủ dữ liệu order." description="Khi có thêm order, khối top món sẽ tự cập nhật." />
-            )}
-          </div>
-          <div className={styles.metricSummary}>
-            <span>{menuStats.seasonal} món đang theo mùa</span>
-            <span>{menuStats.lowStock} món số lượng giới hạn</span>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+              <div className="text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">Lead chờ xử lý</div>
+              <div className="mt-2 text-2xl font-semibold text-zinc-950">{reservationStats.pending}</div>
+              <p className="mt-1 text-sm text-zinc-500">Đặt bàn mới cần đội ngũ phản hồi.</p>
+            </div>
+            <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+              <div className="text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">Đơn đang phục vụ</div>
+              <div className="mt-2 text-2xl font-semibold text-zinc-950">{orderStats.active}</div>
+              <p className="mt-1 text-sm text-zinc-500">Đơn đang trong quá trình chuẩn bị hoặc phục vụ.</p>
+            </div>
+            <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+              <div className="text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">Món cần chú ý</div>
+              <div className="mt-2 text-2xl font-semibold text-zinc-950">{menuStats.lowStock}</div>
+              <p className="mt-1 text-sm text-zinc-500">Bao gồm món giới hạn số lượng và món theo mùa.</p>
+            </div>
+            <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+              <div className="text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">Hoa hồng chờ duyệt</div>
+              <div className="mt-2 text-2xl font-semibold text-zinc-950">{driverStats.pendingCommissions}</div>
+              <p className="mt-1 text-sm text-zinc-500">Khoản giới thiệu cần kiểm tra và xác nhận.</p>
+            </div>
           </div>
         </AdminSurfaceCard>
       </section>
-    </>
+
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+        <AdminSurfaceCard
+          kicker="Top món"
+          title="Món bán tốt"
+          description="Dựa trên dữ liệu order hiện có của chi nhánh đang xem."
+          className={styles.insightCard}
+          bodyClassName="p-0"
+        >
+          {topSellingItems.length ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Món ăn</TableHead>
+                  <TableHead>Số lượng</TableHead>
+                  <TableHead>Doanh thu</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {topSellingItems.map((item) => (
+                  <TableRow key={item.name}>
+                    <TableCell className="font-medium text-zinc-900">{item.name}</TableCell>
+                    <TableCell>{item.quantity} phần</TableCell>
+                    <TableCell>{formatCurrency(item.revenue)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="p-5">
+              <AdminEmptyState title="Chưa đủ dữ liệu order." description="Khi có thêm order, khối top món sẽ tự cập nhật." />
+            </div>
+          )}
+        </AdminSurfaceCard>
+
+        <AdminSurfaceCard
+          kicker="Tình trạng thực đơn"
+          title="Gợi ý theo dõi tồn món"
+          description="Tóm tắt nhanh những nhóm món cần đội vận hành chú ý."
+          className={styles.insightCard}
+        >
+          <div className="space-y-3">
+            <div className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+              <div>
+                <strong className="text-sm text-zinc-900">Món nổi bật</strong>
+                <p className="text-sm text-zinc-500">Đang được đẩy ở landing page và upsell.</p>
+              </div>
+              <span className="text-lg font-semibold text-zinc-950">{menuStats.featured}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+              <div>
+                <strong className="text-sm text-zinc-900">Món theo mùa</strong>
+                <p className="text-sm text-zinc-500">Cần kiểm tra lại giá và khả năng phục vụ.</p>
+              </div>
+              <span className="text-lg font-semibold text-zinc-950">{menuStats.seasonal}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+              <div>
+                <strong className="text-sm text-zinc-900">Số lượng giới hạn</strong>
+                <p className="text-sm text-zinc-500">Có thể tác động tới đơn hàng hoặc voucher upsell.</p>
+              </div>
+              <span className="text-lg font-semibold text-zinc-950">{menuStats.lowStock}</span>
+            </div>
+          </div>
+        </AdminSurfaceCard>
+      </section>
+    </div>
   );
 }

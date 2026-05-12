@@ -1,9 +1,12 @@
 "use client";
 
 import AdminDetailHeader from "../admin-detail-header";
+import AdminActiveFilters from "../admin-active-filters";
 import AdminEmptyState from "../admin-empty-state";
 import AdminPageToolbar from "../admin-page-toolbar";
+import AdminTableFooter from "../admin-table-footer";
 import { AdminDetailShell, AdminListShell } from "../admin-panel-shell";
+import useTablePagination from "../use-table-pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -46,8 +49,30 @@ export default function AdminReservationsSection({
   integrationSaving,
   FormSelect
 }) {
+  const pagination = useTablePagination(filteredReservations);
+  const activeFilterItems = [
+    {
+      key: "query",
+      active: Boolean(reservationQuery.trim()),
+      label: `Tìm: ${reservationQuery.trim()}`,
+      onClear: () => setReservationQuery("")
+    },
+    {
+      key: "status",
+      active: reservationStatus !== "all",
+      label: `Trạng thái: ${reservationStatuses.find((item) => item.value === reservationStatus)?.label || reservationStatus}`,
+      onClear: () => setReservationStatus("all")
+    },
+    {
+      key: "sort",
+      active: reservationSort !== "newest",
+      label: `Sắp xếp: ${reservationSortOptions.find((item) => item.value === reservationSort)?.label || reservationSort}`,
+      onClear: () => setReservationSort("newest")
+    }
+  ];
+
   return (
-    <section className={detailOnlyLayout ? "grid gap-4" : styles.adminGrid}>
+    <section className="grid w-full min-w-0 gap-4">
       {!detailOnlyLayout ? (
         <AdminListShell>
           <AdminPageToolbar
@@ -57,6 +82,16 @@ export default function AdminReservationsSection({
                   {manualOpen ? "Đóng form" : "Thêm đặt bàn"}
                 </Button>
               ) : null
+            }
+            footer={
+              <AdminActiveFilters
+                items={activeFilterItems}
+                onClearAll={() => {
+                  setReservationQuery("");
+                  setReservationStatus("all");
+                  setReservationSort("newest");
+                }}
+              />
             }
           >
             <Input
@@ -165,7 +200,7 @@ export default function AdminReservationsSection({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredReservations.map((item) => (
+              {pagination.pagedItems.map((item) => (
                 <TableRow key={item.id} className={styles.interactiveRow} onClick={() => openSectionDetail("reservations", item.id)}>
                   <TableCell>
                     <strong>{item.name}</strong>
@@ -181,6 +216,7 @@ export default function AdminReservationsSection({
               ))}
             </TableBody>
           </Table>
+          <AdminTableFooter {...pagination} />
         </AdminListShell>
       ) : null}
 

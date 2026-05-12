@@ -1,9 +1,12 @@
 "use client";
 
 import AdminDetailHeader from "../admin-detail-header";
+import AdminActiveFilters from "../admin-active-filters";
 import AdminEmptyState from "../admin-empty-state";
 import AdminPageToolbar from "../admin-page-toolbar";
+import AdminTableFooter from "../admin-table-footer";
 import { AdminDetailShell, AdminListShell } from "../admin-panel-shell";
+import useTablePagination from "../use-table-pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -56,8 +59,30 @@ export default function AdminOrdersSection({
   saveOrderEdit,
   FormSelect
 }) {
+  const pagination = useTablePagination(filteredOrders);
+  const activeFilterItems = [
+    {
+      key: "query",
+      active: Boolean(orderQuery.trim()),
+      label: `Tìm: ${orderQuery.trim()}`,
+      onClear: () => setOrderQuery("")
+    },
+    {
+      key: "status",
+      active: orderStatus !== "all",
+      label: `Trạng thái: ${orderStatuses.find((item) => item.value === orderStatus)?.label || orderStatus}`,
+      onClear: () => setOrderStatus("all")
+    },
+    {
+      key: "sort",
+      active: orderSort !== "newest",
+      label: `Sắp xếp: ${orderSortOptions.find((item) => item.value === orderSort)?.label || orderSort}`,
+      onClear: () => setOrderSort("newest")
+    }
+  ];
+
   return (
-    <section className={detailOnlyLayout ? "grid gap-4" : styles.adminGrid}>
+    <section className="grid w-full min-w-0 gap-4">
       {!detailOnlyLayout ? (
         <AdminListShell>
           <AdminPageToolbar
@@ -67,6 +92,16 @@ export default function AdminOrdersSection({
                   {orderCreateOpen ? "Đóng form" : "Tạo đơn hàng"}
                 </Button>
               ) : null
+            }
+            footer={
+              <AdminActiveFilters
+                items={activeFilterItems}
+                onClearAll={() => {
+                  setOrderQuery("");
+                  setOrderStatus("all");
+                  setOrderSort("newest");
+                }}
+              />
             }
           >
             <Input
@@ -228,7 +263,7 @@ export default function AdminOrdersSection({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredOrders.map((item) => (
+              {pagination.pagedItems.map((item) => (
                 <TableRow key={item.id} className={styles.interactiveRow} onClick={() => openSectionDetail("orders", item.id)}>
                   <TableCell>
                     <strong>{item.customerName}</strong>
@@ -244,6 +279,7 @@ export default function AdminOrdersSection({
               ))}
             </TableBody>
           </Table>
+          <AdminTableFooter {...pagination} />
         </AdminListShell>
       ) : null}
 

@@ -92,7 +92,7 @@ export default function AppSidebar({
       <SidebarContent>
         {branches?.length ? (
           <SidebarGroup>
-            <SidebarGroupLabel>Branch</SidebarGroupLabel>
+            <SidebarGroupLabel>Chi nhánh</SidebarGroupLabel>
             <Select
               value={activeBranchId || "all"}
               onValueChange={(value) => onBranchChange({ target: { value } })}
@@ -114,16 +114,16 @@ export default function AppSidebar({
         ) : null}
 
         <SidebarGroup>
-          <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
+          <SidebarGroupLabel>Quản trị</SidebarGroupLabel>
           <SidebarMenu>
             {visibleSections.map((key) => {
               const Icon = TAB_ICONS[key] || LayoutDashboard;
               return (
                 <SidebarMenuItem key={key}>
                   <SidebarMenuButton asChild isActive={activeSection === key}>
-                      <Link href={withBranchQuery(`/admin/${key}`, branchFilterId)} onClick={closeMobileSidebar}>
-                        <Icon className="size-4" />
-                        <NavLabel>{ADMIN_SECTIONS.find((item) => item.key === key)?.label || key}</NavLabel>
+                    <Link href={withBranchQuery(`/admin/${key}`, branchFilterId)} onClick={closeMobileSidebar}>
+                      <Icon className="size-4" />
+                      <NavLabel>{ADMIN_SECTIONS.find((item) => item.key === key)?.label || key}</NavLabel>
                       {state === "expanded" && key === "reservations" && reservationStats.pending ? <Badge variant="secondary" className="ml-auto">{reservationStats.pending}</Badge> : null}
                       {state === "expanded" && key === "orders" && orderStats.active ? <Badge variant="secondary" className="ml-auto">{orderStats.active}</Badge> : null}
                       {state === "expanded" && key === "vouchers" && voucherStats.recent ? <Badge variant="secondary" className="ml-auto">{voucherStats.recent}</Badge> : null}

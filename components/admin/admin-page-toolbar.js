@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 
-export default function AdminPageToolbar({ children, actions = null, className = "" }) {
+export default function AdminPageToolbar({ children, actions = null, footer = null, className = "" }) {
   return (
     <div
       className={cn(
@@ -10,8 +10,9 @@ export default function AdminPageToolbar({ children, actions = null, className =
         className
       )}
     >
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{children}</div>
+      <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">{children}</div>
       {actions ? <div className="flex flex-wrap items-center gap-2 md:justify-end">{actions}</div> : null}
+      {footer ? <div className="md:col-span-2">{footer}</div> : null}
     </div>
   );
 }
