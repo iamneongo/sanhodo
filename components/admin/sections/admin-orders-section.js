@@ -274,14 +274,14 @@ export default function AdminOrdersSection({
             <TableBody>
               {pagination.pagedItems.map((item) => (
                 <TableRow key={item.id} className={styles.interactiveRow} onClick={() => openSectionDetail("orders", item.id)}>
-                  <TableCell>
+                  <TableCell data-label="Khách">
                     <strong>{item.customerName}</strong>
                     <span>{formatDate(item.createdAt)}</span>
                   </TableCell>
-                  <TableCell>{findTableName(item.tableId)}</TableCell>
-                  <TableCell>{item.items.length}</TableCell>
-                  <TableCell>{formatCurrency(item.totalAmount)}</TableCell>
-                  <TableCell>
+                  <TableCell data-label="Bàn">{findTableName(item.tableId)}</TableCell>
+                  <TableCell data-label="Món">{item.items.length}</TableCell>
+                  <TableCell data-label="Tổng">{formatCurrency(item.totalAmount)}</TableCell>
+                  <TableCell data-label="Trạng thái">
                     <span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_contacted}`}>{formatLabel(item.status)}</span>
                   </TableCell>
                 </TableRow>

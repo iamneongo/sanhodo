@@ -131,10 +131,10 @@ export default function AdminMenuSection({
             <TableBody>
               {pagination.pagedItems.map((item) => (
                 <TableRow key={item.id} className={styles.interactiveRow} onClick={() => openSectionDetail("menu", item.id)}>
-                  <TableCell><strong>{item.name}</strong><span>{item.slug}</span></TableCell>
-                  <TableCell>{item.category}</TableCell>
-                  <TableCell>{formatCurrency(item.price)}</TableCell>
-                  <TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.availabilityStatus || (item.isAvailable ? "confirmed" : "cancelled")}`] || styles.status_confirmed}`}>{formatLabel(item.availabilityStatus || (item.isAvailable ? "available" : "hidden"))}</span></TableCell>
+                  <TableCell data-label="Món"><strong>{item.name}</strong><span>{item.slug}</span></TableCell>
+                  <TableCell data-label="Danh mục">{item.category}</TableCell>
+                  <TableCell data-label="Giá">{formatCurrency(item.price)}</TableCell>
+                  <TableCell data-label="Trạng thái"><span className={`${styles.statusBadge} ${styles[`status_${item.availabilityStatus || (item.isAvailable ? "confirmed" : "cancelled")}`] || styles.status_confirmed}`}>{formatLabel(item.availabilityStatus || (item.isAvailable ? "available" : "hidden"))}</span></TableCell>
                 </TableRow>
               ))}
             </TableBody>

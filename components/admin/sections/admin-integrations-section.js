@@ -179,20 +179,20 @@ export default function AdminIntegrationsSection({
                 <TableHead>Trạng thái</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {pagination.pagedItems.map((item) => (
-                <TableRow key={item.id} className={styles.interactiveRow} onClick={() => openSectionDetail("integrations", item.id)}>
-                  <TableCell>
-                    <strong>{item.name}</strong>
-                    <span>{item.description || item.code}</span>
-                  </TableCell>
-                  <TableCell>{String(item.category || "-").toUpperCase()}</TableCell>
-                  <TableCell>{item.market || "-"}</TableCell>
-                  <TableCell>{item.syncMode === "auto" ? "Tự động" : "Thủ công"}</TableCell>
-                  <TableCell>
-                    <span className={`${styles.statusBadge} ${item.enabled ? styles.status_confirmed : styles.status_cancelled}`}>
-                      {item.enabled ? formatLabel("enabled") : formatLabel("disabled")}
-                    </span>
+              <TableBody>
+                {pagination.pagedItems.map((item) => (
+                  <TableRow key={item.id} className={styles.interactiveRow} onClick={() => openSectionDetail("integrations", item.id)}>
+                    <TableCell data-label="Tích hợp">
+                      <strong>{item.name}</strong>
+                      <span>{item.description || item.code}</span>
+                    </TableCell>
+                    <TableCell data-label="Nhóm">{String(item.category || "-").toUpperCase()}</TableCell>
+                    <TableCell data-label="Thị trường">{item.market || "-"}</TableCell>
+                    <TableCell data-label="Đồng bộ">{item.syncMode === "auto" ? "Tự động" : "Thủ công"}</TableCell>
+                    <TableCell data-label="Trạng thái">
+                      <span className={`${styles.statusBadge} ${item.enabled ? styles.status_confirmed : styles.status_cancelled}`}>
+                        {item.enabled ? formatLabel("enabled") : formatLabel("disabled")}
+                      </span>
                   </TableCell>
                 </TableRow>
               ))}
@@ -246,17 +246,17 @@ export default function AdminIntegrationsSection({
               <TableBody>
                 {syncLogs.slice(0, 12).map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell>
+                    <TableCell data-label="Hệ thống">
                       <strong>{log.integrationName}</strong>
                       <span>{log.endpoint || "Không có endpoint"}</span>
                     </TableCell>
-                    <TableCell>{log.reservationId || "-"}</TableCell>
-                    <TableCell>
+                    <TableCell data-label="Đặt bàn">{log.reservationId || "-"}</TableCell>
+                    <TableCell data-label="Kết quả">
                       <span className={`${styles.statusBadge} ${log.ok ? styles.status_confirmed : styles.status_cancelled}`}>
                         {log.ok ? `Thành công ${log.status}` : `Lỗi ${log.status}`}
                       </span>
                     </TableCell>
-                    <TableCell>{formatDate(log.createdAt)}</TableCell>
+                    <TableCell data-label="Thời gian">{formatDate(log.createdAt)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

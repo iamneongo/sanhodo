@@ -671,6 +671,8 @@
 .tableWrap {
   overflow: auto;
   max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .tableWrap [data-slot="table-cell"] strong,

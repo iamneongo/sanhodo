@@ -39,7 +39,7 @@ function DialogContent({ className, children, hideClose = false, ...props }) {
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "fixed left-[50%] top-[50%] z-50 grid w-[min(92vw,720px)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-3xl border border-zinc-200 bg-white p-6 shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out",
+          "fixed left-[50%] top-[50%] z-50 grid w-[min(92vw,720px)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-3xl border border-zinc-200 bg-white p-6 text-zinc-950 shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out [font-family:var(--admin-font,inherit)]",
           className
         )}
         {...props}
@@ -59,7 +59,7 @@ function DialogContent({ className, children, hideClose = false, ...props }) {
 }
 
 function DialogHeader({ className, ...props }) {
-  return <div data-slot="dialog-header" className={cn("grid gap-1.5 text-left", className)} {...props} />;
+  return <div data-slot="dialog-header" className={cn("grid gap-2 text-left", className)} {...props} />;
 }
 
 function DialogFooter({ className, ...props }) {
@@ -67,11 +67,26 @@ function DialogFooter({ className, ...props }) {
 }
 
 function DialogTitle({ className, ...props }) {
-  return <DialogPrimitive.Title data-slot="dialog-title" className={cn("text-lg font-semibold text-zinc-950", className)} {...props} />;
+  return (
+    <DialogPrimitive.Title
+      data-slot="dialog-title"
+      className={cn(
+        "m-0 text-2xl font-semibold leading-tight tracking-[-0.02em] text-zinc-950 md:text-[1.9rem]",
+        className
+      )}
+      {...props}
+    />
+  );
 }
 
 function DialogDescription({ className, ...props }) {
-  return <DialogPrimitive.Description data-slot="dialog-description" className={cn("text-sm text-zinc-500", className)} {...props} />;
+  return (
+    <DialogPrimitive.Description
+      data-slot="dialog-description"
+      className={cn("m-0 text-sm leading-6 text-zinc-500", className)}
+      {...props}
+    />
+  );
 }
 
 export {

@@ -211,14 +211,14 @@ export default function AdminReservationsSection({
             <TableBody>
               {pagination.pagedItems.map((item) => (
                 <TableRow key={item.id} className={styles.interactiveRow} onClick={() => openSectionDetail("reservations", item.id)}>
-                  <TableCell>
+                  <TableCell data-label="Khách">
                     <strong>{item.name}</strong>
                     <span>{item.guests} khách</span>
                   </TableCell>
-                  <TableCell>{item.phone}</TableCell>
-                  <TableCell>{formatDate(item.datetime)}</TableCell>
-                  <TableCell>{findTableName(item.tableId)}</TableCell>
-                  <TableCell>
+                  <TableCell data-label="SĐT">{item.phone}</TableCell>
+                  <TableCell data-label="Thời gian">{formatDate(item.datetime)}</TableCell>
+                  <TableCell data-label="Bàn">{findTableName(item.tableId)}</TableCell>
+                  <TableCell data-label="Trạng thái">
                     <span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{formatLabel(item.status)}</span>
                   </TableCell>
                 </TableRow>

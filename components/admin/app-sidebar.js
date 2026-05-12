@@ -92,7 +92,7 @@ export default function AppSidebar({
       </SidebarHeader>
 
       <SidebarContent>
-        {branches?.length ? (
+        {(state === "expanded" || isMobile) && branches?.length ? (
           <SidebarGroup>
             <SidebarGroupLabel>Chi nhánh</SidebarGroupLabel>
             <Select

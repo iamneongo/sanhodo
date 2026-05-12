@@ -190,13 +190,13 @@ export default function AdminBranchesSection({
                     className={styles.interactiveRow}
                     onClick={() => openSectionDetail("branches", item.id)}
                   >
-                    <TableCell>
+                    <TableCell data-label="Chi nhánh">
                       <strong>{item.name}</strong>
                       <span>{item.shortName || item.address || "-"}</span>
                     </TableCell>
-                    <TableCell>{item.code}</TableCell>
-                    <TableCell>{item.phone || "-"}</TableCell>
-                    <TableCell>
+                    <TableCell data-label="Mã">{item.code}</TableCell>
+                    <TableCell data-label="Liên hệ">{item.phone || "-"}</TableCell>
+                    <TableCell data-label="Trạng thái">
                       <span
                         className={`${styles.statusBadge} ${
                           item.isActive

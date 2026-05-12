@@ -159,10 +159,10 @@ export default function AdminVouchersSection({
                     className={styles.interactiveRow}
                     onClick={() => openSectionDetail("vouchers", item.id)}
                   >
-                    <TableCell>{item.phone}</TableCell>
-                    <TableCell>{item.voucherCode || "-"}</TableCell>
-                    <TableCell>{item.voucherTitle || "-"}</TableCell>
-                    <TableCell>
+                    <TableCell data-label="SĐT">{item.phone}</TableCell>
+                    <TableCell data-label="Mã">{item.voucherCode || "-"}</TableCell>
+                    <TableCell data-label="Chiến dịch">{item.voucherTitle || "-"}</TableCell>
+                    <TableCell data-label="Trạng thái">
                       <span
                         className={`${styles.statusBadge} ${
                           styles[`status_${item.status}`] || styles.status_new
@@ -171,7 +171,7 @@ export default function AdminVouchersSection({
                         {formatLabel(item.status)}
                       </span>
                     </TableCell>
-                    <TableCell>{formatDate(item.createdAt)}</TableCell>
+                    <TableCell data-label="Tạo lúc">{formatDate(item.createdAt)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -189,13 +189,13 @@ export default function AdminDriversSection({
                     className={styles.interactiveRow}
                     onClick={() => openSectionDetail("drivers", item.id)}
                   >
-                    <TableCell>
+                    <TableCell data-label="Tài xế">
                       <strong>{item.fullName}</strong>
                       <span>{item.phone}</span>
                     </TableCell>
-                    <TableCell>{item.referralCode || "-"}</TableCell>
-                    <TableCell>{item.commissionRate}%</TableCell>
-                    <TableCell>
+                    <TableCell data-label="Mã giới thiệu">{item.referralCode || "-"}</TableCell>
+                    <TableCell data-label="Hoa hồng">{item.commissionRate}%</TableCell>
+                    <TableCell data-label="Trạng thái">
                       <span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_confirmed}`}>
                         {formatLabel(item.status)}
                       </span>

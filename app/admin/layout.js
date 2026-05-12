@@ -1,3 +1,10 @@
+import { Manrope } from "next/font/google";
+
+const manrope = Manrope({
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700", "800"]
+});
+
 export const metadata = {
   title: "Admin Dashboard | San Hô Đỏ Hồ Tràm",
   description: "Khu vực vận hành admin riêng cho đặt bàn, món ăn, voucher, tài xế, đối tác và tích hợp."
@@ -9,12 +16,14 @@ export default function AdminLayout({ children }) {
       padding-bottom: 0 !important;
       background: #f4f4f5 !important;
       color: #09090b !important;
+      --admin-font: ${manrope.style.fontFamily};
+      font-family: var(--admin-font), sans-serif !important;
     }
 
     .admin-theme {
       min-height: 100vh;
       color: #09090b;
-      font-family: var(--font-montserrat), sans-serif;
+      font-family: var(--admin-font), sans-serif;
     }
 
     .admin-theme h1,
@@ -25,7 +34,7 @@ export default function AdminLayout({ children }) {
     .admin-theme h6 {
       margin: 0;
       color: #09090b;
-      font-family: var(--font-montserrat), sans-serif;
+      font-family: var(--admin-font), sans-serif;
       font-weight: 600;
       letter-spacing: -0.02em;
       text-transform: none;
@@ -47,6 +56,13 @@ export default function AdminLayout({ children }) {
     .admin-theme p {
       color: #71717a;
       line-height: 1.6;
+    }
+
+    .admin-theme button,
+    .admin-theme input,
+    .admin-theme select,
+    .admin-theme textarea {
+      font-family: var(--admin-font), sans-serif;
     }
 
     .admin-theme [data-slot="sidebar-wrapper"] {

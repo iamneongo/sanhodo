@@ -168,11 +168,11 @@ export default function AdminPartnersSection({
               </TableHeader>
               <TableBody>
                 {pagination.pagedItems.map((item) => (
-                  <TableRow key={item.id} className={styles.interactiveRow} onClick={() => openSectionDetail("partners", item.id)}>
-                    <TableCell><strong>{item.name}</strong><span>{item.contactName || item.phone}</span></TableCell>
-                    <TableCell>{formatLabel(item.partnerType)}</TableCell>
-                    <TableCell>{item.commissionType === "amount" ? formatCurrency(item.commissionValue) : `${item.commissionValue}%`}</TableCell>
-                    <TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_confirmed}`}>{formatLabel(item.status)}</span></TableCell>
+                <TableRow key={item.id} className={styles.interactiveRow} onClick={() => openSectionDetail("partners", item.id)}>
+                    <TableCell data-label="Đối tác"><strong>{item.name}</strong><span>{item.contactName || item.phone}</span></TableCell>
+                    <TableCell data-label="Loại">{formatLabel(item.partnerType)}</TableCell>
+                    <TableCell data-label="Hoa hồng">{item.commissionType === "amount" ? formatCurrency(item.commissionValue) : `${item.commissionValue}%`}</TableCell>
+                    <TableCell data-label="Trạng thái"><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_confirmed}`}>{formatLabel(item.status)}</span></TableCell>
                   </TableRow>
                 ))}
               </TableBody>

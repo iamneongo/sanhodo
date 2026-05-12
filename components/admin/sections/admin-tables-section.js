@@ -124,10 +124,10 @@ export default function AdminTablesSection({
             <TableBody>
               {pagination.pagedItems.map((item) => (
                 <TableRow key={item.id} className={styles.interactiveRow} onClick={() => openSectionDetail("tables", item.id)}>
-                  <TableCell><strong>{item.name}</strong><span>{formatCurrency(item.minSpend)}</span></TableCell>
-                  <TableCell>{item.area}</TableCell>
-                  <TableCell>{item.capacity}</TableCell>
-                  <TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{formatLabel(item.status)}</span></TableCell>
+                  <TableCell data-label="Bàn"><strong>{item.name}</strong><span>{formatCurrency(item.minSpend)}</span></TableCell>
+                  <TableCell data-label="Khu vực">{item.area}</TableCell>
+                  <TableCell data-label="Sức chứa">{item.capacity}</TableCell>
+                  <TableCell data-label="Trạng thái"><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{formatLabel(item.status)}</span></TableCell>
                 </TableRow>
               ))}
             </TableBody>
