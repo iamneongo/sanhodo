@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import styles from "./admin.module.css";
 
 export default function AdminLoginForm({ initialError = "" }) {
@@ -38,7 +41,8 @@ export default function AdminLoginForm({ initialError = "" }) {
 
   return (
     <main className={styles.loginPage}>
-      <div className={styles.loginCard}>
+      <Card className={styles.loginCard}>
+        <CardContent className="space-y-6 p-8">
         <div className={styles.loginHeading}>
           <span className={styles.kicker}>San Hô Đỏ Admin</span>
           <h1>Đăng nhập dashboard nhà hàng</h1>
@@ -56,7 +60,7 @@ export default function AdminLoginForm({ initialError = "" }) {
         <form className={styles.loginForm} onSubmit={handleSubmit}>
           <label>
             <span>Email admin</span>
-            <input
+            <Input
               type="email"
               value={form.email}
               onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
@@ -65,19 +69,20 @@ export default function AdminLoginForm({ initialError = "" }) {
           </label>
           <label>
             <span>Mật khẩu</span>
-            <input
+            <Input
               type="password"
               value={form.password}
               onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
               required
             />
           </label>
-          <button type="submit" disabled={loading}>
+          <Button type="submit" disabled={loading}>
             {loading ? "Đang đăng nhập..." : "Vào dashboard"}
-          </button>
+          </Button>
           {error ? <p className={styles.loginError}>{error}</p> : null}
         </form>
-      </div>
+        </CardContent>
+      </Card>
     </main>
   );
 }

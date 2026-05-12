@@ -12,6 +12,9 @@ import {
   Ticket,
   UtensilsCrossed
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import styles from "../admin.module.css";
 
 const TAB_ICONS = {
@@ -58,14 +61,18 @@ export default function AppSidebar({
 
       <div className={styles.sidebarSection}>
         <span className={styles.sidebarLabel}>Workspace</span>
-        <div className={styles.sidebarIdentity}>
-          <div className={styles.sidebarIdentityHead}>
-            <LayoutDashboard size={18} />
-            <strong>{adminProfile?.full_name || adminProfile?.email || "Admin"}</strong>
-          </div>
-          <small>{roleLabels[adminProfile?.role] || adminProfile?.role || "Admin"}</small>
-          {selectedBranch ? <small>Đang xem: {selectedBranch.name}</small> : null}
-        </div>
+        <Card className={styles.sidebarIdentity}>
+          <CardContent className="grid gap-1.5 p-4">
+            <div className={styles.sidebarIdentityHead}>
+              <LayoutDashboard size={18} />
+              <strong>{adminProfile?.full_name || adminProfile?.email || "Admin"}</strong>
+            </div>
+            <Badge variant="outline" className="w-fit">
+              {roleLabels[adminProfile?.role] || adminProfile?.role || "Admin"}
+            </Badge>
+            {selectedBranch ? <small>Đang xem: {selectedBranch.name}</small> : null}
+          </CardContent>
+        </Card>
         {branches?.length ? (
           <label className={styles.branchControl}>
             <span>Chi nhánh</span>
@@ -73,6 +80,7 @@ export default function AppSidebar({
               value={activeBranchId || "all"}
               onChange={onBranchChange}
               disabled={!canViewAllBranches && Boolean(selectedBranch)}
+              className="flex h-11 w-full items-center rounded-xl border border-[#dccabe] bg-white/88 px-3 py-2 text-sm text-[#41251e] shadow-sm outline-none"
             >
               {canViewAllBranches ? <option value="all">Tất cả chi nhánh</option> : null}
               {branches.map((branch) => (
@@ -89,9 +97,10 @@ export default function AppSidebar({
         {visibleTabs.map((key) => {
           const Icon = TAB_ICONS[key] || LayoutDashboard;
           return (
-            <button
+            <Button
               key={key}
               type="button"
+              variant={tab === key ? "default" : "ghost"}
               className={tab === key ? styles.sidebarTabActive : styles.sidebarTab}
               onClick={() => onTabChange(key)}
             >
@@ -99,12 +108,12 @@ export default function AppSidebar({
                 <Icon size={17} />
                 <span>{getTabLabel(key)}</span>
               </div>
-              {key === "reservations" && reservationStats.pending ? <small>{reservationStats.pending}</small> : null}
-              {key === "orders" && orderStats.active ? <small>{orderStats.active}</small> : null}
-              {key === "vouchers" && voucherStats.recent ? <small>{voucherStats.recent}</small> : null}
-              {key === "drivers" && driverStats.pendingCommissions ? <small>{driverStats.pendingCommissions}</small> : null}
-              {key === "partners" && partnerStats.openBookings ? <small>{partnerStats.openBookings}</small> : null}
-            </button>
+              {key === "reservations" && reservationStats.pending ? <Badge variant="secondary">{reservationStats.pending}</Badge> : null}
+              {key === "orders" && orderStats.active ? <Badge variant="secondary">{orderStats.active}</Badge> : null}
+              {key === "vouchers" && voucherStats.recent ? <Badge variant="secondary">{voucherStats.recent}</Badge> : null}
+              {key === "drivers" && driverStats.pendingCommissions ? <Badge variant="secondary">{driverStats.pendingCommissions}</Badge> : null}
+              {key === "partners" && partnerStats.openBookings ? <Badge variant="secondary">{partnerStats.openBookings}</Badge> : null}
+            </Button>
           );
         })}
       </nav>
@@ -120,28 +129,16 @@ export default function AppSidebar({
       </div>
 
       <div className={styles.sidebarMiniGrid}>
-        <article className={styles.sidebarMiniCard}>
-          <span>Lead chờ</span>
-          <strong>{reservationStats.pending}</strong>
-        </article>
-        <article className={styles.sidebarMiniCard}>
-          <span>Order active</span>
-          <strong>{orderStats.active}</strong>
-        </article>
-        <article className={styles.sidebarMiniCard}>
-          <span>Pending payout</span>
-          <strong>{driverStats.pendingCommissions}</strong>
-        </article>
-        <article className={styles.sidebarMiniCard}>
-          <span>Booking đoàn</span>
-          <strong>{partnerStats.openBookings}</strong>
-        </article>
+        <Card className={styles.sidebarMiniCard}><CardContent className="grid gap-1.5 p-4"><span>Lead chờ</span><strong>{reservationStats.pending}</strong></CardContent></Card>
+        <Card className={styles.sidebarMiniCard}><CardContent className="grid gap-1.5 p-4"><span>Order active</span><strong>{orderStats.active}</strong></CardContent></Card>
+        <Card className={styles.sidebarMiniCard}><CardContent className="grid gap-1.5 p-4"><span>Pending payout</span><strong>{driverStats.pendingCommissions}</strong></CardContent></Card>
+        <Card className={styles.sidebarMiniCard}><CardContent className="grid gap-1.5 p-4"><span>Booking đoàn</span><strong>{partnerStats.openBookings}</strong></CardContent></Card>
       </div>
 
-      <button className={styles.logoutButton} type="button" onClick={onLogout}>
+      <Button className={styles.logoutButton} type="button" onClick={onLogout}>
         <LogOut size={16} />
         <span>Đăng xuất</span>
-      </button>
+      </Button>
     </aside>
   );
 }

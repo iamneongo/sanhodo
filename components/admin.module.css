@@ -146,6 +146,50 @@
   padding: 20px;
 }
 
+.surfaceCard {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid rgba(111, 74, 54, 0.12);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 36px rgba(84, 50, 29, 0.06);
+}
+
+.surfaceCardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+}
+
+.surfaceCardTitle {
+  margin: 4px 0 0;
+  color: #311b15;
+  font-size: 1.5rem;
+}
+
+.surfaceCardDescription {
+  margin-top: 8px;
+  color: #6d544a;
+}
+
+.surfaceCardActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.surfaceCardBody {
+  min-width: 0;
+}
+
+.subsectionCard {
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 252, 248, 0.92), rgba(249, 243, 236, 0.82));
+  box-shadow: 0 16px 32px rgba(84, 50, 29, 0.05);
+}
+
 .sidebar {
   position: sticky;
   top: 0;
@@ -414,6 +458,18 @@
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.74);
   box-shadow: 0 18px 36px rgba(84, 50, 29, 0.06);
+}
+
+.statCard_warm {
+  background: linear-gradient(180deg, rgba(255, 250, 245, 0.95), rgba(255, 244, 238, 0.88));
+}
+
+.statCard_soft {
+  background: linear-gradient(180deg, rgba(248, 244, 255, 0.92), rgba(255, 255, 255, 0.86));
+}
+
+.statCard_ocean {
+  background: linear-gradient(180deg, rgba(241, 247, 252, 0.95), rgba(255, 255, 255, 0.88));
 }
 
 .statCard span {
