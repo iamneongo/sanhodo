@@ -4,6 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminHeader from "./admin/admin-header";
 import AdminDetailHeader from "./admin/admin-detail-header";
+import AdminEmptyState from "./admin/admin-empty-state";
+import AdminPageToolbar from "./admin/admin-page-toolbar";
+import AdminOverviewSection from "./admin/sections/admin-overview-section";
+import AdminOrdersSection from "./admin/sections/admin-orders-section";
+import AdminReservationsSection from "./admin/sections/admin-reservations-section";
 import AppSidebar from "./admin/app-sidebar";
 import { AdminDetailShell, AdminListShell } from "./admin/admin-panel-shell";
 import AdminStatCard from "./admin/admin-stat-card";
@@ -38,12 +43,111 @@ const voucherStatuses = [
 
 const orderStatuses = [
   { value: "all", label: "Tất cả" },
-  { value: "draft", label: "Draft" },
-  { value: "confirmed", label: "Confirmed" },
-  { value: "preparing", label: "Preparing" },
-  { value: "served", label: "Served" },
-  { value: "paid", label: "Paid" },
-  { value: "cancelled", label: "Cancelled" }
+  { value: "draft", label: "Nháp" },
+  { value: "confirmed", label: "Đã xác nhận" },
+  { value: "preparing", label: "Đang chuẩn bị" },
+  { value: "served", label: "Đã phục vụ" },
+  { value: "paid", label: "Đã thanh toán" },
+  { value: "cancelled", label: "Đã hủy" }
+];
+
+const valueLabels = {
+  draft: "Nháp",
+  confirmed: "Đã xác nhận",
+  contacted: "Đã liên hệ",
+  preparing: "Đang chuẩn bị",
+  served: "Đã phục vụ",
+  paid: "Đã thanh toán",
+  cancelled: "Đã hủy",
+  new: "Mới",
+  qualified: "Đủ điều kiện",
+  used: "Đã dùng",
+  closed: "Đã chốt",
+  available: "Sẵn phục vụ",
+  reserved: "Đã giữ",
+  occupied: "Đang phục vụ",
+  cleaning: "Đang dọn",
+  inactive: "Ngưng dùng",
+  none: "Không cay",
+  mild: "Cay nhẹ",
+  medium: "Cay vừa",
+  hot: "Cay nhiều",
+  low_stock: "Số lượng giới hạn",
+  seasonal: "Theo mùa",
+  sold_out: "Hết món",
+  active: "Đang hoạt động",
+  blocked: "Đã khóa",
+  paused: "Tạm dừng",
+  pending: "Đang chờ",
+  approved: "Đã duyệt",
+  agency: "Đại lý",
+  hdv: "Hướng dẫn viên",
+  hotel: "Khách sạn",
+  corporate: "Doanh nghiệp",
+  lead: "Tiềm năng",
+  arrived: "Đã tới",
+  completed: "Hoàn tất",
+  expired: "Hết hạn",
+  terminated: "Đã chấm dứt",
+  admin: "Nội bộ",
+  website: "Website",
+  reservation: "Từ đặt bàn",
+  "walk-in": "Khách vãng lai",
+  phone: "Điện thoại",
+  zalo: "Zalo",
+  percent: "Phần trăm",
+  amount: "Số tiền",
+  manual: "Thủ công",
+  auto: "Tự động",
+  enabled: "Đang bật",
+  disabled: "Đang tắt",
+  hidden: "Ẩn"
+};
+
+const reservationSortOptions = [
+  { value: "newest", label: "Mới nhất" },
+  { value: "oldest", label: "Cũ nhất" },
+  { value: "guests_desc", label: "Nhiều khách nhất" },
+  { value: "name_asc", label: "Tên A-Z" }
+];
+
+const orderSortOptions = [
+  { value: "newest", label: "Mới nhất" },
+  { value: "oldest", label: "Cũ nhất" },
+  { value: "total_desc", label: "Tổng tiền cao nhất" },
+  { value: "customer_asc", label: "Khách hàng A-Z" }
+];
+
+const voucherSortOptions = [
+  { value: "newest", label: "Mới nhất" },
+  { value: "oldest", label: "Cũ nhất" },
+  { value: "code_asc", label: "Mã A-Z" },
+  { value: "value_desc", label: "Ưu đãi cao nhất" }
+];
+
+const tableSortOptions = [
+  { value: "name_asc", label: "Tên bàn A-Z" },
+  { value: "capacity_desc", label: "Sức chứa cao nhất" },
+  { value: "area_asc", label: "Khu vực A-Z" }
+];
+
+const menuSortOptions = [
+  { value: "name_asc", label: "Tên món A-Z" },
+  { value: "price_desc", label: "Giá cao nhất" },
+  { value: "price_asc", label: "Giá thấp nhất" },
+  { value: "featured_first", label: "Ưu tiên món nổi bật" }
+];
+
+const driverSortOptions = [
+  { value: "name_asc", label: "Tên A-Z" },
+  { value: "commission_desc", label: "Hoa hồng cao nhất" },
+  { value: "status_asc", label: "Theo trạng thái" }
+];
+
+const partnerSortOptions = [
+  { value: "name_asc", label: "Tên A-Z" },
+  { value: "type_asc", label: "Loại đối tác" },
+  { value: "commission_desc", label: "Hoa hồng cao nhất" }
 ];
 
 const tableStatuses = ["available", "reserved", "occupied", "cleaning", "inactive"];
@@ -58,12 +162,12 @@ const partnerBookingStatuses = ["lead", "confirmed", "arrived", "completed", "ca
 const partnerContractStatuses = ["draft", "active", "expired", "terminated"];
 
 const roleLabels = {
-  admin: "Admin",
-  manager: "Manager",
-  staff: "Staff",
-  super_admin: "Super Admin",
-  branch_manager: "Branch Manager",
-  driver: "Driver"
+  admin: "Quản trị viên",
+  manager: "Quản lý",
+  staff: "Nhân viên",
+  super_admin: "Quản trị tổng",
+  branch_manager: "Quản lý chi nhánh",
+  driver: "Tài xế"
 };
 
 function formatDate(value) {
@@ -80,6 +184,10 @@ function formatDate(value) {
 
 function formatCurrency(value) {
   return `${new Intl.NumberFormat("vi-VN").format(Number(value || 0))}đ`;
+}
+
+function formatLabel(value) {
+  return valueLabels[value] || value;
 }
 
 function formatPercent(value, total) {
@@ -116,6 +224,11 @@ function sortByName(items, field = "name") {
   return [...items].sort((a, b) => String(a[field] || "").localeCompare(String(b[field] || ""), "vi"));
 }
 
+function sortItems(items, mode, comparators) {
+  const comparator = comparators[mode] || comparators.default;
+  return [...items].sort(comparator);
+}
+
 function FormSelect({
   value,
   onValueChange,
@@ -131,7 +244,10 @@ function FormSelect({
       </SelectTrigger>
       <SelectContent>
         {options.map((option) => {
-          const normalized = typeof option === "string" ? { value: option, label: option } : option;
+          const normalized =
+            typeof option === "string"
+              ? { value: option, label: formatLabel(option) }
+              : { ...option, label: option.label || formatLabel(option.value) };
           return (
             <SelectItem key={normalized.value} value={String(normalized.value)}>
               {normalized.label}
@@ -386,14 +502,25 @@ export default function AdminDashboard({
 
   const [reservationQuery, setReservationQuery] = useState("");
   const [reservationStatus, setReservationStatus] = useState("all");
+  const [reservationSort, setReservationSort] = useState("newest");
   const [voucherQuery, setVoucherQuery] = useState("");
   const [voucherStatus, setVoucherStatus] = useState("all");
+  const [voucherSort, setVoucherSort] = useState("newest");
   const [orderQuery, setOrderQuery] = useState("");
   const [orderStatus, setOrderStatus] = useState("all");
+  const [orderSort, setOrderSort] = useState("newest");
   const [menuQuery, setMenuQuery] = useState("");
+  const [menuStatusFilter, setMenuStatusFilter] = useState("all");
+  const [menuSort, setMenuSort] = useState("name_asc");
   const [tableQuery, setTableQuery] = useState("");
+  const [tableStatusFilter, setTableStatusFilter] = useState("all");
+  const [tableSort, setTableSort] = useState("name_asc");
   const [driverQuery, setDriverQuery] = useState("");
+  const [driverStatusFilter, setDriverStatusFilter] = useState("all");
+  const [driverSort, setDriverSort] = useState("name_asc");
   const [partnerQuery, setPartnerQuery] = useState("");
+  const [partnerStatusFilter, setPartnerStatusFilter] = useState("all");
+  const [partnerSort, setPartnerSort] = useState("name_asc");
 
   const [selectedReservationId, setSelectedReservationId] = useState(
     activeSection === "reservations" && detailId ? detailId : initialReservations[0]?.id || ""
@@ -596,55 +723,132 @@ export default function AdminDashboard({
 
   const filteredReservations = useMemo(
     () =>
-      reservations.filter((item) => {
+      sortItems(
+        reservations.filter((item) => {
         const statusMatch = reservationStatus === "all" || item.status === reservationStatus;
         return statusMatch && matchesSearch(item, reservationQuery, ["name", "phone", "selectedOffer", "notes", "assignedTo"]);
       }),
-    [reservations, reservationQuery, reservationStatus]
+      reservationSort,
+      {
+        default: (a, b) => new Date(b.createdAt || b.datetime || 0) - new Date(a.createdAt || a.datetime || 0),
+        newest: (a, b) => new Date(b.createdAt || b.datetime || 0) - new Date(a.createdAt || a.datetime || 0),
+        oldest: (a, b) => new Date(a.createdAt || a.datetime || 0) - new Date(b.createdAt || b.datetime || 0),
+        guests_desc: (a, b) => Number(b.guests || 0) - Number(a.guests || 0),
+        name_asc: (a, b) => String(a.name || "").localeCompare(String(b.name || ""), "vi")
+      }
+    ),
+    [reservations, reservationQuery, reservationStatus, reservationSort]
   );
 
   const filteredVouchers = useMemo(
     () =>
-      vouchers.filter((item) => {
+      sortItems(
+        vouchers.filter((item) => {
         const statusMatch = voucherStatus === "all" || item.status === voucherStatus;
         return statusMatch && matchesSearch(item, voucherQuery, ["phone", "notes", "source", "voucherCode", "voucherTitle"]);
       }),
-    [vouchers, voucherQuery, voucherStatus]
+      voucherSort,
+      {
+        default: (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
+        newest: (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
+        oldest: (a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0),
+        code_asc: (a, b) => String(a.voucherCode || "").localeCompare(String(b.voucherCode || ""), "vi"),
+        value_desc: (a, b) => Number(b.voucherDiscountValue || 0) - Number(a.voucherDiscountValue || 0)
+      }
+    ),
+    [vouchers, voucherQuery, voucherStatus, voucherSort]
   );
 
   const filteredOrders = useMemo(
     () =>
-      orders.filter((item) => {
+      sortItems(
+        orders.filter((item) => {
         const statusMatch = orderStatus === "all" || item.status === orderStatus;
         return statusMatch && matchesSearch(item, orderQuery, ["customerName", "customerPhone", "notes"]);
       }),
-    [orders, orderQuery, orderStatus]
+      orderSort,
+      {
+        default: (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
+        newest: (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
+        oldest: (a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0),
+        total_desc: (a, b) => Number(b.totalAmount || 0) - Number(a.totalAmount || 0),
+        customer_asc: (a, b) => String(a.customerName || "").localeCompare(String(b.customerName || ""), "vi")
+      }
+    ),
+    [orders, orderQuery, orderStatus, orderSort]
   );
 
   const filteredMenuItems = useMemo(
-    () => menuItems.filter((item) => matchesSearch(item, menuQuery, ["name", "category", "description"])),
-    [menuItems, menuQuery]
+    () =>
+      sortItems(
+        menuItems.filter((item) => {
+          const statusMatch = menuStatusFilter === "all" || (item.availabilityStatus || "available") === menuStatusFilter;
+          return statusMatch && matchesSearch(item, menuQuery, ["name", "category", "description"]);
+        }),
+        menuSort,
+        {
+          default: (a, b) => String(a.name || "").localeCompare(String(b.name || ""), "vi"),
+          name_asc: (a, b) => String(a.name || "").localeCompare(String(b.name || ""), "vi"),
+          price_desc: (a, b) => Number(b.price || 0) - Number(a.price || 0),
+          price_asc: (a, b) => Number(a.price || 0) - Number(b.price || 0),
+          featured_first: (a, b) => Number(Boolean(b.isFeatured)) - Number(Boolean(a.isFeatured))
+        }
+      ),
+    [menuItems, menuQuery, menuStatusFilter, menuSort]
   );
 
   const filteredTables = useMemo(
-    () => restaurantTables.filter((item) => matchesSearch(item, tableQuery, ["name", "area", "notes", "status"])),
-    [restaurantTables, tableQuery]
+    () =>
+      sortItems(
+        restaurantTables.filter((item) => {
+          const statusMatch = tableStatusFilter === "all" || item.status === tableStatusFilter;
+          return statusMatch && matchesSearch(item, tableQuery, ["name", "area", "notes", "status"]);
+        }),
+        tableSort,
+        {
+          default: (a, b) => String(a.name || "").localeCompare(String(b.name || ""), "vi"),
+          name_asc: (a, b) => String(a.name || "").localeCompare(String(b.name || ""), "vi"),
+          capacity_desc: (a, b) => Number(b.capacity || 0) - Number(a.capacity || 0),
+          area_asc: (a, b) => String(a.area || "").localeCompare(String(b.area || ""), "vi")
+        }
+      ),
+    [restaurantTables, tableQuery, tableStatusFilter, tableSort]
   );
 
   const filteredDrivers = useMemo(
     () =>
-      drivers.filter((item) =>
-        matchesSearch(item, driverQuery, ["fullName", "phone", "referralCode", "code", "vehicleType"])
+      sortItems(
+        drivers.filter((item) => {
+          const statusMatch = driverStatusFilter === "all" || item.status === driverStatusFilter;
+          return statusMatch && matchesSearch(item, driverQuery, ["fullName", "phone", "referralCode", "code", "vehicleType"]);
+        }),
+        driverSort,
+        {
+          default: (a, b) => String(a.fullName || "").localeCompare(String(b.fullName || ""), "vi"),
+          name_asc: (a, b) => String(a.fullName || "").localeCompare(String(b.fullName || ""), "vi"),
+          commission_desc: (a, b) => Number(b.commissionRate || 0) - Number(a.commissionRate || 0),
+          status_asc: (a, b) => formatLabel(a.status).localeCompare(formatLabel(b.status), "vi")
+        }
       ),
-    [drivers, driverQuery]
+    [drivers, driverQuery, driverStatusFilter, driverSort]
   );
 
   const filteredPartners = useMemo(
     () =>
-      travelPartners.filter((item) =>
-        matchesSearch(item, partnerQuery, ["name", "code", "contactName", "phone", "email"])
+      sortItems(
+        travelPartners.filter((item) => {
+          const statusMatch = partnerStatusFilter === "all" || item.status === partnerStatusFilter;
+          return statusMatch && matchesSearch(item, partnerQuery, ["name", "code", "contactName", "phone", "email"]);
+        }),
+        partnerSort,
+        {
+          default: (a, b) => String(a.name || "").localeCompare(String(b.name || ""), "vi"),
+          name_asc: (a, b) => String(a.name || "").localeCompare(String(b.name || ""), "vi"),
+          type_asc: (a, b) => formatLabel(a.partnerType).localeCompare(formatLabel(b.partnerType), "vi"),
+          commission_desc: (a, b) => Number(b.commissionValue || 0) - Number(a.commissionValue || 0)
+        }
       ),
-    [travelPartners, partnerQuery]
+    [travelPartners, partnerQuery, partnerStatusFilter, partnerSort]
   );
 
   const findTableName = (tableId) => restaurantTables.find((item) => item.id === tableId)?.name || "-";
@@ -737,7 +941,7 @@ export default function AdminDashboard({
       setSelectedVoucherCampaignId(data.data.id);
       setCampaignDraft(createEmptyCampaignDraft());
       setCampaignCreateOpen(false);
-      setMessage("Đã tạo campaign voucher.");
+      setMessage("Đã tạo chiến dịch voucher.");
     } catch (error) {
       setMessage(error.message);
     } finally {
@@ -757,7 +961,7 @@ export default function AdminDashboard({
       setVoucherCampaigns((prev) =>
         sortByName(prev.map((item) => (item.id === id ? data.data : item)), "title")
       );
-      setMessage("Đã cập nhật campaign voucher.");
+      setMessage("Đã cập nhật chiến dịch voucher.");
     } catch (error) {
       setMessage(error.message);
     } finally {
@@ -766,20 +970,20 @@ export default function AdminDashboard({
   };
 
   const deleteVoucherCampaignEntry = async (id) => {
-    if (!window.confirm("Xóa campaign voucher này?")) return;
+    if (!window.confirm("Xóa chiến dịch voucher này?")) return;
     try {
       await requestJson(`/api/admin/voucher-campaigns/${id}`, { method: "DELETE" });
       const next = voucherCampaigns.filter((item) => item.id !== id);
       setVoucherCampaigns(next);
       setSelectedVoucherCampaignId(next[0]?.id || "");
-      setMessage("Đã xóa campaign voucher.");
+      setMessage("Đã xóa chiến dịch voucher.");
     } catch (error) {
       setMessage(error.message);
     }
   };
 
   const redeemVoucher = async (voucher) => {
-    const spendInput = window.prompt("Nhập tổng hóa đơn để redeem voucher và cộng loyalty points", "1500000");
+    const spendInput = window.prompt("Nhập tổng hóa đơn để đổi voucher và cộng điểm loyalty", "1500000");
     if (spendInput === null) return;
 
     setVoucherSaving(true);
@@ -811,7 +1015,7 @@ export default function AdminDashboard({
       if (data.data?.redemption) {
         setVoucherRedemptions((prev) => sortByCreatedDesc([data.data.redemption, ...prev]));
       }
-      setMessage("Đã redeem voucher và cập nhật loyalty.");
+      setMessage("Đã đổi voucher và cập nhật loyalty.");
     } catch (error) {
       setMessage(error.message);
     } finally {
@@ -1314,7 +1518,7 @@ export default function AdminDashboard({
       .map((item) => ({
         id: `order-${item.id}`,
         type: "order",
-        title: `${item.customerName} vừa gửi order`,
+        title: `${item.customerName} vừa gửi đơn hàng`,
         subtitle: `${item.items.length} món • ${formatCurrency(item.totalAmount)}`,
         createdAt: item.createdAt,
         status: item.status
@@ -1325,7 +1529,7 @@ export default function AdminDashboard({
         id: `voucher-${item.id}`,
         type: "voucher",
         title: `${item.phone} vừa nhận voucher`,
-        subtitle: item.voucherCode || "Lead voucher mới",
+        subtitle: item.voucherCode || "Yêu cầu voucher mới",
         createdAt: item.createdAt,
         status: item.status
       })),
@@ -1413,250 +1617,135 @@ export default function AdminDashboard({
           </div>
         ) : null}
 
-        {currentSection === "overview" ? <section className={styles.statsGrid}>
-          <AdminStatCard label="Đặt bàn" value={reservationStats.total} detail={`${reservationStats.pending} lead đang chờ xử lý`} accent="warm" />
-          <AdminStatCard label="Orders" value={orderStats.total} detail={`${orderStats.active} order đang phục vụ`} />
-          <AdminStatCard label="Thực đơn" value={menuStats.total} detail={`${menuStats.featured} món featured • ${menuStats.lowStock} món cần chú ý`} />
-          <AdminStatCard label="Bàn" value={tableStats.total} detail={`${tableStats.available} bàn còn trống`} />
-          <AdminStatCard label="Voucher" value={voucherStats.total} detail={`${voucherStats.activeCodes} mã đã phát • ${voucherStats.recent} lead trong 24h`} accent="soft" />
-          <AdminStatCard label="Tài xế" value={driverStats.total} detail={`${driverStats.active} đang hoạt động • ${driverStats.pendingCommissions} pending`} />
-          <AdminStatCard label="Đối tác" value={partnerStats.total} detail={`${partnerStats.openBookings} booking đoàn mở • ${partnerStats.active} active`} accent="ocean" />
-        </section> : null}
-
-        {currentSection === "overview" ? <section className={styles.insightsGrid}>
-          <AdminSurfaceCard
-            kicker="Thông báo mới"
-            title="Lead trong 24 giờ gần nhất"
-            className={styles.insightCard}
-          >
-            <div className={styles.notificationList}>
-              {notificationFeed.length ? (
-                notificationFeed.map((item) => (
-                  <article key={item.id} className={styles.notificationItem}>
-                    <div>
-                      <strong>{item.title}</strong>
-                      <p>{item.subtitle}</p>
-                    </div>
-                    <div className={styles.notificationMeta}>
-                      <span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{item.status}</span>
-                      <small>{formatDate(item.createdAt)}</small>
-                    </div>
-                  </article>
-                ))
-              ) : (
-                <div className={styles.emptyState}>Chưa có lead mới trong 24 giờ gần nhất.</div>
-              )}
-            </div>
-          </AdminSurfaceCard>
-
-          <AdminSurfaceCard
-            kicker="Analytics cơ bản"
-            title="Top món và tình trạng thực đơn"
-            className={styles.insightCard}
-          >
-            <div className={styles.metricStack}>
-              {topSellingItems.length ? (
-                topSellingItems.map((item) => (
-                  <div key={item.name} className={styles.metricRow}>
-                    <div>
-                      <strong>{item.name}</strong>
-                      <p>{item.quantity} phần đã bán</p>
-                    </div>
-                    <span>{formatCurrency(item.revenue)}</span>
-                  </div>
-                ))
-              ) : (
-                <div className={styles.emptyState}>Chưa có dữ liệu order đủ để tính top món.</div>
-              )}
-            </div>
-            <div className={styles.metricSummary}>
-              <span>{menuStats.seasonal} món đang theo mùa</span>
-              <span>{menuStats.lowStock} món số lượng giới hạn</span>
-            </div>
-          </AdminSurfaceCard>
-        </section> : null}
+        {currentSection === "overview" ? (
+          <AdminOverviewSection
+            reservationStats={reservationStats}
+            orderStats={orderStats}
+            voucherStats={voucherStats}
+            driverStats={driverStats}
+            partnerStats={partnerStats}
+            menuStats={menuStats}
+            tableStats={tableStats}
+            notificationFeed={notificationFeed}
+            topSellingItems={topSellingItems}
+            formatDate={formatDate}
+            formatCurrency={formatCurrency}
+            formatLabel={formatLabel}
+          />
+        ) : null}
 
         {currentSection === "reservations" ? (
-          <section className={detailOnlyLayout ? "grid gap-4" : styles.adminGrid}>
-            {!detailOnlyLayout ? <AdminListShell>
-              <div className={styles.panelToolbar}>
-                <Input type="search" placeholder="Tìm khách đặt bàn..." value={reservationQuery} onChange={(event) => setReservationQuery(event.target.value)} />
-                <Select value={reservationStatus} onValueChange={setReservationStatus}>
-                  <SelectTrigger><SelectValue placeholder="Trạng thái" /></SelectTrigger>
-                  <SelectContent>{reservationStatuses.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
-                </Select>
-                {permissions.canManageReservations ? <Button type="button" variant="secondary" onClick={() => setManualOpen((prev) => !prev)}>{manualOpen ? "Đóng form" : "Thêm đặt bàn"}</Button> : <div></div>}
-              </div>
-
-              {manualOpen && permissions.canManageReservations ? (
-                <form className={styles.inlineForm} onSubmit={createManualReservation}>
-                  <Input type="text" placeholder="Tên khách" value={manualForm.name} onChange={(event) => setManualForm((prev) => ({ ...prev, name: event.target.value }))} required />
-                  <Input type="tel" placeholder="SĐT" value={manualForm.phone} onChange={(event) => setManualForm((prev) => ({ ...prev, phone: event.target.value }))} required />
-                  <div className={styles.inlineRow}>
-                    <Input type="text" placeholder="Số khách" value={manualForm.guests} onChange={(event) => setManualForm((prev) => ({ ...prev, guests: event.target.value }))} required />
-                    <Input type="datetime-local" value={manualForm.datetime} onChange={(event) => setManualForm((prev) => ({ ...prev, datetime: event.target.value }))} required />
-                  </div>
-                  <div className={styles.inlineRow}>
-                    <FormSelect
-                      value={manualForm.driverId || "none"}
-                      onValueChange={(value) => setManualForm((prev) => ({ ...prev, driverId: value === "none" ? "" : value }))}
-                      options={[{ value: "none", label: "Chưa gán tài xế" }, ...drivers.map((driver) => ({ value: driver.id, label: driver.fullName }))]}
-                      placeholder="Chưa gán tài xế"
-                    />
-                    <Input type="text" placeholder="Mã giới thiệu" value={manualForm.referralCode} onChange={(event) => setManualForm((prev) => ({ ...prev, referralCode: event.target.value }))} />
-                  </div>
-                  <FormSelect
-                    value={manualForm.tableId || "none"}
-                    onValueChange={(value) => setManualForm((prev) => ({ ...prev, tableId: value === "none" ? "" : value }))}
-                    options={[{ value: "none", label: "Chưa gán bàn" }, ...restaurantTables.map((table) => ({ value: table.id, label: table.name }))]}
-                    placeholder="Chưa gán bàn"
-                  />
-                  <Textarea placeholder="Ghi chú" value={manualForm.notes} onChange={(event) => setManualForm((prev) => ({ ...prev, notes: event.target.value }))} rows={3} />
-                  <Button type="submit" disabled={reservationSaving}>{reservationSaving ? "Đang lưu..." : "Lưu đặt bàn"}</Button>
-                </form>
-              ) : null}
-
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Khách</TableHead>
-                    <TableHead>SĐT</TableHead>
-                    <TableHead>Thời gian</TableHead>
-                    <TableHead>Bàn</TableHead>
-                    <TableHead>Trạng thái</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredReservations.map((item) => (
-                    <TableRow key={item.id} className={`${styles.interactiveRow} ${detailOnlyLayout && item.id === selectedReservation?.id ? styles.activeRow : ""}`} onClick={() => openSectionDetail("reservations", item.id)}>
-                      <TableCell><strong>{item.name}</strong><span>{item.guests} khách</span></TableCell>
-                      <TableCell>{item.phone}</TableCell>
-                      <TableCell>{formatDate(item.datetime)}</TableCell>
-                      <TableCell>{findTableName(item.tableId)}</TableCell>
-                      <TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{item.status}</span></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </AdminListShell> : null}
-
-            {detailOnlyLayout ? <AdminDetailShell>
-              {selectedReservation ? (
-                <div>
-                  <AdminDetailHeader
-                    kicker="Chi tiết đặt bàn"
-                    title={selectedReservation.name}
-                    actions={detailHeaderActions("reservations", permissions.canManageReservations ? <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteReservation(selectedReservation.id)}>Xóa lead</Button> : null)}
-                  />
-                  {permissions.canManageReservations ? <div className={styles.quickStatusRow}>{reservationStatuses.filter((item) => item.value !== "all").map((item) => <Button type="button" variant={selectedReservation.status === item.value ? "default" : "outline"} key={item.value} className={selectedReservation.status === item.value ? styles.quickActive : ""} onClick={() => patchReservation(selectedReservation.id, { ...selectedReservation, status: item.value })}>{item.label}</Button>)}</div> : null}
-                  <div className={styles.editGrid}>
-                    <label><span>SĐT</span><Input type="text" defaultValue={selectedReservation.phone} disabled={!permissions.canManageReservations} onBlur={(event) => patchReservation(selectedReservation.id, { ...selectedReservation, phone: event.target.value })} /></label>
-                    <label><span>Số khách</span><Input type="text" defaultValue={selectedReservation.guests} disabled={!permissions.canManageReservations} onBlur={(event) => patchReservation(selectedReservation.id, { ...selectedReservation, guests: event.target.value })} /></label>
-                    <label><span>Thời gian</span><Input type="datetime-local" defaultValue={selectedReservation.datetime} disabled={!permissions.canManageReservations} onBlur={(event) => patchReservation(selectedReservation.id, { ...selectedReservation, datetime: event.target.value })} /></label>
-                    <label><span>Gán bàn</span><FormSelect value={selectedReservation.tableId || "none"} disabled={!permissions.canManageReservations} onValueChange={(value) => patchReservation(selectedReservation.id, { ...selectedReservation, tableId: value === "none" ? "" : value })} options={[{ value: "none", label: "Chưa gán bàn" }, ...restaurantTables.map((table) => ({ value: table.id, label: table.name }))]} placeholder="Chưa gán bàn" /></label>
-                    <label className={styles.fullWidth}><span>Ghi chú</span><Textarea rows={5} defaultValue={selectedReservation.notes || ""} disabled={!permissions.canManageReservations} onBlur={(event) => patchReservation(selectedReservation.id, { ...selectedReservation, notes: event.target.value })} /></label>
-                  </div>
-                  {permissions.canViewIntegrations ? <div className={styles.syncBox}><div><span className={styles.kicker}>Sync POS/PMS</span><p>Đồng bộ lead này sang hệ POS/PMS.</p></div><div className={styles.syncActions}><Select value={selectedIntegrationId} onValueChange={setSelectedIntegrationId} disabled={!permissions.canManageIntegrations}><SelectTrigger><SelectValue placeholder="Chọn tích hợp" /></SelectTrigger><SelectContent>{integrations.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select>{permissions.canSyncIntegrations ? <Button type="button" onClick={() => syncReservation(selectedReservation.id, selectedIntegrationId)} disabled={integrationSaving}>{integrationSaving ? "Đang sync..." : "Sync ngay"}</Button> : null}</div></div> : null}
-                </div>
-              ) : <div className={styles.emptyState}>Không tìm thấy lead đặt bàn.</div>}
-            </AdminDetailShell> : null}
-          </section>
+          <AdminReservationsSection
+            detailOnlyLayout={detailOnlyLayout}
+            permissions={permissions}
+            manualOpen={manualOpen}
+            setManualOpen={setManualOpen}
+            reservationQuery={reservationQuery}
+            setReservationQuery={setReservationQuery}
+            reservationStatus={reservationStatus}
+            setReservationStatus={setReservationStatus}
+            reservationSort={reservationSort}
+            setReservationSort={setReservationSort}
+            reservationStatuses={reservationStatuses}
+            reservationSortOptions={reservationSortOptions}
+            createManualReservation={createManualReservation}
+            manualForm={manualForm}
+            setManualForm={setManualForm}
+            drivers={drivers}
+            restaurantTables={restaurantTables}
+            reservationSaving={reservationSaving}
+            filteredReservations={filteredReservations}
+            selectedReservation={selectedReservation}
+            openSectionDetail={openSectionDetail}
+            formatDate={formatDate}
+            formatLabel={formatLabel}
+            findTableName={findTableName}
+            detailHeaderActions={detailHeaderActions}
+            deleteReservation={deleteReservation}
+            patchReservation={patchReservation}
+            integrations={integrations}
+            selectedIntegrationId={selectedIntegrationId}
+            setSelectedIntegrationId={setSelectedIntegrationId}
+            syncReservation={syncReservation}
+            integrationSaving={integrationSaving}
+            FormSelect={FormSelect}
+          />
         ) : null}
 
         {currentSection === "orders" ? (
-          <section className={detailOnlyLayout ? "grid gap-4" : styles.adminGrid}>
-            {!detailOnlyLayout ? <AdminListShell>
-              <div className={styles.panelToolbar}>
-                <Input type="search" placeholder="Tìm khách order..." value={orderQuery} onChange={(event) => setOrderQuery(event.target.value)} />
-                <Select value={orderStatus} onValueChange={setOrderStatus}>
-                  <SelectTrigger><SelectValue placeholder="Trạng thái order" /></SelectTrigger>
-                  <SelectContent>{orderStatuses.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
-                </Select>
-                {permissions.canManageOrders ? <Button type="button" variant="secondary" onClick={() => setOrderCreateOpen((prev) => !prev)}>{orderCreateOpen ? "Đóng form" : "Tạo order"}</Button> : <div></div>}
-              </div>
-
-              {orderCreateOpen && permissions.canManageOrders ? (
-                <form className={styles.inlineForm} onSubmit={createManualOrder}>
-                  <Input type="text" placeholder="Tên khách" value={orderDraft.customerName} onChange={(event) => setOrderDraft((prev) => ({ ...prev, customerName: event.target.value }))} required />
-                  <Input type="tel" placeholder="SĐT" value={orderDraft.customerPhone} onChange={(event) => setOrderDraft((prev) => ({ ...prev, customerPhone: event.target.value }))} required />
-                  <div className={styles.inlineRow}>
-                    <FormSelect value={orderDraft.tableId || "none"} onValueChange={(value) => setOrderDraft((prev) => ({ ...prev, tableId: value === "none" ? "" : value }))} options={[{ value: "none", label: "Chọn bàn" }, ...restaurantTables.map((table) => ({ value: table.id, label: table.name }))]} placeholder="Chọn bàn" />
-                    <FormSelect value={orderDraft.orderChannel} onValueChange={(value) => setOrderDraft((prev) => ({ ...prev, orderChannel: value }))} options={orderChannels} placeholder="Order channel" />
-                  </div>
-                  <div className={styles.inlineRow}>
-                    <FormSelect value={orderDraft.driverId || "none"} onValueChange={(value) => setOrderDraft((prev) => ({ ...prev, driverId: value === "none" ? "" : value }))} options={[{ value: "none", label: "Chưa gán tài xế" }, ...drivers.map((driver) => ({ value: driver.id, label: driver.fullName }))]} placeholder="Chưa gán tài xế" />
-                    <Input type="text" placeholder="Mã giới thiệu" value={orderDraft.referralCode} onChange={(event) => setOrderDraft((prev) => ({ ...prev, referralCode: event.target.value }))} />
-                  </div>
-                  <div className={styles.inlineAddRow}><FormSelect value={orderDraftMenuItemId} onValueChange={(value) => { if (value !== "placeholder") { addItemToState(value, setOrderDraft); setOrderDraftMenuItemId("placeholder"); } }} options={[{ value: "placeholder", label: "Thêm món vào order" }, ...menuItems.filter((item) => item.isAvailable).map((item) => ({ value: item.id, label: `${item.name} - ${formatCurrency(item.price)}` }))]} placeholder="Thêm món vào order" /></div>
-                  <div className={styles.lineItemList}>{orderDraft.items.map((item, index) => <div key={`${item.menuItemId}-${index}`} className={styles.lineItemRow}><strong>{item.itemName}</strong><Input type="number" min="1" value={item.quantity} onChange={(event) => updateLineItem(setOrderDraft, index, "quantity", event.target.value)} /><Input type="number" min="0" value={item.unitPrice} onChange={(event) => updateLineItem(setOrderDraft, index, "unitPrice", event.target.value)} /><Button type="button" variant="outline" onClick={() => removeLineItem(setOrderDraft, index)}>Xóa</Button></div>)}</div>
-                  <div className={styles.inlineRow}><Input type="number" min="0" placeholder="Discount" value={orderDraft.discountAmount} onChange={(event) => setOrderDraft((prev) => ({ ...prev, discountAmount: Number(event.target.value) }))} /><Input type="number" min="0" placeholder="Service charge" value={orderDraft.serviceCharge} onChange={(event) => setOrderDraft((prev) => ({ ...prev, serviceCharge: Number(event.target.value) }))} /></div>
-                  <Textarea placeholder="Ghi chú order" rows={3} value={orderDraft.notes} onChange={(event) => setOrderDraft((prev) => ({ ...prev, notes: event.target.value }))} />
-                  <div className={styles.summaryRow}><span>Tạm tính: {formatCurrency(orderDraftTotals.subtotal)}</span><span>Tổng: {formatCurrency(orderDraftTotals.total)}</span></div>
-                  <Button type="submit" disabled={orderSaving}>{orderSaving ? "Đang tạo..." : "Lưu order"}</Button>
-                </form>
-              ) : null}
-
-              <Table>
-                <TableHeader>
-                  <TableRow><TableHead>Khách</TableHead><TableHead>Bàn</TableHead><TableHead>Món</TableHead><TableHead>Tổng</TableHead><TableHead>Trạng thái</TableHead></TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredOrders.map((item) => <TableRow key={item.id} className={`${styles.interactiveRow} ${detailOnlyLayout && item.id === selectedOrder?.id ? styles.activeRow : ""}`} onClick={() => openSectionDetail("orders", item.id)}><TableCell><strong>{item.customerName}</strong><span>{formatDate(item.createdAt)}</span></TableCell><TableCell>{findTableName(item.tableId)}</TableCell><TableCell>{item.items.length}</TableCell><TableCell>{formatCurrency(item.totalAmount)}</TableCell><TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_contacted}`}>{item.status}</span></TableCell></TableRow>)}
-                </TableBody>
-              </Table>
-            </AdminListShell> : null}
-
-            {detailOnlyLayout ? <AdminDetailShell>
-              {selectedOrder ? (
-                <div>
-                  <AdminDetailHeader kicker="Chi tiết order" title={selectedOrder.customerName} actions={detailHeaderActions("orders", permissions.canManageOrders ? <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteOrder(selectedOrder.id)}>Xóa order</Button> : null)} />
-                  {permissions.canManageOrders ? <div className={styles.quickStatusRow}>{orderStatuses.filter((item) => item.value !== "all").map((item) => <Button type="button" variant={orderEdit.status === item.value ? "default" : "outline"} key={item.value} className={orderEdit.status === item.value ? styles.quickActive : ""} onClick={() => setOrderEdit((prev) => ({ ...prev, status: item.value }))}>{item.label}</Button>)}</div> : null}
-                  <div className={styles.editGrid}>
-                    <label><span>Tên khách</span><Input type="text" value={orderEdit.customerName} onChange={(event) => setOrderEdit((prev) => ({ ...prev, customerName: event.target.value }))} /></label>
-                    <label><span>SĐT</span><Input type="text" value={orderEdit.customerPhone} onChange={(event) => setOrderEdit((prev) => ({ ...prev, customerPhone: event.target.value }))} /></label>
-                    <label><span>Reservation</span><FormSelect value={orderEdit.reservationId || "none"} onValueChange={(value) => setOrderEdit((prev) => ({ ...prev, reservationId: value === "none" ? "" : value }))} options={[{ value: "none", label: "Không gắn" }, ...reservations.map((reservation) => ({ value: reservation.id, label: reservation.name }))]} placeholder="Không gắn" /></label>
-                    <label><span>Bàn</span><FormSelect value={orderEdit.tableId || "none"} onValueChange={(value) => setOrderEdit((prev) => ({ ...prev, tableId: value === "none" ? "" : value }))} options={[{ value: "none", label: "Không gắn" }, ...restaurantTables.map((table) => ({ value: table.id, label: table.name }))]} placeholder="Không gắn" /></label>
-                    <label><span>Order channel</span><FormSelect value={orderEdit.orderChannel} onValueChange={(value) => setOrderEdit((prev) => ({ ...prev, orderChannel: value }))} options={orderChannels} placeholder="Order channel" /></label>
-                    <label><span>Discount</span><Input type="number" min="0" value={orderEdit.discountAmount} onChange={(event) => setOrderEdit((prev) => ({ ...prev, discountAmount: Number(event.target.value) }))} /></label>
-                    <label><span>Service charge</span><Input type="number" min="0" value={orderEdit.serviceCharge} onChange={(event) => setOrderEdit((prev) => ({ ...prev, serviceCharge: Number(event.target.value) }))} /></label>
-                    <label className={styles.fullWidth}><span>Ghi chú</span><Textarea rows={4} value={orderEdit.notes} onChange={(event) => setOrderEdit((prev) => ({ ...prev, notes: event.target.value }))} /></label>
-                  </div>
-                  <div className={styles.inlineAddRow}><FormSelect value={orderEditMenuItemId} onValueChange={(value) => { if (value !== "placeholder") { addItemToState(value, setOrderEdit); setOrderEditMenuItemId("placeholder"); } }} options={[{ value: "placeholder", label: "Thêm món vào order" }, ...menuItems.filter((item) => item.isAvailable).map((item) => ({ value: item.id, label: `${item.name} - ${formatCurrency(item.price)}` }))]} placeholder="Thêm món vào order" /></div>
-                  <div className={styles.lineItemList}>{orderEdit.items.map((item, index) => <div key={`${item.menuItemId || item.id}-${index}`} className={styles.lineItemRow}><strong>{item.itemName}</strong><Input type="number" min="1" value={item.quantity} onChange={(event) => updateLineItem(setOrderEdit, index, "quantity", event.target.value)} /><Input type="number" min="0" value={item.unitPrice} onChange={(event) => updateLineItem(setOrderEdit, index, "unitPrice", event.target.value)} /><Button type="button" variant="outline" onClick={() => removeLineItem(setOrderEdit, index)}>Xóa</Button></div>)}</div>
-                  <div className={styles.summaryRow}><span>Tạm tính: {formatCurrency(orderEditTotals.subtotal)}</span><span>Tổng: {formatCurrency(orderEditTotals.total)}</span></div>
-                  {permissions.canManageOrders ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveOrderEdit} disabled={orderSaving}>{orderSaving ? "Đang lưu..." : "Lưu order"}</Button></div> : null}
-                </div>
-              ) : <div className={styles.emptyState}>Không tìm thấy order.</div>}
-            </AdminDetailShell> : null}
-          </section>
+          <AdminOrdersSection
+            detailOnlyLayout={detailOnlyLayout}
+            permissions={permissions}
+            orderCreateOpen={orderCreateOpen}
+            setOrderCreateOpen={setOrderCreateOpen}
+            orderQuery={orderQuery}
+            setOrderQuery={setOrderQuery}
+            orderStatus={orderStatus}
+            setOrderStatus={setOrderStatus}
+            orderSort={orderSort}
+            setOrderSort={setOrderSort}
+            orderStatuses={orderStatuses}
+            orderSortOptions={orderSortOptions}
+            createManualOrder={createManualOrder}
+            orderDraft={orderDraft}
+            setOrderDraft={setOrderDraft}
+            orderDraftMenuItemId={orderDraftMenuItemId}
+            setOrderDraftMenuItemId={setOrderDraftMenuItemId}
+            restaurantTables={restaurantTables}
+            drivers={drivers}
+            menuItems={menuItems}
+            addItemToState={addItemToState}
+            updateLineItem={updateLineItem}
+            removeLineItem={removeLineItem}
+            orderDraftTotals={orderDraftTotals}
+            orderSaving={orderSaving}
+            filteredOrders={filteredOrders}
+            selectedOrder={selectedOrder}
+            openSectionDetail={openSectionDetail}
+            formatDate={formatDate}
+            formatCurrency={formatCurrency}
+            formatLabel={formatLabel}
+            findTableName={findTableName}
+            detailHeaderActions={detailHeaderActions}
+            deleteOrder={deleteOrder}
+            orderEdit={orderEdit}
+            setOrderEdit={setOrderEdit}
+            reservations={reservations}
+            orderChannels={orderChannels}
+            orderEditMenuItemId={orderEditMenuItemId}
+            setOrderEditMenuItemId={setOrderEditMenuItemId}
+            orderEditTotals={orderEditTotals}
+            saveOrderEdit={saveOrderEdit}
+            FormSelect={FormSelect}
+          />
         ) : null}
 
         {currentSection === "tables" ? (
           <section className={detailOnlyLayout ? "grid gap-4" : styles.adminGrid}>
             {!detailOnlyLayout ? <AdminListShell>
-              <div className={styles.panelToolbar}><Input type="search" placeholder="Tìm bàn..." value={tableQuery} onChange={(event) => setTableQuery(event.target.value)} /><div></div>{permissions.canManageTables ? <Button type="button" variant="secondary" onClick={() => setTableCreateOpen((prev) => !prev)}>{tableCreateOpen ? "Đóng form" : "Tạo bàn"}</Button> : <div></div>}</div>
+              <AdminPageToolbar actions={permissions.canManageTables ? <Button type="button" variant="secondary" onClick={() => setTableCreateOpen((prev) => !prev)}>{tableCreateOpen ? "Đóng form" : "Tạo bàn"}</Button> : null}><Input type="search" placeholder="Tìm bàn..." value={tableQuery} onChange={(event) => setTableQuery(event.target.value)} /><FormSelect value={tableStatusFilter} onValueChange={setTableStatusFilter} options={[{ value: "all", label: "Tất cả trạng thái" }, ...tableStatuses]} placeholder="Lọc trạng thái" /><FormSelect value={tableSort} onValueChange={setTableSort} options={tableSortOptions} placeholder="Sắp xếp" /></AdminPageToolbar>
               {tableCreateOpen && permissions.canManageTables ? <form className={styles.inlineForm} onSubmit={createTableEntry}><Input type="text" placeholder="Tên bàn" value={tableDraft.name} onChange={(event) => setTableDraft((prev) => ({ ...prev, name: event.target.value }))} required /><Input type="text" placeholder="Khu vực" value={tableDraft.area} onChange={(event) => setTableDraft((prev) => ({ ...prev, area: event.target.value }))} /><div className={styles.inlineRow}><Input type="number" min="1" placeholder="Sức chứa" value={tableDraft.capacity} onChange={(event) => setTableDraft((prev) => ({ ...prev, capacity: Number(event.target.value) }))} /><FormSelect value={tableDraft.status} onValueChange={(value) => setTableDraft((prev) => ({ ...prev, status: value }))} options={tableStatuses} placeholder="Trạng thái" /></div><Textarea placeholder="Ghi chú" rows={3} value={tableDraft.notes} onChange={(event) => setTableDraft((prev) => ({ ...prev, notes: event.target.value }))} /><Button type="submit" disabled={tableSaving}>{tableSaving ? "Đang tạo..." : "Lưu bàn"}</Button></form> : null}
-              <Table><TableHeader><TableRow><TableHead>Bàn</TableHead><TableHead>Khu vực</TableHead><TableHead>Sức chứa</TableHead><TableHead>Trạng thái</TableHead></TableRow></TableHeader><TableBody>{filteredTables.map((item) => <TableRow key={item.id} className={`${styles.interactiveRow} ${detailOnlyLayout && item.id === selectedTable?.id ? styles.activeRow : ""}`} onClick={() => openSectionDetail("tables", item.id)}><TableCell><strong>{item.name}</strong><span>{formatCurrency(item.minSpend)}</span></TableCell><TableCell>{item.area}</TableCell><TableCell>{item.capacity}</TableCell><TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{item.status}</span></TableCell></TableRow>)}</TableBody></Table>
+              <Table><TableHeader><TableRow><TableHead>Bàn</TableHead><TableHead>Khu vực</TableHead><TableHead>Sức chứa</TableHead><TableHead>Trạng thái</TableHead></TableRow></TableHeader><TableBody>{filteredTables.map((item) => <TableRow key={item.id} className={`${styles.interactiveRow} ${detailOnlyLayout && item.id === selectedTable?.id ? styles.activeRow : ""}`} onClick={() => openSectionDetail("tables", item.id)}><TableCell><strong>{item.name}</strong><span>{formatCurrency(item.minSpend)}</span></TableCell><TableCell>{item.area}</TableCell><TableCell>{item.capacity}</TableCell><TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{formatLabel(item.status)}</span></TableCell></TableRow>)}</TableBody></Table>
             </AdminListShell> : null}
-            {detailOnlyLayout ? <AdminDetailShell>{selectedTable ? <AdminSurfaceCard kicker="Chi tiết bàn" title={selectedTable.name} actions={detailHeaderActions("tables", permissions.canManageTables ? <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteTableEntry(selectedTable.id)}>Xóa bàn</Button> : null)} className={styles.subsectionCard}><div className={styles.editGrid}><label><span>Tên bàn</span><Input type="text" value={tableEdit.name} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, name: event.target.value }))} /></label><label><span>Khu vực</span><Input type="text" value={tableEdit.area} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, area: event.target.value }))} /></label><label><span>Sức chứa</span><Input type="number" min="1" value={tableEdit.capacity} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, capacity: Number(event.target.value) }))} /></label><label><span>Trạng thái</span><FormSelect value={tableEdit.status} disabled={!permissions.canManageTables} onValueChange={(value) => setTableEdit((prev) => ({ ...prev, status: value }))} options={tableStatuses} placeholder="Trạng thái" /></label><label className={styles.fullWidth}><span>Ghi chú</span><Textarea rows={5} value={tableEdit.notes} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, notes: event.target.value }))} /></label></div>{permissions.canManageTables ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveTableEdit} disabled={tableSaving}>{tableSaving ? "Đang lưu..." : "Lưu bàn"}</Button></div> : null}</AdminSurfaceCard> : <div className={styles.emptyState}>Không tìm thấy bàn.</div>}</AdminDetailShell> : null}
+            {detailOnlyLayout ? <AdminDetailShell>{selectedTable ? <AdminSurfaceCard kicker="Chi tiết bàn" title={selectedTable.name} actions={detailHeaderActions("tables", permissions.canManageTables ? <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteTableEntry(selectedTable.id)}>Xóa bàn</Button> : null)} className={styles.subsectionCard}><div className={styles.editGrid}><label><span>Tên bàn</span><Input type="text" value={tableEdit.name} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, name: event.target.value }))} /></label><label><span>Khu vực</span><Input type="text" value={tableEdit.area} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, area: event.target.value }))} /></label><label><span>Sức chứa</span><Input type="number" min="1" value={tableEdit.capacity} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, capacity: Number(event.target.value) }))} /></label><label><span>Trạng thái</span><FormSelect value={tableEdit.status} disabled={!permissions.canManageTables} onValueChange={(value) => setTableEdit((prev) => ({ ...prev, status: value }))} options={tableStatuses} placeholder="Trạng thái" /></label><label className={styles.fullWidth}><span>Ghi chú</span><Textarea rows={5} value={tableEdit.notes} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, notes: event.target.value }))} /></label></div>{permissions.canManageTables ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveTableEdit} disabled={tableSaving}>{tableSaving ? "Đang lưu..." : "Lưu bàn"}</Button></div> : null}</AdminSurfaceCard> : <AdminEmptyState title="Không tìm thấy bàn." description="Bàn có thể đã bị xóa hoặc không thuộc chi nhánh đang xem." />}</AdminDetailShell> : null}
           </section>
         ) : null}
 
         {currentSection === "menu" ? (
           <section className={detailOnlyLayout ? "grid gap-4" : styles.adminGrid}>
             {!detailOnlyLayout ? <AdminListShell>
-              <div className={styles.panelToolbar}><Input type="search" placeholder="Tìm món..." value={menuQuery} onChange={(event) => setMenuQuery(event.target.value)} /><div></div>{permissions.canManageMenu ? <Button type="button" variant="secondary" onClick={() => setMenuCreateOpen((prev) => !prev)}>{menuCreateOpen ? "Đóng form" : "Tạo món"}</Button> : <div></div>}</div>
-              {menuCreateOpen && permissions.canManageMenu ? <form className={styles.inlineForm} onSubmit={createMenuItemEntry}><Input type="text" placeholder="Tên món" value={menuDraft.name} onChange={(event) => setMenuDraft((prev) => ({ ...prev, name: event.target.value }))} required /><Input type="text" placeholder="Danh mục" value={menuDraft.category} onChange={(event) => setMenuDraft((prev) => ({ ...prev, category: event.target.value }))} /><div className={styles.inlineRow}><Input type="number" min="0" placeholder="Giá" value={menuDraft.price} onChange={(event) => setMenuDraft((prev) => ({ ...prev, price: Number(event.target.value) }))} /><FormSelect value={menuDraft.spicyLevel} onValueChange={(value) => setMenuDraft((prev) => ({ ...prev, spicyLevel: value }))} options={spicyLevels} placeholder="Spicy level" /></div><div className={styles.inlineRow}><FormSelect value={menuDraft.availabilityStatus} onValueChange={(value) => setMenuDraft((prev) => ({ ...prev, availabilityStatus: value }))} options={availabilityStatuses} placeholder="Trạng thái món" /><FormSelect value={menuDraft.isFeatured ? "yes" : "no"} onValueChange={(value) => setMenuDraft((prev) => ({ ...prev, isFeatured: value === "yes" }))} options={[{ value: "yes", label: "featured" }, { value: "no", label: "normal" }]} placeholder="Featured" /></div><Input type="text" placeholder="Image URL" value={menuDraft.imageUrl} onChange={(event) => setMenuDraft((prev) => ({ ...prev, imageUrl: event.target.value }))} /><Textarea placeholder="Ghi chú theo mùa / tồn kho" rows={2} value={menuDraft.seasonNote} onChange={(event) => setMenuDraft((prev) => ({ ...prev, seasonNote: event.target.value }))} /><Textarea placeholder="Mô tả" rows={3} value={menuDraft.description} onChange={(event) => setMenuDraft((prev) => ({ ...prev, description: event.target.value }))} /><Button type="submit" disabled={menuSaving}>{menuSaving ? "Đang tạo..." : "Lưu món"}</Button></form> : null}
-              <Table><TableHeader><TableRow><TableHead>Món</TableHead><TableHead>Danh mục</TableHead><TableHead>Giá</TableHead><TableHead>Trạng thái</TableHead></TableRow></TableHeader><TableBody>{filteredMenuItems.map((item) => <TableRow key={item.id} className={`${styles.interactiveRow} ${detailOnlyLayout && item.id === selectedMenuItem?.id ? styles.activeRow : ""}`} onClick={() => openSectionDetail("menu", item.id)}><TableCell><strong>{item.name}</strong><span>{item.slug}</span></TableCell><TableCell>{item.category}</TableCell><TableCell>{formatCurrency(item.price)}</TableCell><TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.availabilityStatus || (item.isAvailable ? "confirmed" : "cancelled")}`] || styles.status_confirmed}`}>{item.availabilityStatus || (item.isAvailable ? "available" : "hidden")}</span></TableCell></TableRow>)}</TableBody></Table>
+              <AdminPageToolbar actions={permissions.canManageMenu ? <Button type="button" variant="secondary" onClick={() => setMenuCreateOpen((prev) => !prev)}>{menuCreateOpen ? "Đóng form" : "Tạo món"}</Button> : null}><Input type="search" placeholder="Tìm món..." value={menuQuery} onChange={(event) => setMenuQuery(event.target.value)} /><FormSelect value={menuStatusFilter} onValueChange={setMenuStatusFilter} options={[{ value: "all", label: "Tất cả trạng thái" }, ...availabilityStatuses]} placeholder="Lọc trạng thái" /><FormSelect value={menuSort} onValueChange={setMenuSort} options={menuSortOptions} placeholder="Sắp xếp" /></AdminPageToolbar>
+              {menuCreateOpen && permissions.canManageMenu ? <form className={styles.inlineForm} onSubmit={createMenuItemEntry}><Input type="text" placeholder="Tên món" value={menuDraft.name} onChange={(event) => setMenuDraft((prev) => ({ ...prev, name: event.target.value }))} required /><Input type="text" placeholder="Danh mục" value={menuDraft.category} onChange={(event) => setMenuDraft((prev) => ({ ...prev, category: event.target.value }))} /><div className={styles.inlineRow}><Input type="number" min="0" placeholder="Giá" value={menuDraft.price} onChange={(event) => setMenuDraft((prev) => ({ ...prev, price: Number(event.target.value) }))} /><FormSelect value={menuDraft.spicyLevel} onValueChange={(value) => setMenuDraft((prev) => ({ ...prev, spicyLevel: value }))} options={spicyLevels} placeholder="Mức cay" /></div><div className={styles.inlineRow}><FormSelect value={menuDraft.availabilityStatus} onValueChange={(value) => setMenuDraft((prev) => ({ ...prev, availabilityStatus: value }))} options={availabilityStatuses} placeholder="Trạng thái món" /><FormSelect value={menuDraft.isFeatured ? "yes" : "no"} onValueChange={(value) => setMenuDraft((prev) => ({ ...prev, isFeatured: value === "yes" }))} options={[{ value: "yes", label: "Món nổi bật" }, { value: "no", label: "Món thường" }]} placeholder="Độ ưu tiên" /></div><Input type="text" placeholder="Đường dẫn ảnh" value={menuDraft.imageUrl} onChange={(event) => setMenuDraft((prev) => ({ ...prev, imageUrl: event.target.value }))} /><Textarea placeholder="Ghi chú theo mùa / tồn kho" rows={2} value={menuDraft.seasonNote} onChange={(event) => setMenuDraft((prev) => ({ ...prev, seasonNote: event.target.value }))} /><Textarea placeholder="Mô tả" rows={3} value={menuDraft.description} onChange={(event) => setMenuDraft((prev) => ({ ...prev, description: event.target.value }))} /><Button type="submit" disabled={menuSaving}>{menuSaving ? "Đang tạo..." : "Lưu món"}</Button></form> : null}
+              <Table><TableHeader><TableRow><TableHead>Món</TableHead><TableHead>Danh mục</TableHead><TableHead>Giá</TableHead><TableHead>Trạng thái</TableHead></TableRow></TableHeader><TableBody>{filteredMenuItems.map((item) => <TableRow key={item.id} className={`${styles.interactiveRow} ${detailOnlyLayout && item.id === selectedMenuItem?.id ? styles.activeRow : ""}`} onClick={() => openSectionDetail("menu", item.id)}><TableCell><strong>{item.name}</strong><span>{item.slug}</span></TableCell><TableCell>{item.category}</TableCell><TableCell>{formatCurrency(item.price)}</TableCell><TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.availabilityStatus || (item.isAvailable ? "confirmed" : "cancelled")}`] || styles.status_confirmed}`}>{formatLabel(item.availabilityStatus || (item.isAvailable ? "available" : "hidden"))}</span></TableCell></TableRow>)}</TableBody></Table>
             </AdminListShell> : null}
-            {detailOnlyLayout ? <AdminDetailShell>{selectedMenuItem ? <AdminSurfaceCard kicker="Chi tiết món ăn" title={selectedMenuItem.name} actions={detailHeaderActions("menu", permissions.canManageMenu ? <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteMenuItemEntry(selectedMenuItem.id)}>Xóa món</Button> : null)} className={styles.subsectionCard}><div className={styles.editGrid}><label><span>Tên món</span><Input type="text" value={menuEdit.name} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, name: event.target.value }))} /></label><label><span>Slug</span><Input type="text" value={menuEdit.slug} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, slug: event.target.value }))} /></label><label><span>Danh mục</span><Input type="text" value={menuEdit.category} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, category: event.target.value }))} /></label><label><span>Giá</span><Input type="number" min="0" value={menuEdit.price} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, price: Number(event.target.value) }))} /></label><label><span>Image URL</span><Input type="text" value={menuEdit.imageUrl} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, imageUrl: event.target.value }))} /></label><label><span>Available</span><FormSelect value={menuEdit.isAvailable ? "yes" : "no"} disabled={!permissions.canManageMenu} onValueChange={(value) => setMenuEdit((prev) => ({ ...prev, isAvailable: value === "yes" }))} options={[{ value: "yes", label: "yes" }, { value: "no", label: "no" }]} placeholder="Available" /></label><label><span>Featured</span><FormSelect value={menuEdit.isFeatured ? "yes" : "no"} disabled={!permissions.canManageMenu} onValueChange={(value) => setMenuEdit((prev) => ({ ...prev, isFeatured: value === "yes" }))} options={[{ value: "yes", label: "yes" }, { value: "no", label: "no" }]} placeholder="Featured" /></label><label><span>Spicy level</span><FormSelect value={menuEdit.spicyLevel} disabled={!permissions.canManageMenu} onValueChange={(value) => setMenuEdit((prev) => ({ ...prev, spicyLevel: value }))} options={spicyLevels} placeholder="Spicy level" /></label><label><span>Trạng thái món</span><FormSelect value={menuEdit.availabilityStatus || "available"} disabled={!permissions.canManageMenu} onValueChange={(value) => setMenuEdit((prev) => ({ ...prev, availabilityStatus: value }))} options={availabilityStatuses} placeholder="Trạng thái món" /></label><label className={styles.fullWidth}><span>Ghi chú theo mùa / tồn kho</span><Textarea rows={3} value={menuEdit.seasonNote || ""} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, seasonNote: event.target.value }))} /></label><label className={styles.fullWidth}><span>Mô tả</span><Textarea rows={5} value={menuEdit.description} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, description: event.target.value }))} /></label></div>{permissions.canManageMenu ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveMenuEdit} disabled={menuSaving}>{menuSaving ? "Đang lưu..." : "Lưu món"}</Button></div> : null}</AdminSurfaceCard> : <div className={styles.emptyState}>Không tìm thấy món ăn.</div>}</AdminDetailShell> : null}
+            {detailOnlyLayout ? <AdminDetailShell>{selectedMenuItem ? <AdminSurfaceCard kicker="Chi tiết món ăn" title={selectedMenuItem.name} actions={detailHeaderActions("menu", permissions.canManageMenu ? <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteMenuItemEntry(selectedMenuItem.id)}>Xóa món</Button> : null)} className={styles.subsectionCard}><div className={styles.editGrid}><label><span>Tên món</span><Input type="text" value={menuEdit.name} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, name: event.target.value }))} /></label><label><span>Slug</span><Input type="text" value={menuEdit.slug} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, slug: event.target.value }))} /></label><label><span>Danh mục</span><Input type="text" value={menuEdit.category} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, category: event.target.value }))} /></label><label><span>Giá</span><Input type="number" min="0" value={menuEdit.price} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, price: Number(event.target.value) }))} /></label><label><span>Đường dẫn ảnh</span><Input type="text" value={menuEdit.imageUrl} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, imageUrl: event.target.value }))} /></label><label><span>Hiển thị</span><FormSelect value={menuEdit.isAvailable ? "yes" : "no"} disabled={!permissions.canManageMenu} onValueChange={(value) => setMenuEdit((prev) => ({ ...prev, isAvailable: value === "yes" }))} options={[{ value: "yes", label: "Có" }, { value: "no", label: "Không" }]} placeholder="Hiển thị" /></label><label><span>Món nổi bật</span><FormSelect value={menuEdit.isFeatured ? "yes" : "no"} disabled={!permissions.canManageMenu} onValueChange={(value) => setMenuEdit((prev) => ({ ...prev, isFeatured: value === "yes" }))} options={[{ value: "yes", label: "Có" }, { value: "no", label: "Không" }]} placeholder="Món nổi bật" /></label><label><span>Mức cay</span><FormSelect value={menuEdit.spicyLevel} disabled={!permissions.canManageMenu} onValueChange={(value) => setMenuEdit((prev) => ({ ...prev, spicyLevel: value }))} options={spicyLevels} placeholder="Mức cay" /></label><label><span>Trạng thái món</span><FormSelect value={menuEdit.availabilityStatus || "available"} disabled={!permissions.canManageMenu} onValueChange={(value) => setMenuEdit((prev) => ({ ...prev, availabilityStatus: value }))} options={availabilityStatuses} placeholder="Trạng thái món" /></label><label className={styles.fullWidth}><span>Ghi chú theo mùa / tồn kho</span><Textarea rows={3} value={menuEdit.seasonNote || ""} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, seasonNote: event.target.value }))} /></label><label className={styles.fullWidth}><span>Mô tả</span><Textarea rows={5} value={menuEdit.description} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, description: event.target.value }))} /></label></div>{permissions.canManageMenu ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveMenuEdit} disabled={menuSaving}>{menuSaving ? "Đang lưu..." : "Lưu món"}</Button></div> : null}</AdminSurfaceCard> : <AdminEmptyState title="Không tìm thấy món ăn." description="Món này có thể đã bị xóa hoặc không thuộc chi nhánh đang xem." />}</AdminDetailShell> : null}
           </section>
         ) : null}
 
         {currentSection === "vouchers" ? (
           <section className={detailOnlyLayout ? "grid gap-4" : styles.adminGrid}>
             {!detailOnlyLayout ? <AdminListShell>
-              <div className={styles.panelToolbar}>
+              <AdminPageToolbar>
                 <Input
                   type="search"
                   placeholder="Tìm voucher..."
@@ -1673,18 +1762,28 @@ export default function AdminDashboard({
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+                <Select value={voucherSort} onValueChange={setVoucherSort}>
+                  <SelectTrigger><SelectValue placeholder="Sắp xếp" /></SelectTrigger>
+                  <SelectContent>
+                    {voucherSortOptions.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </AdminPageToolbar>
               <div className={styles.statsStrip}>
                 <AdminStatCard
-                  label="Campaign active"
+                  label="Chiến dịch đang chạy"
                   value={voucherStats.campaigns}
-                  detail={`${voucherStats.redeemed} voucher da redeem`}
+                  detail={`${voucherStats.redeemed} voucher đã đổi`}
                   accent="warm"
                 />
                 <AdminStatCard
-                  label="Loyalty members"
+                  label="Khách loyalty"
                   value={loyaltyStats.members}
-                  detail={`${loyaltyStats.redemptions} redemption da ghi nhan`}
+                  detail={`${loyaltyStats.redemptions} lượt đổi đã ghi nhận`}
                   accent="soft"
                 />
               </div>
@@ -1694,7 +1793,7 @@ export default function AdminDashboard({
                     <TableRow>
                       <TableHead>SĐT</TableHead>
                       <TableHead>Mã</TableHead>
-                      <TableHead>Campaign</TableHead>
+                      <TableHead>Chiến dịch</TableHead>
                       <TableHead>Trạng thái</TableHead>
                       <TableHead>Tạo lúc</TableHead>
                     </TableRow>
@@ -1715,7 +1814,7 @@ export default function AdminDashboard({
                               styles[`status_${item.status}`] || styles.status_new
                             }`}
                           >
-                            {item.status}
+                            {formatLabel(item.status)}
                           </span>
                         </TableCell>
                         <TableCell>{formatDate(item.createdAt)}</TableCell>
@@ -1727,11 +1826,11 @@ export default function AdminDashboard({
             </AdminListShell> : null}
             {detailOnlyLayout ? <AdminDetailShell>
               <AdminSurfaceCard
-                kicker="Voucher campaigns"
-                title="Campaign & loyalty"
+                kicker="Chiến dịch voucher"
+                title="Quản lý chiến dịch và loyalty"
                 actions={permissions.canManageVouchers ? (
                   <Button type="button" variant="secondary" onClick={() => setCampaignCreateOpen((prev) => !prev)}>
-                    {campaignCreateOpen ? "Đóng form" : "Tạo campaign"}
+                    {campaignCreateOpen ? "Đóng form" : "Tạo chiến dịch"}
                   </Button>
                 ) : null}
                 className={styles.subsectionCard}
@@ -1740,7 +1839,7 @@ export default function AdminDashboard({
                   <form className={styles.inlineForm} onSubmit={createVoucherCampaignEntry}>
                     <Input
                       type="text"
-                      placeholder="Tiêu đề campaign"
+                      placeholder="Tiêu đề chiến dịch"
                       value={campaignDraft.title}
                       onChange={(event) =>
                         setCampaignDraft((prev) => ({
@@ -1753,7 +1852,7 @@ export default function AdminDashboard({
                     />
                     <Input
                       type="text"
-                      placeholder="Mã campaign"
+                      placeholder="Mã chiến dịch"
                       value={campaignDraft.code}
                       onChange={(event) =>
                         setCampaignDraft((prev) => ({ ...prev, code: event.target.value }))
@@ -1790,14 +1889,14 @@ export default function AdminDashboard({
                     </div>
                     <Textarea
                       rows={3}
-                      placeholder="Mô tả campaign"
+                      placeholder="Mô tả chiến dịch"
                       value={campaignDraft.description}
                       onChange={(event) =>
                         setCampaignDraft((prev) => ({ ...prev, description: event.target.value }))
                       }
                     />
                     <Button type="submit" disabled={voucherSaving}>
-                      {voucherSaving ? "Đang tạo..." : "Lưu campaign"}
+                      {voucherSaving ? "Đang tạo..." : "Lưu chiến dịch"}
                     </Button>
                   </form>
                 ) : null}
@@ -1835,7 +1934,7 @@ export default function AdminDashboard({
                       />
                     </label>
                     <label>
-                      <span>Mã campaign</span>
+                      <span>Mã chiến dịch</span>
                       <Input
                         type="text"
                         defaultValue={selectedVoucherCampaign.code}
@@ -1900,7 +1999,7 @@ export default function AdminDashboard({
                           className={styles.deleteButton}
                           onClick={() => deleteVoucherCampaignEntry(selectedVoucherCampaign.id)}
                         >
-                          Xóa campaign
+                          Xóa chiến dịch
                         </Button>
                       </div>
                     ) : null}
@@ -1924,7 +2023,7 @@ export default function AdminDashboard({
                           onClick={() => redeemVoucher(selectedVoucher)}
                           disabled={voucherSaving}
                         >
-                          {voucherSaving ? "Đang xử lý..." : "Redeem + tích điểm"}
+                          {voucherSaving ? "Đang xử lý..." : "Đổi voucher + tích điểm"}
                         </Button>
                       ) : null}
                       {permissions.canManageVouchers ? (
@@ -2048,21 +2147,21 @@ export default function AdminDashboard({
                   </div>
                 </AdminSurfaceCard>
               ) : (
-                <div className={styles.emptyState}>{detailOnlyLayout ? "Không tìm thấy voucher." : "Chưa có voucher."}</div>
+                <AdminEmptyState title={detailOnlyLayout ? "Không tìm thấy voucher." : "Chưa có voucher."} description={detailOnlyLayout ? "Voucher có thể đã bị xóa hoặc không còn trong chi nhánh đang xem." : "Khi có voucher lead, danh sách sẽ hiển thị tại đây."} />
               )}
 
               <AdminSurfaceCard
-                kicker="Loyalty"
+                kicker="Khách hàng thân thiết"
                 title="Top khách hàng giữ chân"
                 className={styles.subsectionCard}
               >
                 <div className={styles.metaGrid}>
                   <div>
-                    <span>Tổng members</span>
+                    <span>Tổng khách</span>
                     <strong>{loyaltyStats.members}</strong>
                   </div>
                   <div>
-                    <span>Tổng points</span>
+                    <span>Tổng điểm</span>
                     <strong>{loyaltyStats.totalPoints}</strong>
                   </div>
                   <div>
@@ -2070,7 +2169,7 @@ export default function AdminDashboard({
                     <strong>{formatCurrency(loyaltyStats.totalSpent)}</strong>
                   </div>
                   <div>
-                    <span>Redemptions</span>
+                    <span>Lượt đổi</span>
                     <strong>{loyaltyStats.redemptions}</strong>
                   </div>
                 </div>
@@ -2080,12 +2179,12 @@ export default function AdminDashboard({
                       <strong>{customer.fullName || customer.phone}</strong>
                       <span>{customer.phone}</span>
                       <small>
-                        {customer.loyaltyPoints} points • {formatCurrency(customer.totalSpent)}
+                        {customer.loyaltyPoints} điểm • {formatCurrency(customer.totalSpent)}
                       </small>
                     </article>
                   ))}
                   {!customerProfiles.length ? (
-                    <div className={styles.emptyState}>Chưa có hồ sơ loyalty.</div>
+                    <AdminEmptyState title="Chưa có hồ sơ loyalty." description="Khi có khách nhận hoặc đổi voucher, hồ sơ loyalty sẽ xuất hiện ở đây." />
                   ) : null}
                 </div>
               </AdminSurfaceCard>
@@ -2096,22 +2195,22 @@ export default function AdminDashboard({
         {currentSection === "drivers" && permissions.canViewDrivers ? (
           <section className={detailOnlyLayout ? "grid gap-4" : styles.adminGrid}>
             {!detailOnlyLayout ? <AdminListShell>
-              <div className={styles.panelToolbar}>
+              <AdminPageToolbar
+                actions={permissions.canManageDrivers ? (
+                  <Button type="button" variant="secondary" onClick={() => setDriverCreateOpen((prev) => !prev)}>
+                    {driverCreateOpen ? "Đóng form" : "Tạo tài xế"}
+                  </Button>
+                ) : null}
+              >
                 <Input
                   type="search"
                   placeholder="Tìm tài xế / mã giới thiệu..."
                   value={driverQuery}
                   onChange={(event) => setDriverQuery(event.target.value)}
                 />
-                <div></div>
-                {permissions.canManageDrivers ? (
-                  <Button type="button" variant="secondary" onClick={() => setDriverCreateOpen((prev) => !prev)}>
-                    {driverCreateOpen ? "Đóng form" : "Tạo tài xế"}
-                  </Button>
-                ) : (
-                  <div></div>
-                )}
-              </div>
+                <FormSelect value={driverStatusFilter} onValueChange={setDriverStatusFilter} options={[{ value: "all", label: "Tất cả trạng thái" }, ...driverStatuses]} placeholder="Lọc trạng thái" />
+                <FormSelect value={driverSort} onValueChange={setDriverSort} options={driverSortOptions} placeholder="Sắp xếp" />
+              </AdminPageToolbar>
               {driverCreateOpen && permissions.canManageDrivers ? (
                 <form className={styles.inlineForm} onSubmit={createDriverEntry}>
                   <Input type="text" placeholder="Mã tài xế" value={driverDraft.code} onChange={(event) => setDriverDraft((prev) => ({ ...prev, code: event.target.value }))} required />
@@ -2144,7 +2243,7 @@ export default function AdminDashboard({
                         <TableCell><strong>{item.fullName}</strong><span>{item.phone}</span></TableCell>
                         <TableCell>{item.referralCode || "-"}</TableCell>
                         <TableCell>{item.commissionRate}%</TableCell>
-                        <TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_confirmed}`}>{item.status}</span></TableCell>
+                        <TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_confirmed}`}>{formatLabel(item.status)}</span></TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -2155,7 +2254,7 @@ export default function AdminDashboard({
               {selectedDriver ? (
                 <div>
                   <AdminDetailHeader
-                    kicker="Driver / Referral"
+                    kicker="Tài xế / giới thiệu"
                     title={selectedDriver.fullName}
                     actions={detailHeaderActions("drivers", permissions.canManageDrivers ? (
                       <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteDriverEntry(selectedDriver.id)}>
@@ -2167,7 +2266,7 @@ export default function AdminDashboard({
                     <div><span>Mã tài xế</span><strong>{selectedDriver.code}</strong></div>
                     <div><span>Mã giới thiệu</span><strong>{selectedDriver.referralCode || "-"}</strong></div>
                     <div><span>Hoa hồng</span><strong>{selectedDriver.commissionRate}%</strong></div>
-                    <div><span>Pending payout</span><strong>{formatCurrency(driverCommissions.filter((item) => item.driverId === selectedDriver.id && item.status === "pending").reduce((sum, item) => sum + item.commissionAmount, 0))}</strong></div>
+                    <div><span>Hoa hồng chờ duyệt</span><strong>{formatCurrency(driverCommissions.filter((item) => item.driverId === selectedDriver.id && item.status === "pending").reduce((sum, item) => sum + item.commissionAmount, 0))}</strong></div>
                   </div>
                   <div className={styles.editGrid}>
                     <label><span>Tên tài xế</span><Input type="text" value={driverEdit.fullName} disabled={!permissions.canManageDrivers} onChange={(event) => setDriverEdit((prev) => ({ ...prev, fullName: event.target.value }))} /></label>
@@ -2180,40 +2279,40 @@ export default function AdminDashboard({
                   </div>
                   {permissions.canManageDrivers ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveDriverEdit} disabled={tableSaving}>{tableSaving ? "Đang lưu..." : "Lưu tài xế"}</Button></div> : null}
                   <AdminSurfaceCard
-                    kicker="Referral gần đây"
+                    kicker="Giới thiệu gần đây"
                     title="Lead do tài xế giới thiệu"
                     className={styles.subsectionCard}
                   >
                     <div className={styles.logList}>
                       {driverReferrals.filter((item) => item.driverId === selectedDriver.id).slice(0, 6).map((item) => (
                         <article key={item.id} className={styles.logItem}>
-                          <div className={styles.logHead}><strong>{item.referredName || item.referredPhone}</strong><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{item.status}</span></div>
+                          <div className={styles.logHead}><strong>{item.referredName || item.referredPhone}</strong><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{formatLabel(item.status)}</span></div>
                           <small>{item.referralCode || "-"}</small>
                           <p>Base {formatCurrency(item.commissionBaseAmount)} • Hoa hồng {formatCurrency(item.commissionAmount)}</p>
                         </article>
                       ))}
-                      {!driverReferrals.filter((item) => item.driverId === selectedDriver.id).length ? <div className={styles.emptyState}>Chưa có referral.</div> : null}
+                      {!driverReferrals.filter((item) => item.driverId === selectedDriver.id).length ? <AdminEmptyState title="Chưa có lượt giới thiệu." description="Khi tài xế phát sinh lead mới, danh sách giới thiệu sẽ xuất hiện ở đây." /> : null}
                     </div>
                   </AdminSurfaceCard>
                   <AdminSurfaceCard
-                    kicker="Commission"
+                    kicker="Hoa hồng"
                     title="Giao dịch hoa hồng"
                     className={styles.subsectionCard}
                   >
                     <div className={styles.logList}>
                       {driverCommissions.filter((item) => item.driverId === selectedDriver.id).slice(0, 6).map((item) => (
                         <article key={item.id} className={styles.logItem}>
-                          <div className={styles.logHead}><strong>{formatCurrency(item.commissionAmount)}</strong><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{item.status}</span></div>
-                          <small>Order: {item.orderId || "-"} • Reservation: {item.reservationId || "-"}</small>
-                          <p>{item.notes || "Chưa có ghi chú payout."}</p>
+                          <div className={styles.logHead}><strong>{formatCurrency(item.commissionAmount)}</strong><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{formatLabel(item.status)}</span></div>
+                          <small>Đơn hàng: {item.orderId || "-"} • Đặt bàn: {item.reservationId || "-"}</small>
+                          <p>{item.notes || "Chưa có ghi chú chi trả."}</p>
                         </article>
                       ))}
-                      {!driverCommissions.filter((item) => item.driverId === selectedDriver.id).length ? <div className={styles.emptyState}>Chưa có commission transaction.</div> : null}
+                      {!driverCommissions.filter((item) => item.driverId === selectedDriver.id).length ? <AdminEmptyState title="Chưa có giao dịch hoa hồng." description="Các giao dịch hoa hồng sẽ hiển thị sau khi có lượt giới thiệu hoặc thanh toán." /> : null}
                     </div>
                   </AdminSurfaceCard>
                 </div>
               ) : (
-                <div className={styles.emptyState}>Chưa có tài xế.</div>
+                <AdminEmptyState title="Chưa có tài xế." description="Tạo tài xế mới hoặc quay lại danh sách để kiểm tra bộ lọc." />
               )}
             </AdminDetailShell> : null}
           </section>
@@ -2222,22 +2321,22 @@ export default function AdminDashboard({
         {currentSection === "partners" && permissions.canViewPartners ? (
           <section className={detailOnlyLayout ? "grid gap-4" : styles.adminGrid}>
             {!detailOnlyLayout ? <AdminListShell>
-              <div className={styles.panelToolbar}>
+              <AdminPageToolbar
+                actions={permissions.canManagePartners ? (
+                  <Button type="button" variant="secondary" onClick={() => setPartnerCreateOpen((prev) => !prev)}>
+                    {partnerCreateOpen ? "Đóng form" : "Tạo đối tác"}
+                  </Button>
+                ) : null}
+              >
                 <Input
                   type="search"
                   placeholder="Tìm đối tác / HDV..."
                   value={partnerQuery}
                   onChange={(event) => setPartnerQuery(event.target.value)}
                 />
-                <div></div>
-                {permissions.canManagePartners ? (
-                  <Button type="button" variant="secondary" onClick={() => setPartnerCreateOpen((prev) => !prev)}>
-                    {partnerCreateOpen ? "Đóng form" : "Tạo đối tác"}
-                  </Button>
-                ) : (
-                  <div></div>
-                )}
-              </div>
+                <FormSelect value={partnerStatusFilter} onValueChange={setPartnerStatusFilter} options={[{ value: "all", label: "Tất cả trạng thái" }, ...partnerStatuses]} placeholder="Lọc trạng thái" />
+                <FormSelect value={partnerSort} onValueChange={setPartnerSort} options={partnerSortOptions} placeholder="Sắp xếp" />
+              </AdminPageToolbar>
               {partnerCreateOpen && permissions.canManagePartners ? (
                 <form className={styles.inlineForm} onSubmit={createPartnerEntry}>
                   <Input type="text" placeholder="Mã đối tác" value={partnerDraft.code} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, code: event.target.value }))} required />
@@ -2277,9 +2376,9 @@ export default function AdminDashboard({
                     {filteredPartners.map((item) => (
                       <TableRow key={item.id} className={`${styles.interactiveRow} ${detailOnlyLayout && item.id === selectedPartner?.id ? styles.activeRow : ""}`} onClick={() => openSectionDetail("partners", item.id)}>
                         <TableCell><strong>{item.name}</strong><span>{item.contactName || item.phone}</span></TableCell>
-                        <TableCell>{item.partnerType}</TableCell>
+                        <TableCell>{formatLabel(item.partnerType)}</TableCell>
                         <TableCell>{item.commissionType === "amount" ? formatCurrency(item.commissionValue) : `${item.commissionValue}%`}</TableCell>
-                        <TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_confirmed}`}>{item.status}</span></TableCell>
+                        <TableCell><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_confirmed}`}>{formatLabel(item.status)}</span></TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -2290,15 +2389,10 @@ export default function AdminDashboard({
               {selectedPartner ? (
                 <div>
                   <AdminDetailHeader
-                    kicker="Travel partner / HDV"
+                    kicker="Đối tác / hướng dẫn viên"
                     title={selectedPartner.name}
                     actions={detailHeaderActions("partners")}
                   />
-                  {permissions.canManagePartners ? !detailOnlyLayout ? (
-                    <div className={styles.detailHeading} style={{ justifyContent: "flex-end", marginTop: "-16px" }}>
-                      <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deletePartnerEntry(selectedPartner.id)}>Xóa đối tác</Button>
-                    </div>
-                  ) : null : null}
                   {permissions.canManagePartners && detailOnlyLayout ? (
                     <div className={styles.detailActions}>
                       <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deletePartnerEntry(selectedPartner.id)}>Xóa đối tác</Button>
@@ -2306,7 +2400,7 @@ export default function AdminDashboard({
                   ) : null}
                   <div className={styles.metaGrid}>
                     <div><span>Mã đối tác</span><strong>{selectedPartner.code}</strong></div>
-                    <div><span>Loại</span><strong>{selectedPartner.partnerType}</strong></div>
+                    <div><span>Loại</span><strong>{formatLabel(selectedPartner.partnerType)}</strong></div>
                     <div><span>Booking mở</span><strong>{partnerBookings.filter((item) => item.partnerId === selectedPartner.id && ["lead", "confirmed"].includes(item.status)).length}</strong></div>
                     <div><span>Tổng ngân sách</span><strong>{formatCurrency(partnerBookings.filter((item) => item.partnerId === selectedPartner.id).reduce((sum, item) => sum + Number(item.menuBudget || 0), 0))}</strong></div>
                   </div>
@@ -2317,7 +2411,7 @@ export default function AdminDashboard({
                     <label><span>Email</span><Input type="text" value={partnerEdit.email} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, email: event.target.value }))} /></label>
                     <label><span>Loại</span><FormSelect value={partnerEdit.partnerType} disabled={!permissions.canManagePartners} onValueChange={(value) => setPartnerEdit((prev) => ({ ...prev, partnerType: value }))} options={partnerTypes} /></label>
                     <label><span>Trạng thái</span><FormSelect value={partnerEdit.status} disabled={!permissions.canManagePartners} onValueChange={(value) => setPartnerEdit((prev) => ({ ...prev, status: value }))} options={partnerStatuses} /></label>
-                    <label><span>Kiểu chiết khấu</span><FormSelect value={partnerEdit.commissionType} disabled={!permissions.canManagePartners} onValueChange={(value) => setPartnerEdit((prev) => ({ ...prev, commissionType: value }))} options={[{ value: "percent", label: "percent" }, { value: "amount", label: "amount" }]} /></label>
+                    <label><span>Kiểu chiết khấu</span><FormSelect value={partnerEdit.commissionType} disabled={!permissions.canManagePartners} onValueChange={(value) => setPartnerEdit((prev) => ({ ...prev, commissionType: value }))} options={["percent", "amount"]} /></label>
                     <label><span>Giá trị</span><Input type="number" min="0" value={partnerEdit.commissionValue} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, commissionValue: Number(event.target.value) }))} /></label>
                     <label><span>Bắt đầu hợp tác</span><Input type="datetime-local" value={partnerEdit.contractStartAt ? String(partnerEdit.contractStartAt).slice(0, 16) : ""} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, contractStartAt: event.target.value }))} /></label>
                     <label><span>Kết thúc hợp tác</span><Input type="datetime-local" value={partnerEdit.contractEndAt ? String(partnerEdit.contractEndAt).slice(0, 16) : ""} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, contractEndAt: event.target.value }))} /></label>
@@ -2349,12 +2443,12 @@ export default function AdminDashboard({
                     <div className={styles.logList}>
                       {partnerContracts.filter((item) => item.partnerId === selectedPartner.id).slice(0, 6).map((item) => (
                         <article key={item.id} className={styles.logItem}>
-                          <div className={styles.logHead}><strong>{item.title}</strong><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{item.status}</span></div>
+                          <div className={styles.logHead}><strong>{item.title}</strong><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{formatLabel(item.status)}</span></div>
                           <small>{formatDate(item.startsAt)} → {formatDate(item.endsAt)}</small>
                           <p>Chiết khấu {item.discountPercent}% • Hoa hồng {item.commissionPercent}%</p>
                         </article>
                       ))}
-                      {!partnerContracts.filter((item) => item.partnerId === selectedPartner.id).length ? <div className={styles.emptyState}>Chưa có hợp đồng.</div> : null}
+                      {!partnerContracts.filter((item) => item.partnerId === selectedPartner.id).length ? <AdminEmptyState title="Chưa có hợp đồng." description="Thêm hợp đồng mới để áp dụng chiết khấu và hoa hồng cho đối tác này." /> : null}
                     </div>
                   </AdminSurfaceCard>
                   <AdminSurfaceCard
@@ -2391,21 +2485,21 @@ export default function AdminDashboard({
                     <div className={styles.logList}>
                       {partnerBookings.filter((item) => item.partnerId === selectedPartner.id).slice(0, 8).map((item) => (
                         <article key={item.id} className={styles.logItem}>
-                          <div className={styles.logHead}><strong>{item.customerName}</strong><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{item.status}</span></div>
+                          <div className={styles.logHead}><strong>{item.customerName}</strong><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{formatLabel(item.status)}</span></div>
                           <small>{item.code || "Chưa có mã"} • {item.groupSize} khách • {formatDate(item.bookingAt)}</small>
-                          <p>{item.packageName || "Chưa chọn set menu"} • Budget {formatCurrency(item.menuBudget)} • Commission {formatCurrency(item.commissionAmount)}</p>
+                          <p>{item.packageName || "Chưa chọn set menu"} • Ngân sách {formatCurrency(item.menuBudget)} • Hoa hồng {formatCurrency(item.commissionAmount)}</p>
                           <div className={styles.inlineRow}>
                             <FormSelect value={item.status} disabled={!permissions.canManagePartnerBookings} onValueChange={(value) => patchPartnerBooking(item.id, { ...item, status: value })} options={partnerBookingStatuses} />
                             {permissions.canManagePartnerBookings ? <Button type="button" variant="destructive" className={styles.deleteButton} onClick={() => deletePartnerBookingEntry(item.id)}>Xóa</Button> : null}
                           </div>
                         </article>
                       ))}
-                      {!partnerBookings.filter((item) => item.partnerId === selectedPartner.id).length ? <div className={styles.emptyState}>Chưa có booking đoàn.</div> : null}
+                      {!partnerBookings.filter((item) => item.partnerId === selectedPartner.id).length ? <AdminEmptyState title="Chưa có booking đoàn." description="Khi đối tác tạo booking đoàn, lịch sử sẽ hiển thị trong khối này." /> : null}
                     </div>
                   </AdminSurfaceCard>
                 </div>
               ) : (
-                <div className={styles.emptyState}>Chưa có đối tác / HDV.</div>
+                <AdminEmptyState title="Chưa có đối tác / HDV." description="Tạo đối tác mới hoặc quay lại danh sách để chọn bản ghi khác." />
               )}
             </AdminDetailShell> : null}
           </section>
@@ -2416,7 +2510,7 @@ export default function AdminDashboard({
             {!detailOnlyLayout ? <div className={styles.integrationList}>
               {integrations.map((item) => (
                 <Button type="button" variant="ghost" key={item.id} className={`${detailOnlyLayout && item.id === selectedIntegration?.id ? styles.integrationCardActive : ""} ${styles.integrationCard}`} onClick={() => openSectionDetail("integrations", item.id)}>
-                  <div className={styles.integrationCardTop}><strong>{item.name}</strong><span className={`${styles.statusBadge} ${item.enabled ? styles.status_confirmed : styles.status_cancelled}`}>{item.enabled ? "enabled" : "disabled"}</span></div>
+                  <div className={styles.integrationCardTop}><strong>{item.name}</strong><span className={`${styles.statusBadge} ${item.enabled ? styles.status_confirmed : styles.status_cancelled}`}>{item.enabled ? formatLabel("enabled") : formatLabel("disabled")}</span></div>
                   <small>{item.category.toUpperCase()} • {item.market}</small>
                   <p>{item.description}</p>
                   <span className={styles.integrationMeta}>{item.syncMode === "auto" ? "Tự động đồng bộ" : "Đồng bộ thủ công"}</span>
@@ -2432,23 +2526,23 @@ export default function AdminDashboard({
                   className={styles.subsectionCard}
                 >
                   <div className={styles.editGrid}>
-                    <label><span>Trạng thái</span><FormSelect value={selectedIntegration.enabled ? "enabled" : "disabled"} disabled={!permissions.canManageIntegrations} onValueChange={(value) => patchIntegration(selectedIntegration.id, { enabled: value === "enabled" })} options={[{ value: "disabled", label: "disabled" }, { value: "enabled", label: "enabled" }]} /></label>
-                    <label><span>Sync mode</span><FormSelect value={selectedIntegration.syncMode} disabled={!permissions.canManageIntegrations} onValueChange={(value) => patchIntegration(selectedIntegration.id, { syncMode: value })} options={[{ value: "manual", label: "manual" }, { value: "auto", label: "auto" }]} /></label>
-                    <label className={styles.fullWidth}><span>Endpoint</span><Input type="url" defaultValue={selectedIntegration.endpoint} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { endpoint: event.target.value })} /></label>
-                    <label><span>API key</span><Input type="text" defaultValue={selectedIntegration.apiKey} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { apiKey: event.target.value })} /></label>
-                    <label><span>API secret</span><Input type="text" defaultValue={selectedIntegration.apiSecret} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { apiSecret: event.target.value })} /></label>
-                    <label><span>Location code</span><Input type="text" defaultValue={selectedIntegration.locationCode} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { locationCode: event.target.value })} /></label>
-                    <label><span>Tenant code</span><Input type="text" defaultValue={selectedIntegration.tenantCode} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { tenantCode: event.target.value })} /></label>
+                    <label><span>Trạng thái</span><FormSelect value={selectedIntegration.enabled ? "enabled" : "disabled"} disabled={!permissions.canManageIntegrations} onValueChange={(value) => patchIntegration(selectedIntegration.id, { enabled: value === "enabled" })} options={["disabled", "enabled"]} /></label>
+                    <label><span>Chế độ đồng bộ</span><FormSelect value={selectedIntegration.syncMode} disabled={!permissions.canManageIntegrations} onValueChange={(value) => patchIntegration(selectedIntegration.id, { syncMode: value })} options={["manual", "auto"]} /></label>
+                    <label className={styles.fullWidth}><span>Địa chỉ webhook</span><Input type="url" defaultValue={selectedIntegration.endpoint} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { endpoint: event.target.value })} /></label>
+                    <label><span>Khóa API</span><Input type="text" defaultValue={selectedIntegration.apiKey} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { apiKey: event.target.value })} /></label>
+                    <label><span>Bí mật API</span><Input type="text" defaultValue={selectedIntegration.apiSecret} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { apiSecret: event.target.value })} /></label>
+                    <label><span>Mã địa điểm</span><Input type="text" defaultValue={selectedIntegration.locationCode} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { locationCode: event.target.value })} /></label>
+                    <label><span>Mã tenant</span><Input type="text" defaultValue={selectedIntegration.tenantCode} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { tenantCode: event.target.value })} /></label>
                     <label className={styles.fullWidth}><span>Ghi chú</span><Textarea rows={5} defaultValue={selectedIntegration.notes} disabled={!permissions.canManageIntegrations} onBlur={(event) => patchIntegration(selectedIntegration.id, { notes: event.target.value })} /></label>
                   </div>
                 </AdminSurfaceCard>
-              ) : detailOnlyLayout ? <div className={styles.emptyState}>Không tìm thấy tích hợp.</div> : null}
+              ) : detailOnlyLayout ? <AdminEmptyState title="Không tìm thấy tích hợp." description="Tích hợp này có thể đã bị gỡ hoặc không thuộc chi nhánh đang xem." /> : null}
               <AdminSurfaceCard
                 kicker="Nhật ký đồng bộ"
-                title="Lịch sử sync gần đây"
+                title="Lịch sử đồng bộ gần đây"
                 className={styles.subsectionCard}
               >
-                <div className={styles.logList}>{syncLogs.length ? syncLogs.slice(0, 12).map((log) => <article key={log.id} className={styles.logItem}><div className={styles.logHead}><strong>{log.integrationName}</strong><span className={`${styles.statusBadge} ${log.ok ? styles.status_confirmed : styles.status_cancelled}`}>{log.ok ? `OK ${log.status}` : `ERR ${log.status}`}</span></div><small>Reservation: {log.reservationId || "-"}</small><small>{formatDate(log.createdAt)}</small><p>{log.responsePreview || "Không có nội dung phản hồi."}</p></article>) : <div className={styles.emptyState}>Chưa có log đồng bộ.</div>}</div>
+                <div className={styles.logList}>{syncLogs.length ? syncLogs.slice(0, 12).map((log) => <article key={log.id} className={styles.logItem}><div className={styles.logHead}><strong>{log.integrationName}</strong><span className={`${styles.statusBadge} ${log.ok ? styles.status_confirmed : styles.status_cancelled}`}>{log.ok ? `Thành công ${log.status}` : `Lỗi ${log.status}`}</span></div><small>Đặt bàn: {log.reservationId || "-"}</small><small>{formatDate(log.createdAt)}</small><p>{log.responsePreview || "Không có nội dung phản hồi."}</p></article>) : <AdminEmptyState title="Chưa có log đồng bộ." description="Các lần đồng bộ POS/PMS thành công hoặc lỗi sẽ xuất hiện ở đây." />}</div>
               </AdminSurfaceCard>
             </div>
           </section>
