@@ -93,5 +93,5 @@ function withBranchQuery(url, branchId) {
   }
 
   const separator = url.includes("?") ? "&" : "?";
-  return `${url}${separator}branchId=${encodeURIComponent(branchId)}`;
+  return `${url}${separator}branch=${encodeURIComponent(branchId)}`;
 }

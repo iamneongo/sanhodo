@@ -92,6 +92,7 @@ export default async function AdminSectionPage({ params, searchParams }) {
         initialMenuItems={dashboardData.menuItems}
         initialTables={dashboardData.restaurantTables}
         initialOrders={dashboardData.orders}
+        initialFeatureStatus={dashboardData.featureStatus}
         activeBranchId={branchScope.activeBranchId}
         canViewAllBranches={branchScope.canViewAll}
         adminProfile={profile}

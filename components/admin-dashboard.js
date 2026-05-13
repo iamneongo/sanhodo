@@ -617,6 +617,7 @@ export default function AdminDashboard({
   initialMenuItems,
   initialTables,
   initialOrders,
+  initialFeatureStatus,
   activeBranchId,
   canViewAllBranches,
   adminProfile
@@ -661,6 +662,7 @@ export default function AdminDashboard({
   const [orders, setOrders] = useState(sortByCreatedDesc(initialOrders));
   const [integrations, setIntegrations] = useState(initialIntegrations);
   const [syncLogs, setSyncLogs] = useState(initialSyncLogs);
+  const driverFeatureStatus = initialFeatureStatus?.drivers || { ready: true, message: "" };
 
   const [reservationQuery, setReservationQuery] = useState("");
   const [reservationStatus, setReservationStatus] = useState("all");
@@ -972,8 +974,9 @@ export default function AdminDashboard({
     }
   }, [selectedVoucherCampaignId, voucherCampaigns]);
 
-  const handleBranchChange = (event) => {
-    const nextBranchId = event.target.value;
+  const handleBranchChange = (valueOrEvent) => {
+    const nextBranchId =
+      typeof valueOrEvent === "string" ? valueOrEvent : valueOrEvent?.target?.value || "";
     const params = new URLSearchParams(window.location.search);
     if (!nextBranchId || nextBranchId === "all") {
       params.delete("branch");
@@ -2612,6 +2615,7 @@ export default function AdminDashboard({
             setDriverEdit={setDriverEdit}
             saveDriverEdit={saveDriverEdit}
             driverReferrals={driverReferrals}
+            driverFeatureStatus={driverFeatureStatus}
             FormSelect={FormSelect}
           />
         ) : null}

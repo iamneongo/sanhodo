@@ -111,7 +111,7 @@ export default function AppSidebar({
             <SidebarGroupLabel>Chi nhánh</SidebarGroupLabel>
             <Select
               value={activeBranchId || "all"}
-              onValueChange={(value) => onBranchChange({ target: { value } })}
+              onValueChange={onBranchChange}
               disabled={!canViewAllBranches && Boolean(selectedBranch)}
             >
               <SelectTrigger>
@@ -178,5 +178,5 @@ function withBranchQuery(url, branchId) {
   }
 
   const separator = url.includes("?") ? "&" : "?";
-  return `${url}${separator}branchId=${encodeURIComponent(branchId)}`;
+  return `${url}${separator}branch=${encodeURIComponent(branchId)}`;
 }

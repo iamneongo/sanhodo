@@ -44,9 +44,14 @@ export default function AdminDriversSection({
   setDriverEdit,
   saveDriverEdit,
   driverReferrals,
+  driverFeatureStatus,
   FormSelect
 }) {
   const pagination = useTablePagination(filteredDrivers);
+  const driversReady = driverFeatureStatus?.ready !== false;
+  const driverSetupMessage =
+    driverFeatureStatus?.message ||
+    "Tinh nang tai xe hien chua san sang tren project Supabase nay.";
   const activeFilterItems = [
     {
       key: "query",
@@ -74,7 +79,7 @@ export default function AdminDriversSection({
         <AdminListShell>
           <AdminPageToolbar
             actions={
-              permissions.canManageDrivers ? (
+              permissions.canManageDrivers && driversReady ? (
                 <Button type="button" variant="secondary" onClick={() => setDriverCreateOpen(true)}>
                   Tạo tài xế
                 </Button>
@@ -106,7 +111,17 @@ export default function AdminDriversSection({
             <FormSelect value={driverSort} onValueChange={setDriverSort} options={driverSortOptions} placeholder="Sắp xếp" />
           </AdminPageToolbar>
 
-          {permissions.canManageDrivers ? (
+          {!driversReady ? (
+            <AdminSurfaceCard
+              kicker="Can hoan tat setup"
+              title="Tinh nang tai xe chua san sang"
+              className={styles.subsectionCard}
+            >
+              <p>{driverSetupMessage}</p>
+            </AdminSurfaceCard>
+          ) : null}
+
+          {permissions.canManageDrivers && driversReady ? (
             <AdminFormDialog
               open={driverCreateOpen}
               onOpenChange={setDriverCreateOpen}
@@ -211,7 +226,12 @@ export default function AdminDriversSection({
 
       {detailOnlyLayout ? (
         <AdminDetailShell>
-          {selectedDriver ? (
+          {!driversReady ? (
+            <AdminEmptyState
+              title="Tinh nang tai xe chua san sang."
+              description={driverSetupMessage}
+            />
+          ) : selectedDriver ? (
             <div>
               <AdminDetailHeader
                 kicker="Tài xế / giới thiệu"
