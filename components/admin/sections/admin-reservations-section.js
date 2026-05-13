@@ -191,8 +191,8 @@ export default function AdminReservationsSection({
                 onChange={(event) => setManualForm((prev) => ({ ...prev, notes: event.target.value }))}
                 rows={3}
               />
-              <Button type="submit" disabled={reservationSaving}>
-                {reservationSaving ? "Đang lưu..." : "Lưu đặt bàn"}
+              <Button type="submit" loading={reservationSaving} loadingLabel="Đang lưu...">
+                Lưu đặt bàn
               </Button>
             </form>
             </AdminFormDialog>
@@ -344,9 +344,10 @@ export default function AdminReservationsSection({
                       <Button
                         type="button"
                         onClick={() => syncReservation(selectedReservation.id, selectedIntegrationId)}
-                        disabled={integrationSaving}
+                        loading={integrationSaving}
+                        loadingLabel="Đang đồng bộ..."
                       >
-                        {integrationSaving ? "Đang đồng bộ..." : "Đồng bộ ngay"}
+                        Đồng bộ ngay
                       </Button>
                     ) : null}
                   </div>

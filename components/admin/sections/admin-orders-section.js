@@ -254,8 +254,8 @@ export default function AdminOrdersSection({
                 <span>Tạm tính: {formatCurrency(orderDraftTotals.subtotal)}</span>
                 <span>Tổng: {formatCurrency(orderDraftTotals.total)}</span>
               </div>
-              <Button type="submit" disabled={orderSaving}>
-                {orderSaving ? "Đang tạo..." : "Lưu đơn hàng"}
+              <Button type="submit" loading={orderSaving} loadingLabel="Đang tạo...">
+                Lưu đơn hàng
               </Button>
             </form>
             </AdminFormDialog>
@@ -420,8 +420,8 @@ export default function AdminOrdersSection({
               </div>
               {permissions.canManageOrders ? (
                 <div className={styles.detailActions}>
-                  <Button type="button" className={styles.saveButton} onClick={saveOrderEdit} disabled={orderSaving}>
-                    {orderSaving ? "Đang lưu..." : "Lưu đơn"}
+                  <Button type="button" className={styles.saveButton} onClick={saveOrderEdit} loading={orderSaving} loadingLabel="Đang lưu...">
+                    Lưu đơn
                   </Button>
                 </div>
               ) : null}

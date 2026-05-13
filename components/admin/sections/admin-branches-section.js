@@ -194,8 +194,8 @@ export default function AdminBranchesSection({
                   value={branchDraft.address}
                   onChange={(event) => setBranchDraft((prev) => ({ ...prev, address: event.target.value }))}
                 />
-                <Button type="submit" disabled={branchSaving}>
-                  {branchSaving ? "Đang tạo..." : "Lưu chi nhánh"}
+                <Button type="submit" loading={branchSaving} loadingLabel="Đang tạo...">
+                  Lưu chi nhánh
                 </Button>
               </form>
             </AdminFormDialog>
@@ -372,8 +372,14 @@ export default function AdminBranchesSection({
                 </div>
                 {permissions.canManageBranches ? (
                   <div className={styles.detailActions}>
-                    <Button type="button" className={styles.saveButton} onClick={saveBranchEdit} disabled={branchSaving}>
-                      {branchSaving ? "Đang lưu..." : "Lưu chi nhánh"}
+                    <Button
+                      type="button"
+                      className={styles.saveButton}
+                      onClick={saveBranchEdit}
+                      loading={branchSaving}
+                      loadingLabel="Đang lưu..."
+                    >
+                      Lưu chi nhánh
                     </Button>
                   </div>
                 ) : null}
@@ -435,8 +441,13 @@ export default function AdminBranchesSection({
                           ]}
                         />
                       </div>
-                      <Button type="submit" disabled={branchStaffSaving || !availableProfilesForBranch.length}>
-                        {branchStaffSaving ? "Đang lưu..." : "Lưu phân công"}
+                      <Button
+                        type="submit"
+                        disabled={!availableProfilesForBranch.length}
+                        loading={branchStaffSaving}
+                        loadingLabel="Đang lưu..."
+                      >
+                        Lưu phân công
                       </Button>
                     </form>
                   </AdminFormDialog>

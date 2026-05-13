@@ -304,8 +304,14 @@ export default function AdminStaffSection({
 
                 {permissions.canManageStaff ? (
                   <div className={styles.detailActions}>
-                    <Button type="button" className={styles.saveButton} onClick={saveStaffEdit} disabled={profileSaving}>
-                      {profileSaving ? "Đang lưu..." : "Lưu tài khoản"}
+                    <Button
+                      type="button"
+                      className={styles.saveButton}
+                      onClick={saveStaffEdit}
+                      loading={profileSaving}
+                      loadingLabel="Đang lưu..."
+                    >
+                      Lưu tài khoản
                     </Button>
                   </div>
                 ) : null}

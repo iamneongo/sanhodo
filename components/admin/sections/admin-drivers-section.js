@@ -180,8 +180,8 @@ export default function AdminDriversSection({
                 value={driverDraft.notes}
                 onChange={(event) => setDriverDraft((prev) => ({ ...prev, notes: event.target.value }))}
               />
-              <Button type="submit" disabled={tableSaving}>
-                {tableSaving ? "Đang tạo..." : "Lưu tài xế"}
+              <Button type="submit" loading={tableSaving} loadingLabel="Đang tạo...">
+                Lưu tài xế
               </Button>
             </form>
             </AdminFormDialog>
@@ -273,8 +273,14 @@ export default function AdminDriversSection({
               </div>
               {permissions.canManageDrivers ? (
                 <div className={styles.detailActions}>
-                  <Button type="button" className={styles.saveButton} onClick={saveDriverEdit} disabled={tableSaving}>
-                    {tableSaving ? "Đang lưu..." : "Lưu tài xế"}
+                  <Button
+                    type="button"
+                    className={styles.saveButton}
+                    onClick={saveDriverEdit}
+                    loading={tableSaving}
+                    loadingLabel="Đang lưu..."
+                  >
+                    Lưu tài xế
                   </Button>
                 </div>
               ) : null}

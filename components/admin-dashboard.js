@@ -14,6 +14,7 @@ import AdminReservationsSection from "./admin/sections/admin-reservations-sectio
 import AdminDriversSection from "./admin/sections/admin-drivers-section";
 import AdminStaffSection from "./admin/sections/admin-staff-section";
 import AdminTablesSection from "./admin/sections/admin-tables-section";
+import AdminToast from "./admin/admin-toast";
 import AdminVouchersSection from "./admin/sections/admin-vouchers-section";
 import AppSidebar from "./admin/app-sidebar";
 import { Button } from "@/components/ui/button";
@@ -2089,6 +2090,16 @@ export default function AdminDashboard({
     setIsNavigating(false);
   }, [pathname, searchParams?.toString(), activeBranchId, detailId, currentSection]);
 
+  useEffect(() => {
+    if (!message) return undefined;
+
+    const timer = window.setTimeout(() => {
+      setMessage("");
+    }, 4200);
+
+    return () => window.clearTimeout(timer);
+  }, [message]);
+
   const reservationStats = {
     total: reservations.length,
     pending: reservations.filter((item) => ["new", "contacted"].includes(item.status)).length
@@ -2253,6 +2264,7 @@ export default function AdminDashboard({
         "--sidebar-width-collapsed": "4.5rem"
       }}
     >
+      <AdminToast message={message} onClose={() => setMessage("")} />
       <div className="flex min-h-svh w-full bg-zinc-50">
         <AppSidebar
           visibleSections={visibleSections}
@@ -2290,12 +2302,6 @@ export default function AdminDashboard({
         <div className="relative flex-1 w-full min-w-0 p-4 md:p-6">
         {isNavigating ? <AdminContentSkeleton detail={detailOnlyLayout} overlay /> : null}
         <div className="flex w-full min-w-0 flex-col gap-4 md:gap-6">
-        {message ? (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-            {message}
-          </div>
-        ) : null}
-
         {currentSection === "overview" ? (
           <AdminOverviewSection
             reservationStats={reservationStats}

@@ -215,8 +215,8 @@ export default function AdminVouchersSection({
                     value={voucherDraft.notes}
                     onChange={(event) => setVoucherDraft((prev) => ({ ...prev, notes: event.target.value }))}
                   />
-                  <Button type="submit" disabled={voucherSaving}>
-                    {voucherSaving ? "Đang tạo..." : "Lưu voucher"}
+                  <Button type="submit" loading={voucherSaving} loadingLabel="Đang tạo...">
+                    Lưu voucher
                   </Button>
                 </form>
               </AdminFormDialog>
@@ -285,8 +285,8 @@ export default function AdminVouchersSection({
                     value={campaignDraft.description}
                     onChange={(event) => setCampaignDraft((prev) => ({ ...prev, description: event.target.value }))}
                   />
-                  <Button type="submit" disabled={voucherSaving}>
-                    {voucherSaving ? "Đang tạo..." : "Lưu chiến dịch"}
+                  <Button type="submit" loading={voucherSaving} loadingLabel="Đang tạo...">
+                    Lưu chiến dịch
                   </Button>
                 </form>
               </AdminFormDialog>
@@ -580,8 +580,8 @@ export default function AdminVouchersSection({
                   value={campaignDraft.description}
                   onChange={(event) => setCampaignDraft((prev) => ({ ...prev, description: event.target.value }))}
                 />
-                <Button type="submit" disabled={voucherSaving}>
-                  {voucherSaving ? "Đang tạo..." : "Lưu chiến dịch"}
+                <Button type="submit" loading={voucherSaving} loadingLabel="Đang tạo...">
+                  Lưu chiến dịch
                 </Button>
               </form>
               </AdminFormDialog>
@@ -709,9 +709,10 @@ export default function AdminVouchersSection({
                       type="button"
                       className={styles.saveButton}
                       onClick={() => redeemVoucher(selectedVoucher)}
-                      disabled={voucherSaving}
+                      loading={voucherSaving}
+                      loadingLabel="Đang xử lý..."
                     >
-                      {voucherSaving ? "Đang xử lý..." : "Đổi voucher + tích điểm"}
+                      Đổi voucher + tích điểm
                     </Button>
                   ) : null}
                   {permissions.canManageVouchers ? (

@@ -138,7 +138,13 @@ export default function AdminMenuSection({
               <Input type="text" placeholder="Đường dẫn ảnh" value={menuDraft.imageUrl} onChange={(event) => setMenuDraft((prev) => ({ ...prev, imageUrl: event.target.value }))} />
               <Textarea placeholder="Ghi chú theo mùa / tồn kho" rows={2} value={menuDraft.seasonNote} onChange={(event) => setMenuDraft((prev) => ({ ...prev, seasonNote: event.target.value }))} />
               <Textarea placeholder="Mô tả" rows={3} value={menuDraft.description} onChange={(event) => setMenuDraft((prev) => ({ ...prev, description: event.target.value }))} />
-              <Button type="submit" disabled={menuSaving || menuImageUploading === "draft"}>{menuSaving ? "Đang tạo..." : menuImageUploading === "draft" ? "Đang xử lý ảnh..." : "Lưu món"}</Button>
+              <Button
+                type="submit"
+                loading={menuSaving || menuImageUploading === "draft"}
+                loadingLabel={menuImageUploading === "draft" ? "Đang xử lý ảnh..." : "Đang tạo..."}
+              >
+                Lưu món
+              </Button>
             </form>
             </AdminFormDialog>
           ) : null}
@@ -207,7 +213,7 @@ export default function AdminMenuSection({
                 <label className={styles.fullWidth}><span>Ghi chú theo mùa / tồn kho</span><Textarea rows={3} value={menuEdit.seasonNote || ""} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, seasonNote: event.target.value }))} /></label>
                 <label className={styles.fullWidth}><span>Mô tả</span><Textarea rows={5} value={menuEdit.description} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, description: event.target.value }))} /></label>
               </div>
-              {permissions.canManageMenu ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveMenuEdit} disabled={menuSaving || menuImageUploading === "edit"}>{menuSaving ? "Đang lưu..." : menuImageUploading === "edit" ? "Đang xử lý ảnh..." : "Lưu món"}</Button></div> : null}
+              {permissions.canManageMenu ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveMenuEdit} loading={menuSaving || menuImageUploading === "edit"} loadingLabel={menuImageUploading === "edit" ? "Đang xử lý ảnh..." : "Đang lưu..."}>Lưu món</Button></div> : null}
             </AdminSurfaceCard>
           ) : (
             <AdminEmptyState title="Không tìm thấy món ăn." description="Món này có thể đã bị xóa hoặc không thuộc chi nhánh đang xem." />

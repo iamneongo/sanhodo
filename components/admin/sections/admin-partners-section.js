@@ -151,7 +151,7 @@ export default function AdminPartnersSection({
               </div>
               <Input type="datetime-local" placeholder="Kết thúc hợp tác" value={partnerDraft.contractEndAt} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, contractEndAt: event.target.value }))} />
               <Textarea placeholder="Ghi chú" rows={3} value={partnerDraft.notes} onChange={(event) => setPartnerDraft((prev) => ({ ...prev, notes: event.target.value }))} />
-              <Button type="submit" disabled={partnerSaving}>{partnerSaving ? "Đang tạo..." : "Lưu đối tác"}</Button>
+              <Button type="submit" loading={partnerSaving} loadingLabel="Đang tạo...">Lưu đối tác</Button>
             </form>
             </AdminFormDialog>
           ) : null}
@@ -211,7 +211,7 @@ export default function AdminPartnersSection({
                 <label><span>Kết thúc hợp tác</span><Input type="datetime-local" value={partnerEdit.contractEndAt ? String(partnerEdit.contractEndAt).slice(0, 16) : ""} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, contractEndAt: event.target.value }))} /></label>
                 <label className={styles.fullWidth}><span>Ghi chú</span><Textarea rows={4} value={partnerEdit.notes} disabled={!permissions.canManagePartners} onChange={(event) => setPartnerEdit((prev) => ({ ...prev, notes: event.target.value }))} /></label>
               </div>
-              {permissions.canManagePartners ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={savePartnerEdit} disabled={partnerSaving}>{partnerSaving ? "Đang lưu..." : "Lưu đối tác"}</Button></div> : null}
+              {permissions.canManagePartners ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={savePartnerEdit} loading={partnerSaving} loadingLabel="Đang lưu...">Lưu đối tác</Button></div> : null}
 
               <AdminSurfaceCard kicker="Hợp đồng" title="Chính sách áp dụng" actions={permissions.canManagePartnerContracts ? <Button type="button" variant="secondary" onClick={() => setPartnerContractCreateOpen(true)}>Thêm hợp đồng</Button> : null} className={styles.subsectionCard}>
                 {permissions.canManagePartnerContracts ? (
@@ -234,7 +234,7 @@ export default function AdminPartnersSection({
                     </div>
                     <Input type="datetime-local" value={partnerContractDraft.endsAt} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, endsAt: event.target.value }))} />
                     <Textarea placeholder="Điều khoản thanh toán / ghi chú" rows={3} value={partnerContractDraft.paymentTerms} onChange={(event) => setPartnerContractDraft((prev) => ({ ...prev, paymentTerms: event.target.value }))} />
-                    <Button type="submit" disabled={partnerSaving}>{partnerSaving ? "Đang tạo..." : "Lưu hợp đồng"}</Button>
+                    <Button type="submit" loading={partnerSaving} loadingLabel="Đang tạo...">Lưu hợp đồng</Button>
                   </form>
                   </AdminFormDialog>
                 ) : null}
@@ -280,7 +280,7 @@ export default function AdminPartnersSection({
                     </div>
                     <Input type="url" placeholder="Link manifest / danh sách khách" value={partnerBookingDraft.guestManifestUrl} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, guestManifestUrl: event.target.value }))} />
                     <Textarea placeholder="Ghi chú" rows={3} value={partnerBookingDraft.notes} onChange={(event) => setPartnerBookingDraft((prev) => ({ ...prev, notes: event.target.value }))} />
-                    <Button type="submit" disabled={partnerSaving}>{partnerSaving ? "Đang tạo..." : "Lưu booking đoàn"}</Button>
+                    <Button type="submit" loading={partnerSaving} loadingLabel="Đang tạo...">Lưu booking đoàn</Button>
                   </form>
                   </AdminFormDialog>
                 ) : null}
