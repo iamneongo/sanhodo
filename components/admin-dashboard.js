@@ -429,6 +429,17 @@ function createEmptyCampaignDraft() {
   };
 }
 
+function createEmptyVoucherDraft() {
+  return {
+    fullName: "",
+    phone: "",
+    campaignId: "",
+    source: "admin",
+    status: "new",
+    notes: ""
+  };
+}
+
 function createEmptyDriverDraft() {
   return {
     code: "",
@@ -725,6 +736,7 @@ export default function AdminDashboard({
   const [orderCreateOpen, setOrderCreateOpen] = useState(false);
   const [menuCreateOpen, setMenuCreateOpen] = useState(false);
   const [tableCreateOpen, setTableCreateOpen] = useState(false);
+  const [voucherCreateOpen, setVoucherCreateOpen] = useState(false);
   const [campaignCreateOpen, setCampaignCreateOpen] = useState(false);
   const [driverCreateOpen, setDriverCreateOpen] = useState(false);
   const [partnerCreateOpen, setPartnerCreateOpen] = useState(false);
@@ -771,6 +783,7 @@ export default function AdminDashboard({
   const [menuEdit, setMenuEdit] = useState(createEmptyMenuDraft());
   const [tableDraft, setTableDraft] = useState(createEmptyTableDraft());
   const [tableEdit, setTableEdit] = useState(createEmptyTableDraft());
+  const [voucherDraft, setVoucherDraft] = useState(createEmptyVoucherDraft());
   const [campaignDraft, setCampaignDraft] = useState(createEmptyCampaignDraft());
   const [driverDraft, setDriverDraft] = useState(createEmptyDriverDraft());
   const [driverEdit, setDriverEdit] = useState(createEmptyDriverDraft());
@@ -841,6 +854,19 @@ export default function AdminDashboard({
   const buildAdminHref = (section, itemId = "") =>
     `/admin/${section}${itemId ? `/${itemId}` : ""}${branchQueryString}`;
   const openSectionDetail = (section, itemId) => router.push(buildAdminHref(section, itemId));
+  const openSection = (section) => router.push(buildAdminHref(section));
+  const openNotificationItem = (item) => {
+    if (!item?.section) {
+      return;
+    }
+
+    if (item.targetId) {
+      openSectionDetail(item.section, item.targetId);
+      return;
+    }
+
+    openSection(item.section);
+  };
   const backToSection = (section = currentSection) => router.push(buildAdminHref(section));
   const detailOnlyLayout = detailMode && currentSection !== "overview";
   const detailHeaderActions = (section, extra = null) => (
@@ -1414,6 +1440,28 @@ export default function AdminDashboard({
       });
       setVouchers((prev) => sortByCreatedDesc(prev.map((item) => (item.id === id ? data.data : item))));
       setMessage("Đã cập nhật voucher.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setVoucherSaving(false);
+    }
+  };
+
+  const createVoucherEntry = async (event) => {
+    event.preventDefault();
+    setVoucherSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(withBranchQuery("/api/admin/vouchers", branchFilterId), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(attachBranchToPayload(voucherDraft))
+      });
+      setVouchers((prev) => sortByCreatedDesc([data.data, ...prev]));
+      setSelectedVoucherId(data.data.id);
+      setVoucherDraft(createEmptyVoucherDraft());
+      setVoucherCreateOpen(false);
+      setMessage("Đã tạo voucher mới.");
     } catch (error) {
       setMessage(error.message);
     } finally {
@@ -2093,6 +2141,8 @@ export default function AdminDashboard({
       .map((item) => ({
         id: `reservation-${item.id}`,
         type: "reservation",
+        section: "reservations",
+        targetId: item.id,
         title: `${item.name} vừa tạo lead đặt bàn`,
         subtitle: `${item.guests} khách • ${formatDate(item.datetime)}`,
         createdAt: item.createdAt,
@@ -2103,6 +2153,8 @@ export default function AdminDashboard({
       .map((item) => ({
         id: `order-${item.id}`,
         type: "order",
+        section: "orders",
+        targetId: item.id,
         title: `${item.customerName} vừa gửi đơn hàng`,
         subtitle: `${item.items.length} món • ${formatCurrency(item.totalAmount)}`,
         createdAt: item.createdAt,
@@ -2113,6 +2165,8 @@ export default function AdminDashboard({
       .map((item) => ({
         id: `voucher-${item.id}`,
         type: "voucher",
+        section: "vouchers",
+        targetId: item.id,
         title: `${item.phone} vừa nhận voucher`,
         subtitle: item.voucherCode || "Yêu cầu voucher mới",
         createdAt: item.createdAt,
@@ -2123,6 +2177,8 @@ export default function AdminDashboard({
       .map((item) => ({
         id: `partner-booking-${item.id}`,
         type: "partner-booking",
+        section: "partners",
+        targetId: item.partnerId || "",
         title: `${findPartnerName(item.partnerId)} vừa gửi booking đoàn`,
         subtitle: `${item.customerName} • ${item.groupSize} khách • ${formatDate(item.bookingAt)}`,
         createdAt: item.createdAt,
@@ -2230,6 +2286,7 @@ export default function AdminDashboard({
             menuStats={menuStats}
             tableStats={tableStats}
             notificationFeed={notificationFeed}
+            openNotificationItem={openNotificationItem}
             topSellingItems={topSellingItems}
             formatDate={formatDate}
             formatCurrency={formatCurrency}
@@ -2496,6 +2553,11 @@ export default function AdminDashboard({
             openSectionDetail={openSectionDetail}
             formatDate={formatDate}
             formatLabel={formatLabel}
+            voucherCreateOpen={voucherCreateOpen}
+            setVoucherCreateOpen={setVoucherCreateOpen}
+            createVoucherEntry={createVoucherEntry}
+            voucherDraft={voucherDraft}
+            setVoucherDraft={setVoucherDraft}
             campaignCreateOpen={campaignCreateOpen}
             setCampaignCreateOpen={setCampaignCreateOpen}
             createVoucherCampaignEntry={createVoucherCampaignEntry}

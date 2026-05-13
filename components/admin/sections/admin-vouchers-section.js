@@ -34,6 +34,11 @@ export default function AdminVouchersSection({
   openSectionDetail,
   formatDate,
   formatLabel,
+  voucherCreateOpen,
+  setVoucherCreateOpen,
+  createVoucherEntry,
+  voucherDraft,
+  setVoucherDraft,
   campaignCreateOpen,
   setCampaignCreateOpen,
   createVoucherCampaignEntry,
@@ -83,6 +88,18 @@ export default function AdminVouchersSection({
       {!detailOnlyLayout ? (
         <AdminListShell>
           <AdminPageToolbar
+            actions={
+              permissions.canManageVouchers ? (
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" variant="outline" onClick={() => setVoucherCreateOpen(true)}>
+                    Tạo voucher
+                  </Button>
+                  <Button type="button" variant="secondary" onClick={() => setCampaignCreateOpen(true)}>
+                    Tạo chiến dịch
+                  </Button>
+                </div>
+              ) : null
+            }
             footer={
               <AdminActiveFilters
                 items={activeFilterItems}
@@ -126,6 +143,156 @@ export default function AdminVouchersSection({
             </Select>
           </AdminPageToolbar>
 
+          {permissions.canManageVouchers ? (
+            <>
+              <AdminFormDialog
+                open={voucherCreateOpen}
+                onOpenChange={setVoucherCreateOpen}
+                title="Tạo voucher thủ công"
+                description="Tạo nhanh một voucher lead mới từ admin để test hoặc chăm sóc khách hàng."
+                size="medium"
+              >
+                <form className={styles.inlineForm} onSubmit={createVoucherEntry}>
+                  <Input
+                    type="text"
+                    placeholder="Tên khách (không bắt buộc)"
+                    value={voucherDraft.fullName}
+                    onChange={(event) => setVoucherDraft((prev) => ({ ...prev, fullName: event.target.value }))}
+                  />
+                  <Input
+                    type="tel"
+                    placeholder="Số điện thoại"
+                    value={voucherDraft.phone}
+                    onChange={(event) => setVoucherDraft((prev) => ({ ...prev, phone: event.target.value }))}
+                    required
+                  />
+                  <Select
+                    value={voucherDraft.campaignId || "auto"}
+                    onValueChange={(value) =>
+                      setVoucherDraft((prev) => ({ ...prev, campaignId: value === "auto" ? "" : value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn chiến dịch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="auto">Tự chọn chiến dịch phù hợp</SelectItem>
+                      {voucherCampaigns.map((campaign) => (
+                        <SelectItem key={campaign.id} value={campaign.id}>
+                          {campaign.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className={styles.inlineRow}>
+                    <Select
+                      value={voucherDraft.status}
+                      onValueChange={(value) => setVoucherDraft((prev) => ({ ...prev, status: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Trạng thái" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {voucherStatuses
+                          .filter((item) => item.value !== "all")
+                          .map((item) => (
+                            <SelectItem key={item.value} value={item.value}>
+                              {item.label}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      type="text"
+                      placeholder="Nguồn"
+                      value={voucherDraft.source}
+                      onChange={(event) => setVoucherDraft((prev) => ({ ...prev, source: event.target.value }))}
+                    />
+                  </div>
+                  <Textarea
+                    rows={3}
+                    placeholder="Ghi chú"
+                    value={voucherDraft.notes}
+                    onChange={(event) => setVoucherDraft((prev) => ({ ...prev, notes: event.target.value }))}
+                  />
+                  <Button type="submit" disabled={voucherSaving}>
+                    {voucherSaving ? "Đang tạo..." : "Lưu voucher"}
+                  </Button>
+                </form>
+              </AdminFormDialog>
+
+              <AdminFormDialog
+                open={campaignCreateOpen}
+                onOpenChange={setCampaignCreateOpen}
+                title="Tạo chiến dịch voucher"
+                description="Thiết lập ưu đãi mới cho landing page và loyalty flow."
+                size="medium"
+              >
+                <form className={styles.inlineForm} onSubmit={createVoucherCampaignEntry}>
+                  <Input
+                    type="text"
+                    placeholder="Tiêu đề chiến dịch"
+                    value={campaignDraft.title}
+                    onChange={(event) =>
+                      setCampaignDraft((prev) => ({
+                        ...prev,
+                        title: event.target.value,
+                        name: prev.name || event.target.value
+                      }))
+                    }
+                    required
+                  />
+                  <Input
+                    type="text"
+                    placeholder="Mã chiến dịch"
+                    value={campaignDraft.code}
+                    onChange={(event) => setCampaignDraft((prev) => ({ ...prev, code: event.target.value }))}
+                  />
+                  <div className={styles.inlineRow}>
+                    <Select
+                      value={campaignDraft.discountType}
+                      onValueChange={(value) =>
+                        setCampaignDraft((prev) => ({
+                          ...prev,
+                          discountType: value
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Kiểu ưu đãi" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="percent">Phần trăm</SelectItem>
+                        <SelectItem value="amount">Số tiền</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="Giá trị ưu đãi"
+                      value={campaignDraft.discountValue}
+                      onChange={(event) =>
+                        setCampaignDraft((prev) => ({
+                          ...prev,
+                          discountValue: Number(event.target.value)
+                        }))
+                      }
+                    />
+                  </div>
+                  <Textarea
+                    rows={3}
+                    placeholder="Mô tả chiến dịch"
+                    value={campaignDraft.description}
+                    onChange={(event) => setCampaignDraft((prev) => ({ ...prev, description: event.target.value }))}
+                  />
+                  <Button type="submit" disabled={voucherSaving}>
+                    {voucherSaving ? "Đang tạo..." : "Lưu chiến dịch"}
+                  </Button>
+                </form>
+              </AdminFormDialog>
+            </>
+          ) : null}
+
           <div className={styles.statsStrip}>
             <AdminStatCard
               label="Chiến dịch đang chạy"
@@ -141,6 +308,120 @@ export default function AdminVouchersSection({
             />
           </div>
 
+          <AdminSurfaceCard
+            kicker="Chiến dịch voucher"
+            title="Quản lý chiến dịch và loyalty"
+            description="Tạo, chỉnh sửa và tắt/mở các ưu đãi đang dùng ở landing page."
+            className={styles.subsectionCard}
+          >
+            <div className={styles.campaignRail}>
+              {voucherCampaigns.map((campaign) => (
+                <Button
+                  key={campaign.id}
+                  type="button"
+                  variant="ghost"
+                  className={`${styles.campaignTile} ${
+                    campaign.id === selectedVoucherCampaignId ? styles.campaignTileActive : ""
+                  }`}
+                  onClick={() => setSelectedVoucherCampaignId(campaign.id)}
+                >
+                  <strong>{campaign.title}</strong>
+                  <span>{formatVoucherBenefit(campaign)}</span>
+                  <small>{campaign.isActive ? "Đang chạy" : "Đã tắt"} • {campaign.validDays} ngày</small>
+                </Button>
+              ))}
+            </div>
+
+            {selectedVoucherCampaign ? (
+              <div className={styles.editGrid}>
+                <label>
+                  <span>Tiêu đề</span>
+                  <Input
+                    type="text"
+                    defaultValue={selectedVoucherCampaign.title}
+                    disabled={!permissions.canManageVouchers}
+                    onBlur={(event) =>
+                      patchVoucherCampaign(selectedVoucherCampaign.id, {
+                        ...selectedVoucherCampaign,
+                        title: event.target.value
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  <span>Mã chiến dịch</span>
+                  <Input
+                    type="text"
+                    defaultValue={selectedVoucherCampaign.code}
+                    disabled={!permissions.canManageVouchers}
+                    onBlur={(event) =>
+                      patchVoucherCampaign(selectedVoucherCampaign.id, {
+                        ...selectedVoucherCampaign,
+                        code: event.target.value
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  <span>Giá trị ưu đãi</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    defaultValue={selectedVoucherCampaign.discountValue}
+                    disabled={!permissions.canManageVouchers}
+                    onBlur={(event) =>
+                      patchVoucherCampaign(selectedVoucherCampaign.id, {
+                        ...selectedVoucherCampaign,
+                        discountValue: Number(event.target.value)
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  <span>Số ngày hiệu lực</span>
+                  <Input
+                    type="number"
+                    min="1"
+                    defaultValue={selectedVoucherCampaign.validDays}
+                    disabled={!permissions.canManageVouchers}
+                    onBlur={(event) =>
+                      patchVoucherCampaign(selectedVoucherCampaign.id, {
+                        ...selectedVoucherCampaign,
+                        validDays: Number(event.target.value)
+                      })
+                    }
+                  />
+                </label>
+                <label className={styles.fullWidth}>
+                  <span>Mô tả</span>
+                  <Textarea
+                    rows={3}
+                    defaultValue={selectedVoucherCampaign.description}
+                    disabled={!permissions.canManageVouchers}
+                    onBlur={(event) =>
+                      patchVoucherCampaign(selectedVoucherCampaign.id, {
+                        ...selectedVoucherCampaign,
+                        description: event.target.value
+                      })
+                    }
+                  />
+                </label>
+                {permissions.canManageVouchers ? (
+                  <div className={styles.detailActions}>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      className={styles.deleteButton}
+                      onClick={() => deleteVoucherCampaignEntry(selectedVoucherCampaign.id)}
+                    >
+                      Xóa chiến dịch
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+          </AdminSurfaceCard>
+
           <div className="w-full min-w-0">
             <Table>
               <TableHeader>
@@ -150,6 +431,7 @@ export default function AdminVouchersSection({
                   <TableHead>Chiến dịch</TableHead>
                   <TableHead>Trạng thái</TableHead>
                   <TableHead>Tạo lúc</TableHead>
+                  <TableHead className="text-right">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -172,6 +454,44 @@ export default function AdminVouchersSection({
                       </span>
                     </TableCell>
                     <TableCell data-label="Tạo lúc">{formatDate(item.createdAt)}</TableCell>
+                    <TableCell data-label="Thao tác" className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            openSectionDetail("vouchers", item.id);
+                          }}
+                        >
+                          Xem
+                        </Button>
+                        {permissions.canManageVouchers ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              redeemVoucher(item);
+                            }}
+                          >
+                            Đổi
+                          </Button>
+                        ) : null}
+                        {permissions.canManageVouchers ? (
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              deleteVoucherEntry(item.id);
+                            }}
+                          >
+                            Xóa
+                          </Button>
+                        ) : null}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

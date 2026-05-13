@@ -15,6 +15,7 @@ export default function AdminOverviewSection({
   menuStats,
   tableStats,
   notificationFeed,
+  openNotificationItem,
   topSellingItems,
   formatDate,
   formatCurrency,
@@ -42,7 +43,12 @@ export default function AdminOverviewSection({
           {notificationFeed.length ? (
             <div className="divide-y divide-zinc-100">
               {notificationFeed.map((item) => (
-                <article key={item.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => openNotificationItem?.(item)}
+                  className="flex w-full cursor-pointer flex-col gap-3 px-5 py-4 text-left transition-colors hover:bg-zinc-50 sm:flex-row sm:items-start sm:justify-between"
+                >
                   <div className="min-w-0">
                     <strong className="block text-sm font-semibold text-zinc-900">{item.title}</strong>
                     <p className="mt-1 text-sm text-zinc-500">{item.subtitle}</p>
@@ -51,7 +57,7 @@ export default function AdminOverviewSection({
                     <span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{formatLabel(item.status)}</span>
                     <span>{formatDate(item.createdAt)}</span>
                   </div>
-                </article>
+                </button>
               ))}
             </div>
           ) : (
