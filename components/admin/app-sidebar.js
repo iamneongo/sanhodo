@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   LogOut,
   Ticket,
+  Users2,
   UtensilsCrossed
 } from "lucide-react";
 import { ADMIN_SECTIONS } from "@/lib/admin-sections";
@@ -35,6 +36,7 @@ import {
 const TAB_ICONS = {
   overview: LayoutDashboard,
   branches: Building2,
+  staff: Users2,
   reservations: ClipboardList,
   orders: UtensilsCrossed,
   tables: BookOpenText,

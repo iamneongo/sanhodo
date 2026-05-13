@@ -11,6 +11,7 @@ import AdminOrdersSection from "./admin/sections/admin-orders-section";
 import AdminPartnersSection from "./admin/sections/admin-partners-section";
 import AdminReservationsSection from "./admin/sections/admin-reservations-section";
 import AdminDriversSection from "./admin/sections/admin-drivers-section";
+import AdminStaffSection from "./admin/sections/admin-staff-section";
 import AdminTablesSection from "./admin/sections/admin-tables-section";
 import AdminVouchersSection from "./admin/sections/admin-vouchers-section";
 import AppSidebar from "./admin/app-sidebar";
@@ -148,6 +149,12 @@ const partnerSortOptions = [
   { value: "commission_desc", label: "Hoa hồng cao nhất" }
 ];
 
+const staffSortOptions = [
+  { value: "name_asc", label: "Tên A-Z" },
+  { value: "role_asc", label: "Vai trò" },
+  { value: "updated_desc", label: "Cập nhật gần nhất" }
+];
+
 const branchSortOptions = [
   { value: "sort_asc", label: "Thứ tự hiển thị" },
   { value: "name_asc", label: "Tên A-Z" },
@@ -223,6 +230,7 @@ function getDetailTitle({
   if (!detailOnlyLayout) return "";
 
   if (currentSection === "branches") return selectedManagedBranch?.name || "Chi tiết";
+  if (currentSection === "staff") return selectedStaff?.fullName || selectedStaff?.email || "Chi tiết";
   if (currentSection === "reservations") return selectedReservation?.name || "Chi tiết";
   if (currentSection === "orders") return selectedOrder?.customerName || "Chi tiết";
   if (currentSection === "tables") return selectedTable?.name || "Chi tiết";
@@ -325,6 +333,15 @@ function createEmptyBranchDraft() {
     phone: "",
     isActive: true,
     sortOrder: 0
+  };
+}
+
+function createEmptyBranchStaffDraft(branchId = "") {
+  return {
+    branchId,
+    profileId: "",
+    role: "staff",
+    isPrimary: false
   };
 }
 
@@ -496,6 +513,8 @@ export default function AdminDashboard({
   detailMode = false,
   detailId = "",
   initialBranches,
+  initialProfiles,
+  initialBranchStaffAssignments,
   initialReservations,
   initialVouchers,
   initialVoucherCampaigns,
@@ -521,6 +540,10 @@ export default function AdminDashboard({
   const branchFilterId = activeBranchId && activeBranchId !== "all" ? activeBranchId : "";
   const [message, setMessage] = useState("");
   const [branches, setBranches] = useState(sortBranches(initialBranches || []));
+  const [profiles, setProfiles] = useState(sortByName(initialProfiles || [], "fullName"));
+  const [branchStaffAssignments, setBranchStaffAssignments] = useState(
+    sortByCreatedDesc(initialBranchStaffAssignments || [])
+  );
 
   const [reservations, setReservations] = useState(sortByCreatedDesc(initialReservations));
   const [vouchers, setVouchers] = useState(sortByCreatedDesc(initialVouchers));
@@ -574,12 +597,18 @@ export default function AdminDashboard({
   const [partnerQuery, setPartnerQuery] = useState("");
   const [partnerStatusFilter, setPartnerStatusFilter] = useState("all");
   const [partnerSort, setPartnerSort] = useState("name_asc");
+  const [staffQuery, setStaffQuery] = useState("");
+  const [staffRoleFilter, setStaffRoleFilter] = useState("all");
+  const [staffSort, setStaffSort] = useState("name_asc");
   const [branchQuery, setBranchQuery] = useState("");
   const [branchStatusFilter, setBranchStatusFilter] = useState("all");
   const [branchSort, setBranchSort] = useState("sort_asc");
 
   const [selectedManagedBranchId, setSelectedManagedBranchId] = useState(
     activeSection === "branches" && detailId ? detailId : initialBranches?.[0]?.id || ""
+  );
+  const [selectedStaffId, setSelectedStaffId] = useState(
+    activeSection === "staff" && detailId ? detailId : initialProfiles?.[0]?.id || ""
   );
   const [selectedReservationId, setSelectedReservationId] = useState(
     activeSection === "reservations" && detailId ? detailId : initialReservations[0]?.id || ""
@@ -624,8 +653,10 @@ export default function AdminDashboard({
   const [partnerCreateOpen, setPartnerCreateOpen] = useState(false);
   const [partnerContractCreateOpen, setPartnerContractCreateOpen] = useState(false);
   const [partnerBookingCreateOpen, setPartnerBookingCreateOpen] = useState(false);
+  const [branchStaffCreateOpen, setBranchStaffCreateOpen] = useState(false);
 
   const [branchSaving, setBranchSaving] = useState(false);
+  const [branchStaffSaving, setBranchStaffSaving] = useState(false);
   const [reservationSaving, setReservationSaving] = useState(false);
   const [voucherSaving, setVoucherSaving] = useState(false);
   const [orderSaving, setOrderSaving] = useState(false);
@@ -648,6 +679,13 @@ export default function AdminDashboard({
   });
   const [branchDraft, setBranchDraft] = useState(createEmptyBranchDraft());
   const [branchEdit, setBranchEdit] = useState(createEmptyBranchDraft());
+  const [branchStaffDraft, setBranchStaffDraft] = useState(createEmptyBranchStaffDraft(activeBranchId || ""));
+  const [staffEdit, setStaffEdit] = useState({
+    fullName: "",
+    email: "",
+    role: "staff",
+    branchId: ""
+  });
   const [orderDraft, setOrderDraft] = useState(createEmptyOrderDraft());
   const [orderEdit, setOrderEdit] = useState(createEmptyOrderDraft());
   const [menuDraft, setMenuDraft] = useState(createEmptyMenuDraft());
@@ -669,6 +707,14 @@ export default function AdminDashboard({
   const selectedVoucherCampaign =
     voucherCampaigns.find((item) => item.id === selectedVoucherCampaignId) || null;
   const selectedManagedBranch = branches.find((item) => item.id === selectedManagedBranchId) || null;
+  const selectedStaff = profiles.find((item) => item.id === selectedStaffId) || null;
+  const selectedBranchAssignments = branchStaffAssignments.filter(
+    (item) => item.branchId === selectedManagedBranchId
+  );
+  const selectedStaffAssignments = branchStaffAssignments.filter((item) => item.profileId === selectedStaffId);
+  const availableProfilesForBranch = profiles.filter(
+    (item) => !selectedBranchAssignments.some((assignment) => assignment.profileId === item.id)
+  );
   const selectedVoucherCustomer =
     customerProfiles.find(
       (item) =>
@@ -686,6 +732,8 @@ export default function AdminDashboard({
       canExport: hasAdminPermission(currentRole, "dashboard.export"),
       canViewBranches: hasAdminPermission(currentRole, "branches.view"),
       canManageBranches: hasAdminPermission(currentRole, "branches.manage"),
+      canViewStaff: hasAdminPermission(currentRole, "staff.view"),
+      canManageStaff: hasAdminPermission(currentRole, "staff.manage"),
       canManageReservations: hasAdminPermission(currentRole, "reservations.manage"),
       canManageOrders: hasAdminPermission(currentRole, "orders.manage"),
       canManageTables: hasAdminPermission(currentRole, "tables.manage"),
@@ -731,6 +779,7 @@ export default function AdminDashboard({
     if (!detailMode || !detailId) return;
 
     if (currentSection === "branches") setSelectedManagedBranchId(detailId);
+    if (currentSection === "staff") setSelectedStaffId(detailId);
     if (currentSection === "reservations") setSelectedReservationId(detailId);
     if (currentSection === "orders") setSelectedOrderId(detailId);
     if (currentSection === "tables") setSelectedTableId(detailId);
@@ -744,6 +793,31 @@ export default function AdminDashboard({
   useEffect(() => {
     setBranchEdit(selectedManagedBranch ? { ...selectedManagedBranch } : createEmptyBranchDraft());
   }, [selectedManagedBranchId, selectedManagedBranch]);
+
+  useEffect(() => {
+    setStaffEdit(
+      selectedStaff
+        ? {
+            fullName: selectedStaff.fullName || "",
+            email: selectedStaff.email || "",
+            role: selectedStaff.role || "staff",
+            branchId: selectedStaff.branchId || ""
+          }
+        : {
+            fullName: "",
+            email: "",
+            role: "staff",
+            branchId: ""
+          }
+    );
+  }, [selectedStaffId, selectedStaff]);
+
+  useEffect(() => {
+    setBranchStaffDraft((prev) => ({
+      ...prev,
+      branchId: selectedManagedBranchId || prev.branchId || ""
+    }));
+  }, [selectedManagedBranchId]);
 
   useEffect(() => {
     setOrderEdit(cloneOrder(selectedOrder));
@@ -778,6 +852,12 @@ export default function AdminDashboard({
       setSelectedManagedBranchId(branches[0].id);
     }
   }, [selectedManagedBranchId, branches]);
+
+  useEffect(() => {
+    if (!selectedStaffId && profiles.length) {
+      setSelectedStaffId(profiles[0].id);
+    }
+  }, [selectedStaffId, profiles]);
 
   useEffect(() => {
     if (!selectedVoucherCampaignId && voucherCampaigns.length) {
@@ -820,6 +900,30 @@ export default function AdminDashboard({
         }
       ),
     [branches, branchQuery, branchStatusFilter, branchSort]
+  );
+
+  const filteredProfiles = useMemo(
+    () =>
+      sortItems(
+        profiles.filter((item) => {
+          const roleMatch = staffRoleFilter === "all" || item.role === staffRoleFilter;
+          const branchMatch =
+            !branchFilterId ||
+            item.branchId === branchFilterId ||
+            branchStaffAssignments.some(
+              (assignment) => assignment.profileId === item.id && assignment.branchId === branchFilterId
+            );
+          return roleMatch && branchMatch && matchesSearch(item, staffQuery, ["fullName", "email", "role"]);
+        }),
+        staffSort,
+        {
+          default: (a, b) => String(a.fullName || a.email || "").localeCompare(String(b.fullName || b.email || ""), "vi"),
+          name_asc: (a, b) => String(a.fullName || a.email || "").localeCompare(String(b.fullName || b.email || ""), "vi"),
+          role_asc: (a, b) => formatLabel(a.role).localeCompare(formatLabel(b.role), "vi"),
+          updated_desc: (a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)
+        }
+      ),
+    [profiles, staffQuery, staffRoleFilter, staffSort, branchFilterId, branchStaffAssignments]
   );
 
   const filteredReservations = useMemo(
@@ -1031,6 +1135,141 @@ export default function AdminDashboard({
       setMessage(error.message);
     } finally {
       setBranchSaving(false);
+    }
+  };
+
+  const deleteBranchEntry = async (id) => {
+    if (!window.confirm("Xóa chi nhánh này? Thao tác chỉ thành công khi chi nhánh không còn dữ liệu liên quan.")) {
+      return;
+    }
+
+    setBranchSaving(true);
+    setMessage("");
+    try {
+      await requestJson(`/api/admin/branches/${id}`, {
+        method: "DELETE"
+      });
+      const next = branches.filter((item) => item.id !== id);
+      setBranches(sortBranches(next));
+      setSelectedManagedBranchId(next[0]?.id || "");
+      setMessage("Đã xóa chi nhánh.");
+      backToSection("branches");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setBranchSaving(false);
+    }
+  };
+
+  const createBranchStaffAssignment = async (event) => {
+    event.preventDefault();
+    setBranchStaffSaving(true);
+    setMessage("");
+    try {
+      const payload = {
+        ...branchStaffDraft,
+        branchId: selectedManagedBranchId || branchStaffDraft.branchId || ""
+      };
+      const data = await requestJson("/api/admin/branch-staff", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      setBranchStaffAssignments((prev) => {
+        const next = prev.filter(
+          (item) =>
+            !(item.branchId === data.data.assignment.branchId && item.profileId === data.data.assignment.profileId)
+        );
+        return sortByCreatedDesc([data.data.assignment, ...next]);
+      });
+      if (data.data.profile) {
+        setProfiles((prev) =>
+          sortByName(
+            prev.some((item) => item.id === data.data.profile.id)
+              ? prev.map((item) => (item.id === data.data.profile.id ? data.data.profile : item))
+              : [data.data.profile, ...prev],
+            "fullName"
+          )
+        );
+      }
+      setBranchStaffDraft(createEmptyBranchStaffDraft(selectedManagedBranchId || ""));
+      setBranchStaffCreateOpen(false);
+      setMessage("Đã gán nhân sự vào chi nhánh.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setBranchStaffSaving(false);
+    }
+  };
+
+  const updateBranchStaffAssignment = async (assignmentId, payload) => {
+    setBranchStaffSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(`/api/admin/branch-staff/${assignmentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      setBranchStaffAssignments((prev) =>
+        sortByCreatedDesc(prev.map((item) => (item.id === assignmentId ? data.data.assignment : item)))
+      );
+      if (data.data.profile) {
+        setProfiles((prev) =>
+          sortByName(prev.map((item) => (item.id === data.data.profile.id ? data.data.profile : item)), "fullName")
+        );
+      }
+      setMessage("Đã cập nhật nhân sự chi nhánh.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setBranchStaffSaving(false);
+    }
+  };
+
+  const deleteBranchStaffAssignment = async (assignmentId) => {
+    if (!window.confirm("Gỡ nhân sự này khỏi chi nhánh?")) {
+      return;
+    }
+
+    setBranchStaffSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(`/api/admin/branch-staff/${assignmentId}`, {
+        method: "DELETE"
+      });
+      setBranchStaffAssignments((prev) => prev.filter((item) => item.id !== data.data.assignmentId));
+      if (data.data.profile) {
+        setProfiles((prev) =>
+          sortByName(prev.map((item) => (item.id === data.data.profile.id ? data.data.profile : item)), "fullName")
+        );
+      }
+      setMessage("Đã gỡ nhân sự khỏi chi nhánh.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setBranchStaffSaving(false);
+    }
+  };
+
+  const saveStaffEdit = async () => {
+    if (!selectedStaff) return;
+    setBranchStaffSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(`/api/admin/profiles/${selectedStaff.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(staffEdit)
+      });
+      setProfiles((prev) =>
+        sortByName(prev.map((item) => (item.id === selectedStaff.id ? data.data : item)), "fullName")
+      );
+      setMessage("Đã cập nhật tài khoản nhân sự.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setBranchStaffSaving(false);
     }
   };
 
@@ -1635,6 +1874,28 @@ export default function AdminDashboard({
     total: restaurantTables.length,
     available: restaurantTables.filter((item) => item.status === "available").length
   };
+  const selectedBranchMetrics = selectedManagedBranch
+    ? {
+        staff: selectedBranchAssignments.length,
+        tables: restaurantTables.filter((item) => item.branchId === selectedManagedBranch.id).length,
+        menuItems: menuItems.filter((item) => item.branchId === selectedManagedBranch.id).length,
+        reservations: reservations.filter((item) => item.branchId === selectedManagedBranch.id).length,
+        orders: orders.filter((item) => item.branchId === selectedManagedBranch.id).length,
+        vouchers: vouchers.filter((item) => item.branchId === selectedManagedBranch.id).length
+      }
+    : {
+        staff: 0,
+        tables: 0,
+        menuItems: 0,
+        reservations: 0,
+        orders: 0,
+        vouchers: 0
+      };
+  const branchStats = {
+    total: branches.length,
+    active: branches.filter((item) => item.isActive).length,
+    inactive: branches.filter((item) => !item.isActive).length
+  };
   const voucherStats = {
     total: vouchers.length,
     activeCodes: vouchers.filter((item) => item.voucherCode).length,
@@ -1732,6 +1993,7 @@ export default function AdminDashboard({
     currentSection,
     detailOnlyLayout,
     selectedManagedBranch,
+    selectedStaff,
     selectedReservation,
     selectedOrder,
     selectedTable,
@@ -1813,8 +2075,12 @@ export default function AdminDashboard({
           <AdminBranchesSection
             detailOnlyLayout={detailOnlyLayout}
             permissions={permissions}
+            branchStats={branchStats}
+            branchDetailStats={selectedBranchMetrics}
             branchCreateOpen={branchCreateOpen}
             setBranchCreateOpen={setBranchCreateOpen}
+            branchStaffCreateOpen={branchStaffCreateOpen}
+            setBranchStaffCreateOpen={setBranchStaffCreateOpen}
             branchQuery={branchQuery}
             setBranchQuery={setBranchQuery}
             branchStatusFilter={branchStatusFilter}
@@ -1833,6 +2099,53 @@ export default function AdminDashboard({
             branchEdit={branchEdit}
             setBranchEdit={setBranchEdit}
             saveBranchEdit={saveBranchEdit}
+            deleteBranchEntry={deleteBranchEntry}
+            branchAssignments={selectedBranchAssignments}
+            profiles={profiles}
+            availableProfilesForBranch={availableProfilesForBranch}
+            branchStaffDraft={branchStaffDraft}
+            setBranchStaffDraft={setBranchStaffDraft}
+            branchStaffSaving={branchStaffSaving}
+            createBranchStaffAssignment={createBranchStaffAssignment}
+            updateBranchStaffAssignment={updateBranchStaffAssignment}
+            deleteBranchStaffAssignment={deleteBranchStaffAssignment}
+            roleLabels={roleLabels}
+            formatDate={formatDate}
+            FormSelect={FormSelect}
+          />
+        ) : null}
+
+        {currentSection === "staff" && permissions.canViewStaff ? (
+          <AdminStaffSection
+            detailOnlyLayout={detailOnlyLayout}
+            permissions={permissions}
+            staffQuery={staffQuery}
+            setStaffQuery={setStaffQuery}
+            staffRoleFilter={staffRoleFilter}
+            setStaffRoleFilter={setStaffRoleFilter}
+            staffSort={staffSort}
+            setStaffSort={setStaffSort}
+            staffSortOptions={staffSortOptions}
+            staffRoleOptions={[
+              { value: "super_admin", label: roleLabels.super_admin },
+              { value: "admin", label: roleLabels.admin },
+              { value: "manager", label: roleLabels.manager },
+              { value: "branch_manager", label: roleLabels.branch_manager },
+              { value: "staff", label: roleLabels.staff },
+              { value: "driver", label: roleLabels.driver }
+            ]}
+            filteredProfiles={filteredProfiles}
+            selectedStaff={selectedStaff}
+            selectedStaffAssignments={selectedStaffAssignments}
+            branches={branches}
+            openSectionDetail={openSectionDetail}
+            detailHeaderActions={detailHeaderActions}
+            staffEdit={staffEdit}
+            setStaffEdit={setStaffEdit}
+            saveStaffEdit={saveStaffEdit}
+            profileSaving={branchStaffSaving}
+            roleLabels={roleLabels}
+            formatDate={formatDate}
             FormSelect={FormSelect}
           />
         ) : null}

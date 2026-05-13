@@ -41,6 +41,8 @@ export default async function AdminSectionDetailPage({ params, searchParams }) {
         detailMode
         detailId={itemId}
         initialBranches={dashboardData.branches}
+        initialProfiles={dashboardData.profiles}
+        initialBranchStaffAssignments={dashboardData.branchStaffAssignments}
         initialReservations={dashboardData.reservations}
         initialVouchers={dashboardData.vouchers}
         initialVoucherCampaigns={dashboardData.voucherCampaigns}
