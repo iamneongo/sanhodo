@@ -86,13 +86,13 @@ export default function AppSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg">
               <Link href={withBranchQuery("/admin/overview", branchFilterId)} onClick={closeMobileSidebar}>
-                <div className="flex size-8 items-center justify-center overflow-hidden rounded-xl bg-[#f7f1e4] ring-1 ring-[#eadfca]">
+                <div className="flex size-9 items-center justify-center overflow-hidden rounded-full bg-[#fff7ee] ring-1 ring-[#eadfca]">
                   <Image
-                    src="/assets/logo-coral.svg"
+                    src="/assets/logo-coral.png"
                     alt="San Hô Đỏ"
-                    width={22}
-                    height={22}
-                    className="size-5 object-contain"
+                    width={28}
+                    height={28}
+                    className="size-7 object-contain"
                     priority
                   />
                 </div>
