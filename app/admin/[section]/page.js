@@ -72,6 +72,7 @@ export default async function AdminSectionPage({ params, searchParams }) {
 
     return (
       <AdminDashboard
+        key={`${section}:${branchScope.activeBranchId}:list`}
         activeSection={section}
         initialBranches={dashboardData.branches}
         initialProfiles={dashboardData.profiles}
