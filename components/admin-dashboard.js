@@ -514,6 +514,66 @@ async function requestJson(url, options = {}) {
   return data;
 }
 
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Không đọc được file ảnh"));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function optimizeMenuImage(file) {
+  if (!file) {
+    return "";
+  }
+
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Chỉ hỗ trợ upload file ảnh.");
+  }
+
+  const sourceDataUrl = await readFileAsDataUrl(file);
+  const image = await new Promise((resolve, reject) => {
+    const element = new window.Image();
+    element.onload = () => resolve(element);
+    element.onerror = () => reject(new Error("Không xử lý được ảnh đã chọn."));
+    element.src = sourceDataUrl;
+  });
+
+  const maxDimension = 1440;
+  const ratio = Math.min(1, maxDimension / Math.max(image.width, image.height));
+  const targetWidth = Math.max(1, Math.round(image.width * ratio));
+  const targetHeight = Math.max(1, Math.round(image.height * ratio));
+  const canvas = document.createElement("canvas");
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    return sourceDataUrl;
+  }
+
+  context.drawImage(image, 0, 0, targetWidth, targetHeight);
+  return canvas.toDataURL("image/jpeg", 0.82);
+}
+
+async function uploadMenuImageFile(file, branchId = "") {
+  const formData = new FormData();
+  formData.append("file", file, file.name || "menu-image.jpg");
+
+  const response = await fetch(withBranchQuery("/api/admin/menu-items/upload", branchId), {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || "Không upload được ảnh món ăn");
+  }
+
+  return data.data?.url || "";
+}
+
 function withBranchQuery(url, branchId) {
   if (!branchId) {
     return url;
@@ -678,6 +738,7 @@ export default function AdminDashboard({
   const [voucherSaving, setVoucherSaving] = useState(false);
   const [orderSaving, setOrderSaving] = useState(false);
   const [menuSaving, setMenuSaving] = useState(false);
+  const [menuImageUploading, setMenuImageUploading] = useState("");
   const [tableSaving, setTableSaving] = useState(false);
   const [integrationSaving, setIntegrationSaving] = useState(false);
   const [partnerSaving, setPartnerSaving] = useState(false);
@@ -1625,6 +1686,60 @@ export default function AdminDashboard({
     }
   };
 
+  const uploadMenuImage = async (target, file) => {
+    if (!file) {
+      return;
+    }
+
+    setMenuImageUploading(target);
+    setMessage("");
+    try {
+      const dataUrl = await optimizeMenuImage(file);
+      const optimizedBlob = await fetch(dataUrl).then((response) => response.blob());
+      const optimizedFile = new File([optimizedBlob], `${Date.now()}-menu-image.jpg`, {
+        type: "image/jpeg"
+      });
+
+      let finalUrl = dataUrl;
+      let storageBacked = false;
+
+      try {
+        const uploadedUrl = await uploadMenuImageFile(optimizedFile, branchFilterId);
+        if (uploadedUrl) {
+          finalUrl = uploadedUrl;
+          storageBacked = true;
+        }
+      } catch {
+        storageBacked = false;
+      }
+
+      if (target === "draft") {
+        setMenuDraft((prev) => ({ ...prev, imageUrl: finalUrl }));
+      } else {
+        setMenuEdit((prev) => ({ ...prev, imageUrl: finalUrl }));
+      }
+
+      setMessage(
+        storageBacked
+          ? "Đã upload ảnh món ăn lên storage. Ảnh này sẽ hiển thị cả trong landing page."
+          : "Bucket ảnh chưa sẵn sàng, mình đã lưu tạm ảnh trực tiếp vào món ăn để landing page vẫn hiển thị ngay."
+      );
+    } catch (error) {
+      setMessage(error.message || "Không tải được ảnh món ăn.");
+    } finally {
+      setMenuImageUploading("");
+    }
+  };
+
+  const clearMenuImage = (target) => {
+    if (target === "draft") {
+      setMenuDraft((prev) => ({ ...prev, imageUrl: "" }));
+      return;
+    }
+
+    setMenuEdit((prev) => ({ ...prev, imageUrl: "" }));
+  };
+
   const createTableEntry = async (event) => {
     event.preventDefault();
     setTableSaving(true);
@@ -2345,6 +2460,9 @@ export default function AdminDashboard({
             menuDraft={menuDraft}
             setMenuDraft={setMenuDraft}
             menuSaving={menuSaving}
+            menuImageUploading={menuImageUploading}
+            uploadMenuImage={uploadMenuImage}
+            clearMenuImage={clearMenuImage}
             filteredMenuItems={filteredMenuItems}
             selectedMenuItem={selectedMenuItem}
             openSectionDetail={openSectionDetail}

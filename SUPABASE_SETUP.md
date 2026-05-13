@@ -14,6 +14,8 @@
   - `supabase/migrations/20260511_006_phase4_voucher_loyalty.sql`
   - `supabase/migrations/20260511_007_phase5_driver_commission.sql`
   - `supabase/migrations/20260511_008_phase6_travel_partner_portal.sql`
+  - `supabase/migrations/20260513_009_staff_account_status.sql`
+  - `supabase/migrations/20260513_010_menu_images_storage.sql`
   - sau do `supabase/migrations/20260509_002_seed_admin_demo.sql`
 
 ## 2. Tao tai khoan admin
@@ -63,6 +65,7 @@ where email = 'admin@gmail.com';
 - Travel partners / doi tac du lich, HDV, hotel, corporate
 - Partner contracts / chinh sach hop tac, chiết khau, commission
 - Partner bookings / booking doan, set menu, ngan sach, manifest link
+- Menu image upload / bucket `menu-images` de upload anh mon an truc tiep tu admin
 
 ## 6. Bien moi truong local
 File `.env.local` da duoc gan:

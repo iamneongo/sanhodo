@@ -7,7 +7,7 @@ export async function GET(request) {
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const branchId = searchParams.get("branchId") || "";
-    const items = await listMenuItems(supabase, { availableOnly: true, featuredOnly: true, branchId });
+    const items = await listMenuItems(supabase, { availableOnly: true, branchId });
     return NextResponse.json({ ok: true, data: items });
   } catch (error) {
     if (isSupabaseSchemaMissingError(error)) {

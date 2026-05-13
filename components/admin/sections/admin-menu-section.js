@@ -32,6 +32,9 @@ export default function AdminMenuSection({
   menuDraft,
   setMenuDraft,
   menuSaving,
+  menuImageUploading,
+  uploadMenuImage,
+  clearMenuImage,
   filteredMenuItems,
   selectedMenuItem,
   openSectionDetail,
@@ -112,10 +115,30 @@ export default function AdminMenuSection({
                 <FormSelect value={menuDraft.availabilityStatus} onValueChange={(value) => setMenuDraft((prev) => ({ ...prev, availabilityStatus: value }))} options={availabilityStatuses} placeholder="Trạng thái món" />
                 <FormSelect value={menuDraft.isFeatured ? "yes" : "no"} onValueChange={(value) => setMenuDraft((prev) => ({ ...prev, isFeatured: value === "yes" }))} options={[{ value: "yes", label: "Món nổi bật" }, { value: "no", label: "Món thường" }]} placeholder="Độ ưu tiên" />
               </div>
+              <label className={styles.fullWidth}>
+                <span>Upload ảnh món ăn</span>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => uploadMenuImage("draft", event.target.files?.[0])}
+                  disabled={menuSaving || menuImageUploading === "draft"}
+                />
+              </label>
+              {menuDraft.imageUrl ? (
+                <div className={styles.fullWidth}>
+                  <div className="grid gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3 sm:grid-cols-[120px_minmax(0,1fr)] sm:items-center">
+                    <img src={menuDraft.imageUrl} alt="Preview món ăn" className="h-24 w-full rounded-xl object-cover" />
+                    <div className="grid gap-2">
+                      <p className="text-sm text-zinc-600">Ảnh này sẽ được lưu trực tiếp vào món ăn và hiển thị ngay ở landing page.</p>
+                      <Button type="button" variant="outline" onClick={() => clearMenuImage("draft")}>Xóa ảnh</Button>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
               <Input type="text" placeholder="Đường dẫn ảnh" value={menuDraft.imageUrl} onChange={(event) => setMenuDraft((prev) => ({ ...prev, imageUrl: event.target.value }))} />
               <Textarea placeholder="Ghi chú theo mùa / tồn kho" rows={2} value={menuDraft.seasonNote} onChange={(event) => setMenuDraft((prev) => ({ ...prev, seasonNote: event.target.value }))} />
               <Textarea placeholder="Mô tả" rows={3} value={menuDraft.description} onChange={(event) => setMenuDraft((prev) => ({ ...prev, description: event.target.value }))} />
-              <Button type="submit" disabled={menuSaving}>{menuSaving ? "Đang tạo..." : "Lưu món"}</Button>
+              <Button type="submit" disabled={menuSaving || menuImageUploading === "draft"}>{menuSaving ? "Đang tạo..." : menuImageUploading === "draft" ? "Đang xử lý ảnh..." : "Lưu món"}</Button>
             </form>
             </AdminFormDialog>
           ) : null}
@@ -156,6 +179,26 @@ export default function AdminMenuSection({
                 <label><span>Slug</span><Input type="text" value={menuEdit.slug} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, slug: event.target.value }))} /></label>
                 <label><span>Danh mục</span><Input type="text" value={menuEdit.category} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, category: event.target.value }))} /></label>
                 <label><span>Giá</span><Input type="number" min="0" value={menuEdit.price} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, price: Number(event.target.value) }))} /></label>
+                <label className={styles.fullWidth}>
+                  <span>Upload ảnh món ăn</span>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    disabled={!permissions.canManageMenu || menuSaving || menuImageUploading === "edit"}
+                    onChange={(event) => uploadMenuImage("edit", event.target.files?.[0])}
+                  />
+                </label>
+                {menuEdit.imageUrl ? (
+                  <div className={styles.fullWidth}>
+                    <div className="grid gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-3 sm:grid-cols-[160px_minmax(0,1fr)] sm:items-center">
+                      <img src={menuEdit.imageUrl} alt={menuEdit.name || "Ảnh món ăn"} className="h-28 w-full rounded-xl object-cover" />
+                      <div className="grid gap-2">
+                        <p className="text-sm text-zinc-600">Ảnh đang gắn với món này sẽ tự động đồng bộ ra landing page.</p>
+                        {permissions.canManageMenu ? <Button type="button" variant="outline" onClick={() => clearMenuImage("edit")}>Gỡ ảnh</Button> : null}
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
                 <label><span>Đường dẫn ảnh</span><Input type="text" value={menuEdit.imageUrl} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, imageUrl: event.target.value }))} /></label>
                 <label><span>Hiển thị</span><FormSelect value={menuEdit.isAvailable ? "yes" : "no"} disabled={!permissions.canManageMenu} onValueChange={(value) => setMenuEdit((prev) => ({ ...prev, isAvailable: value === "yes" }))} options={[{ value: "yes", label: "Có" }, { value: "no", label: "Không" }]} placeholder="Hiển thị" /></label>
                 <label><span>Món nổi bật</span><FormSelect value={menuEdit.isFeatured ? "yes" : "no"} disabled={!permissions.canManageMenu} onValueChange={(value) => setMenuEdit((prev) => ({ ...prev, isFeatured: value === "yes" }))} options={[{ value: "yes", label: "Có" }, { value: "no", label: "Không" }]} placeholder="Món nổi bật" /></label>
@@ -164,7 +207,7 @@ export default function AdminMenuSection({
                 <label className={styles.fullWidth}><span>Ghi chú theo mùa / tồn kho</span><Textarea rows={3} value={menuEdit.seasonNote || ""} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, seasonNote: event.target.value }))} /></label>
                 <label className={styles.fullWidth}><span>Mô tả</span><Textarea rows={5} value={menuEdit.description} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, description: event.target.value }))} /></label>
               </div>
-              {permissions.canManageMenu ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveMenuEdit} disabled={menuSaving}>{menuSaving ? "Đang lưu..." : "Lưu món"}</Button></div> : null}
+              {permissions.canManageMenu ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveMenuEdit} disabled={menuSaving || menuImageUploading === "edit"}>{menuSaving ? "Đang lưu..." : menuImageUploading === "edit" ? "Đang xử lý ảnh..." : "Lưu món"}</Button></div> : null}
             </AdminSurfaceCard>
           ) : (
             <AdminEmptyState title="Không tìm thấy món ăn." description="Món này có thể đã bị xóa hoặc không thuộc chi nhánh đang xem." />
