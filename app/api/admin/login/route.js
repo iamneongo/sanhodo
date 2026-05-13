@@ -19,7 +19,7 @@ import { createClient } from "../../../../lib/supabase/server";
 async function loadAdminProfile(supabase, userId) {
   const primary = await supabase
     .from("profiles")
-    .select("id, email, full_name, role, branch_id, branch_code")
+    .select("id, email, full_name, role, branch_id, branch_code, is_active")
     .eq("id", userId)
     .maybeSingle();
 
@@ -41,11 +41,12 @@ async function loadAdminProfile(supabase, userId) {
     throw fallback.error;
   }
 
-  return fallback.data
+      return fallback.data
     ? {
         ...fallback.data,
         branch_id: null,
-        branch_code: "main"
+        branch_code: "main",
+        is_active: true
       }
     : null;
 }
@@ -108,10 +109,10 @@ export async function POST(request) {
       return NextResponse.json({ error: profileError.message }, { status: 500 });
     }
 
-    if (!profile || !hasDashboardAccess(profile.role)) {
+    if (!profile || profile.is_active === false || !hasDashboardAccess(profile.role)) {
       await supabase.auth.signOut();
       return NextResponse.json(
-        { error: "Tài khoản này chưa có quyền truy cập dashboard admin" },
+        { error: profile?.is_active === false ? "Tài khoản này đang bị khóa" : "Tài khoản này chưa có quyền truy cập dashboard admin" },
         { status: 403 }
       );
     }
@@ -137,6 +138,7 @@ export async function POST(request) {
           role: profile.role,
           branch_id: profile.branch_id || null,
           branch_code: profile.branch_code || "main",
+          is_active: profile.is_active !== false,
           last_login_at: new Date().toISOString()
         }
       }),

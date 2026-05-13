@@ -11,6 +11,14 @@ export async function PATCH(request, { params }) {
   try {
     const body = await request.json();
     const { id } = await params;
+
+    if (context.user?.id === id && body?.isActive === false) {
+      return NextResponse.json(
+        { error: "Bạn không thể tự khóa tài khoản đang đăng nhập." },
+        { status: 400 }
+      );
+    }
+
     const updated = await updateProfile(context.supabase, id, body);
 
     if (!updated) {

@@ -3,6 +3,7 @@
 import AdminActiveFilters from "../admin-active-filters";
 import AdminEmptyState from "../admin-empty-state";
 import AdminPageToolbar from "../admin-page-toolbar";
+import AdminStatCard from "../admin-stat-card";
 import AdminSurfaceCard from "../admin-surface-card";
 import AdminTableFooter from "../admin-table-footer";
 import { AdminDetailShell, AdminListShell } from "../admin-panel-shell";
@@ -19,6 +20,12 @@ export default function AdminStaffSection({
   setStaffQuery,
   staffRoleFilter,
   setStaffRoleFilter,
+  staffActivityFilter,
+  setStaffActivityFilter,
+  staffActivityOptions,
+  staffAccountStatusFilter,
+  setStaffAccountStatusFilter,
+  staffAccountStatusOptions,
   staffSort,
   setStaffSort,
   staffSortOptions,
@@ -26,6 +33,7 @@ export default function AdminStaffSection({
   filteredProfiles,
   selectedStaff,
   selectedStaffAssignments,
+  branchStaffAssignments,
   branches,
   openSectionDetail,
   detailHeaderActions,
@@ -52,6 +60,18 @@ export default function AdminStaffSection({
       onClear: () => setStaffRoleFilter("all")
     },
     {
+      key: "activity",
+      active: staffActivityFilter !== "all",
+      label: `Hoạt động: ${staffActivityOptions.find((item) => item.value === staffActivityFilter)?.label || staffActivityFilter}`,
+      onClear: () => setStaffActivityFilter("all")
+    },
+    {
+      key: "account",
+      active: staffAccountStatusFilter !== "all",
+      label: `Tài khoản: ${staffAccountStatusOptions.find((item) => item.value === staffAccountStatusFilter)?.label || staffAccountStatusFilter}`,
+      onClear: () => setStaffAccountStatusFilter("all")
+    },
+    {
       key: "sort",
       active: staffSort !== "name_asc",
       label: `Sắp xếp: ${staffSortOptions.find((item) => item.value === staffSort)?.label || staffSort}`,
@@ -62,6 +82,35 @@ export default function AdminStaffSection({
     branches.find((item) => item.id === branchId)?.shortName ||
     branches.find((item) => item.id === branchId)?.name ||
     "-";
+  const getAssignmentCount = (profileId) =>
+    branchStaffAssignments.filter((assignment) => assignment.profileId === profileId).length;
+  const getActivityLabel = (item) => {
+    if (item.isActive === false) return "Đang khóa";
+    if (!item.lastLoginAt) return "Chưa đăng nhập";
+    const time = new Date(item.lastLoginAt).getTime();
+    if (!Number.isFinite(time)) return "Chưa rõ";
+    return Date.now() - time <= 1000 * 60 * 60 * 24 * 7 ? "Đang hoạt động" : "Ít hoạt động";
+  };
+  const getActivityClassName = (item) => {
+    if (item.isActive === false) return styles.status_cancelled || styles.status_inactive;
+    if (!item.lastLoginAt) return styles.status_pending;
+    const time = new Date(item.lastLoginAt).getTime();
+    if (!Number.isFinite(time)) return styles.status_pending;
+    return Date.now() - time <= 1000 * 60 * 60 * 24 * 7
+      ? styles.status_active || styles.status_confirmed
+      : styles.status_inactive || styles.status_cancelled;
+  };
+  const staffStats = {
+    total: filteredProfiles.length,
+    activeRecently: filteredProfiles.filter((item) => {
+      if (!item.lastLoginAt) return false;
+      const time = new Date(item.lastLoginAt).getTime();
+      return Number.isFinite(time) && Date.now() - time <= 1000 * 60 * 60 * 24 * 7;
+    }).length,
+    assigned: filteredProfiles.filter((item) =>
+      branchStaffAssignments.some((assignment) => assignment.profileId === item.id)
+    ).length
+  };
 
   return (
     <section className="grid w-full min-w-0 gap-4">
@@ -74,6 +123,8 @@ export default function AdminStaffSection({
                 onClearAll={() => {
                   setStaffQuery("");
                   setStaffRoleFilter("all");
+                  setStaffActivityFilter("all");
+                  setStaffAccountStatusFilter("all");
                   setStaffSort("name_asc");
                 }}
               />
@@ -91,8 +142,35 @@ export default function AdminStaffSection({
               options={[{ value: "all", label: "Tất cả vai trò" }, ...staffRoleOptions]}
               placeholder="Lọc vai trò"
             />
+            <FormSelect
+              value={staffActivityFilter}
+              onValueChange={setStaffActivityFilter}
+              options={staffActivityOptions}
+              placeholder="Lọc hoạt động"
+            />
+            <FormSelect
+              value={staffAccountStatusFilter}
+              onValueChange={setStaffAccountStatusFilter}
+              options={staffAccountStatusOptions}
+              placeholder="Lọc tài khoản"
+            />
             <FormSelect value={staffSort} onValueChange={setStaffSort} options={staffSortOptions} placeholder="Sắp xếp" />
           </AdminPageToolbar>
+
+          <div className={styles.statsStrip}>
+            <AdminStatCard
+              label="Tổng nhân sự"
+              value={staffStats.total}
+              detail={`${staffStats.assigned} người đã có phân công`}
+              accent="soft"
+            />
+            <AdminStatCard
+              label="Hoạt động 7 ngày"
+              value={staffStats.activeRecently}
+              detail="Có đăng nhập gần đây"
+              accent="default"
+            />
+          </div>
 
           <div className={styles.tableWrap}>
             <Table>
@@ -101,7 +179,9 @@ export default function AdminStaffSection({
                   <TableHead>Nhân sự</TableHead>
                   <TableHead>Vai trò</TableHead>
                   <TableHead>Chi nhánh chính</TableHead>
-                  <TableHead>Cập nhật</TableHead>
+                  <TableHead>Phân công</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                  <TableHead>Đăng nhập gần nhất</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -117,7 +197,15 @@ export default function AdminStaffSection({
                     </TableCell>
                     <TableCell data-label="Vai trò">{roleLabels[item.role] || item.role}</TableCell>
                     <TableCell data-label="Chi nhánh chính">{findBranchName(item.branchId)}</TableCell>
-                    <TableCell data-label="Cập nhật">{item.updatedAt ? formatDate(item.updatedAt) : "-"}</TableCell>
+                    <TableCell data-label="Phân công">{getAssignmentCount(item.id)}</TableCell>
+                    <TableCell data-label="Trạng thái">
+                      <span className={`${styles.statusBadge} ${getActivityClassName(item)}`}>
+                        {getActivityLabel(item)}
+                      </span>
+                    </TableCell>
+                    <TableCell data-label="Đăng nhập gần nhất">
+                      {item.lastLoginAt ? formatDate(item.lastLoginAt) : "Chưa ghi nhận"}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -145,6 +233,10 @@ export default function AdminStaffSection({
                   <div>
                     <span>Chi nhánh chính</span>
                     <strong>{findBranchName(selectedStaff.branchId)}</strong>
+                  </div>
+                  <div>
+                    <span>Đăng nhập gần nhất</span>
+                    <strong>{selectedStaff.lastLoginAt ? formatDate(selectedStaff.lastLoginAt) : "Chưa ghi nhận"}</strong>
                   </div>
                   <div>
                     <span>Số phân công</span>
@@ -193,6 +285,18 @@ export default function AdminStaffSection({
                           value: item.id,
                           label: item.shortName || item.name
                         }))
+                      ]}
+                    />
+                  </label>
+                  <label>
+                    <span>Tài khoản</span>
+                    <FormSelect
+                      value={staffEdit.isActive ? "active" : "inactive"}
+                      disabled={!permissions.canManageStaff}
+                      onValueChange={(value) => setStaffEdit((prev) => ({ ...prev, isActive: value === "active" }))}
+                      options={[
+                        { value: "active", label: "Đang bật" },
+                        { value: "inactive", label: "Đang khóa" }
                       ]}
                     />
                   </label>

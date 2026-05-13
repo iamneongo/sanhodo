@@ -52,6 +52,7 @@ create table if not exists public.profiles (
   branch_id uuid references public.branches(id) on delete set null,
   branch_code text not null default 'main',
   phone text,
+  is_active boolean not null default true,
   last_login_at timestamptz,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())

@@ -152,7 +152,22 @@ const partnerSortOptions = [
 const staffSortOptions = [
   { value: "name_asc", label: "Tên A-Z" },
   { value: "role_asc", label: "Vai trò" },
+  { value: "last_login_desc", label: "Đăng nhập gần nhất" },
   { value: "updated_desc", label: "Cập nhật gần nhất" }
+];
+
+const staffActivityOptions = [
+  { value: "all", label: "Tất cả trạng thái" },
+  { value: "recent", label: "Hoạt động 7 ngày" },
+  { value: "stale", label: "Lâu không đăng nhập" },
+  { value: "never", label: "Chưa đăng nhập" },
+  { value: "unassigned", label: "Chưa có phân công" }
+];
+
+const staffAccountStatusOptions = [
+  { value: "all", label: "Tất cả tài khoản" },
+  { value: "active", label: "Đang bật" },
+  { value: "inactive", label: "Đang khóa" }
 ];
 
 const branchSortOptions = [
@@ -599,6 +614,8 @@ export default function AdminDashboard({
   const [partnerSort, setPartnerSort] = useState("name_asc");
   const [staffQuery, setStaffQuery] = useState("");
   const [staffRoleFilter, setStaffRoleFilter] = useState("all");
+  const [staffActivityFilter, setStaffActivityFilter] = useState("all");
+  const [staffAccountStatusFilter, setStaffAccountStatusFilter] = useState("all");
   const [staffSort, setStaffSort] = useState("name_asc");
   const [branchQuery, setBranchQuery] = useState("");
   const [branchStatusFilter, setBranchStatusFilter] = useState("all");
@@ -684,7 +701,8 @@ export default function AdminDashboard({
     fullName: "",
     email: "",
     role: "staff",
-    branchId: ""
+    branchId: "",
+    isActive: true
   });
   const [orderDraft, setOrderDraft] = useState(createEmptyOrderDraft());
   const [orderEdit, setOrderEdit] = useState(createEmptyOrderDraft());
@@ -801,13 +819,15 @@ export default function AdminDashboard({
             fullName: selectedStaff.fullName || "",
             email: selectedStaff.email || "",
             role: selectedStaff.role || "staff",
-            branchId: selectedStaff.branchId || ""
+            branchId: selectedStaff.branchId || "",
+            isActive: selectedStaff.isActive !== false
           }
         : {
             fullName: "",
             email: "",
             role: "staff",
-            branchId: ""
+            branchId: "",
+            isActive: true
           }
     );
   }, [selectedStaffId, selectedStaff]);
@@ -907,23 +927,54 @@ export default function AdminDashboard({
       sortItems(
         profiles.filter((item) => {
           const roleMatch = staffRoleFilter === "all" || item.role === staffRoleFilter;
+          const accountStatusMatch =
+            staffAccountStatusFilter === "all" ||
+            (staffAccountStatusFilter === "active" ? item.isActive !== false : item.isActive === false);
+          const assignmentCount = branchStaffAssignments.filter((assignment) => assignment.profileId === item.id).length;
+          const lastLoginTime = item.lastLoginAt ? new Date(item.lastLoginAt).getTime() : NaN;
+          const isRecentLogin =
+            Number.isFinite(lastLoginTime) && Date.now() - lastLoginTime <= 1000 * 60 * 60 * 24 * 7;
+          const isStaleLogin =
+            Number.isFinite(lastLoginTime) && Date.now() - lastLoginTime > 1000 * 60 * 60 * 24 * 7;
+          const activityMatch =
+            staffActivityFilter === "all" ||
+            (staffActivityFilter === "recent" && isRecentLogin) ||
+            (staffActivityFilter === "stale" && isStaleLogin) ||
+            (staffActivityFilter === "never" && !item.lastLoginAt) ||
+            (staffActivityFilter === "unassigned" && assignmentCount === 0);
           const branchMatch =
             !branchFilterId ||
             item.branchId === branchFilterId ||
             branchStaffAssignments.some(
               (assignment) => assignment.profileId === item.id && assignment.branchId === branchFilterId
             );
-          return roleMatch && branchMatch && matchesSearch(item, staffQuery, ["fullName", "email", "role"]);
+          return (
+            roleMatch &&
+            accountStatusMatch &&
+            activityMatch &&
+            branchMatch &&
+            matchesSearch(item, staffQuery, ["fullName", "email", "role"])
+          );
         }),
         staffSort,
         {
           default: (a, b) => String(a.fullName || a.email || "").localeCompare(String(b.fullName || b.email || ""), "vi"),
           name_asc: (a, b) => String(a.fullName || a.email || "").localeCompare(String(b.fullName || b.email || ""), "vi"),
           role_asc: (a, b) => formatLabel(a.role).localeCompare(formatLabel(b.role), "vi"),
+          last_login_desc: (a, b) => new Date(b.lastLoginAt || 0) - new Date(a.lastLoginAt || 0),
           updated_desc: (a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)
         }
       ),
-    [profiles, staffQuery, staffRoleFilter, staffSort, branchFilterId, branchStaffAssignments]
+    [
+      profiles,
+      staffQuery,
+      staffRoleFilter,
+      staffActivityFilter,
+      staffAccountStatusFilter,
+      staffSort,
+      branchFilterId,
+      branchStaffAssignments
+    ]
   );
 
   const filteredReservations = useMemo(
@@ -2123,6 +2174,12 @@ export default function AdminDashboard({
             setStaffQuery={setStaffQuery}
             staffRoleFilter={staffRoleFilter}
             setStaffRoleFilter={setStaffRoleFilter}
+            staffActivityFilter={staffActivityFilter}
+            setStaffActivityFilter={setStaffActivityFilter}
+            staffActivityOptions={staffActivityOptions}
+            staffAccountStatusFilter={staffAccountStatusFilter}
+            setStaffAccountStatusFilter={setStaffAccountStatusFilter}
+            staffAccountStatusOptions={staffAccountStatusOptions}
             staffSort={staffSort}
             setStaffSort={setStaffSort}
             staffSortOptions={staffSortOptions}
@@ -2137,6 +2194,7 @@ export default function AdminDashboard({
             filteredProfiles={filteredProfiles}
             selectedStaff={selectedStaff}
             selectedStaffAssignments={selectedStaffAssignments}
+            branchStaffAssignments={branchStaffAssignments}
             branches={branches}
             openSectionDetail={openSectionDetail}
             detailHeaderActions={detailHeaderActions}

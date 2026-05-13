@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
   Building2,
   BookOpenText,
@@ -85,8 +86,19 @@ export default function AppSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg">
               <Link href={withBranchQuery("/admin/overview", branchFilterId)} onClick={closeMobileSidebar}>
-                <CommandIcon className="size-4" />
-                <NavLabel>San Hô Đỏ</NavLabel>
+                <div className="flex size-8 items-center justify-center overflow-hidden rounded-xl bg-[#f7f1e4] ring-1 ring-[#eadfca]">
+                  <Image
+                    src="/assets/logo-coral.svg"
+                    alt="San Hô Đỏ"
+                    width={22}
+                    height={22}
+                    className="size-5 object-contain"
+                    priority
+                  />
+                </div>
+                <NavLabel>
+                  <span className="font-semibold tracking-tight text-zinc-900">San Hô Đỏ</span>
+                </NavLabel>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -157,17 +169,6 @@ export default function AppSidebar({
         </Button>
       </SidebarFooter>
     </Sidebar>
-  );
-}
-
-function CommandIcon(props) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
-      <path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 1 0 6 0V6a3 3 0 0 0-3-3Z" />
-      <path d="M6 3a3 3 0 0 0-3 3v12a3 3 0 1 0 6 0V6A3 3 0 0 0 6 3Z" />
-      <path d="M3 9h18" />
-      <path d="M3 15h18" />
-    </svg>
   );
 }
 
