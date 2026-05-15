@@ -350,7 +350,8 @@ function createEmptyBranchDraft() {
     address: "",
     phone: "",
     isActive: true,
-    sortOrder: 0
+    sortOrder: 0,
+    landingConfig: {}
   };
 }
 
@@ -583,6 +584,23 @@ async function uploadMenuImageFile(file, branchId = "") {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new Error(data.error || "Không upload được ảnh món ăn");
+  }
+
+  return data.data?.url || "";
+}
+
+async function uploadLandingImageFile(file, branchId = "") {
+  const formData = new FormData();
+  formData.append("file", file, file.name || "landing-image.jpg");
+
+  const response = await fetch(withBranchQuery("/api/admin/branches/upload", branchId), {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || "Không upload được ảnh landing page");
   }
 
   return data.data?.url || "";
@@ -1804,6 +1822,45 @@ export default function AdminDashboard({
     setMenuEdit((prev) => ({ ...prev, imageUrl: "" }));
   };
 
+  const uploadLandingImage = async (file, branchId) => {
+    if (!file) {
+      return "";
+    }
+
+    setMessage("");
+    try {
+      const dataUrl = await optimizeMenuImage(file);
+      const optimizedBlob = await fetch(dataUrl).then((response) => response.blob());
+      const optimizedFile = new File([optimizedBlob], `${Date.now()}-landing-image.jpg`, {
+        type: "image/jpeg"
+      });
+
+      let finalUrl = dataUrl;
+      let storageBacked = false;
+
+      try {
+        const uploadedUrl = await uploadLandingImageFile(optimizedFile, branchId);
+        if (uploadedUrl) {
+          finalUrl = uploadedUrl;
+          storageBacked = true;
+        }
+      } catch {
+        storageBacked = false;
+      }
+
+      setMessage(
+        storageBacked
+          ? "Đã upload ảnh landing page lên storage."
+          : "Bucket ảnh chưa sẵn sàng, mình đã lưu tạm ảnh trực tiếp để landing page vẫn hiển thị ngay."
+      );
+
+      return finalUrl;
+    } catch (error) {
+      setMessage(error.message || "Không tải được ảnh landing page.");
+      throw error;
+    }
+  };
+
   const createTableEntry = async (event) => {
     event.preventDefault();
     setTableSaving(true);
@@ -2349,6 +2406,7 @@ export default function AdminDashboard({
             branchEdit={branchEdit}
             setBranchEdit={setBranchEdit}
             saveBranchEdit={saveBranchEdit}
+            uploadLandingImage={uploadLandingImage}
             deleteBranchEntry={deleteBranchEntry}
             branchAssignments={selectedBranchAssignments}
             profiles={profiles}

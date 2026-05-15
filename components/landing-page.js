@@ -282,6 +282,47 @@ export default function LandingPage({
     .split("\n")
     .map((item) => item.trim())
     .filter(Boolean);
+  const heroImageUrl = landingConfig.heroImageUrl || "/assets/drive-hero-exterior.jpg";
+  const aboutImageUrl = landingConfig.aboutImageUrl || "/assets/drive-about-facade.jpg";
+  const spaceImageOneUrl = landingConfig.spaceImageOneUrl || "/assets/drive-space-dining-1.jpg";
+  const spaceImageTwoUrl = landingConfig.spaceImageTwoUrl || "/assets/drive-space-dining-2.jpg";
+  const spaceImageThreeUrl = landingConfig.spaceImageThreeUrl || "/assets/drive-space-lobby.jpg";
+  const spaceImageFourUrl = landingConfig.spaceImageFourUrl || "/assets/drive-space-private.jpg";
+  const newsImageOneUrl = landingConfig.newsImageOneUrl || "/assets/drive-news-winewall.jpg";
+  const newsImageTwoUrl = landingConfig.newsImageTwoUrl || "/assets/drive-news-table-close.jpg";
+  const newsImageThreeUrl = landingConfig.newsImageThreeUrl || "/assets/drive-news-place-setting.jpg";
+  const resolvedCombos = [
+    {
+      title: landingConfig.comboOneTitle || DEFAULT_LANDING_PAGE_CONFIG.comboOneTitle,
+      price: landingConfig.comboOnePrice || DEFAULT_LANDING_PAGE_CONFIG.comboOnePrice,
+      originalPrice:
+        landingConfig.comboOneOriginalPrice || DEFAULT_LANDING_PAGE_CONFIG.comboOneOriginalPrice,
+      description:
+        landingConfig.comboOneDescription || DEFAULT_LANDING_PAGE_CONFIG.comboOneDescription,
+      badge: landingConfig.comboOneBadge || DEFAULT_LANDING_PAGE_CONFIG.comboOneBadge,
+      serves: landingConfig.comboOneServes || DEFAULT_LANDING_PAGE_CONFIG.comboOneServes
+    },
+    {
+      title: landingConfig.comboTwoTitle || DEFAULT_LANDING_PAGE_CONFIG.comboTwoTitle,
+      price: landingConfig.comboTwoPrice || DEFAULT_LANDING_PAGE_CONFIG.comboTwoPrice,
+      originalPrice:
+        landingConfig.comboTwoOriginalPrice || DEFAULT_LANDING_PAGE_CONFIG.comboTwoOriginalPrice,
+      description:
+        landingConfig.comboTwoDescription || DEFAULT_LANDING_PAGE_CONFIG.comboTwoDescription,
+      badge: landingConfig.comboTwoBadge || DEFAULT_LANDING_PAGE_CONFIG.comboTwoBadge,
+      serves: landingConfig.comboTwoServes || DEFAULT_LANDING_PAGE_CONFIG.comboTwoServes
+    },
+    {
+      title: landingConfig.comboThreeTitle || DEFAULT_LANDING_PAGE_CONFIG.comboThreeTitle,
+      price: landingConfig.comboThreePrice || DEFAULT_LANDING_PAGE_CONFIG.comboThreePrice,
+      originalPrice:
+        landingConfig.comboThreeOriginalPrice || DEFAULT_LANDING_PAGE_CONFIG.comboThreeOriginalPrice,
+      description:
+        landingConfig.comboThreeDescription || DEFAULT_LANDING_PAGE_CONFIG.comboThreeDescription,
+      badge: landingConfig.comboThreeBadge || DEFAULT_LANDING_PAGE_CONFIG.comboThreeBadge,
+      serves: landingConfig.comboThreeServes || DEFAULT_LANDING_PAGE_CONFIG.comboThreeServes
+    }
+  ];
   const activeHotline = selectedBranch?.phone || hotline;
   const activeHotlineDisplay = selectedBranch?.phone || hotlineDisplay;
   const activeZaloLink = `https://zalo.me/${String(activeHotline || hotline).replace(/[^\d]/g, "")}`;
@@ -299,7 +340,7 @@ export default function LandingPage({
       "@context": "https://schema.org",
       "@type": "Restaurant",
       name: displayBranchName,
-      image: ["https://sanhodo.vn/assets/drive-hero-exterior.jpg"],
+      image: [heroImageUrl],
       telephone: activeHotlineDisplay,
       servesCuisine: ["Hải sản", "Việt Nam", "Fine dining"],
       priceRange: "$$",
@@ -328,7 +369,7 @@ export default function LandingPage({
       ],
       sameAs: [activeZaloLink]
     }),
-    [activeHotlineDisplay, activeZaloLink, displayBranchName, selectedBranch]
+    [activeHotlineDisplay, activeZaloLink, displayBranchName, heroImageUrl, selectedBranch]
   );
 
   useEffect(() => {
@@ -884,7 +925,11 @@ export default function LandingPage({
 
       <main>
         <section className="hero">
-          <div className="hero-scene" aria-hidden="true"></div>
+          <div
+            className="hero-scene"
+            aria-hidden="true"
+            style={{ backgroundImage: `url("${heroImageUrl}")` }}
+          ></div>
           <div className="hero-overlay"></div>
           <img className="hero-coral hero-coral-left" src="/assets/coral-pattern.png" alt="" />
           <div className="container hero-inner">
@@ -949,7 +994,7 @@ export default function LandingPage({
             </div>
 
             <div className="about-card about-card-drive reveal">
-              <img src="/assets/drive-about-facade.jpg" alt="Mặt tiền nhà hàng San Hô Đỏ" />
+              <img src={aboutImageUrl} alt={`Mặt tiền ${displayBranchName}`} />
               <div className="about-card-badge">
                 <strong>{landingConfig.aboutBadgeTitle || DEFAULT_LANDING_PAGE_CONFIG.aboutBadgeTitle}</strong>
                 <span>{landingConfig.aboutBadgeSubtitle || DEFAULT_LANDING_PAGE_CONFIG.aboutBadgeSubtitle}</span>
@@ -1245,11 +1290,13 @@ export default function LandingPage({
 
           <div className="container combo-section reveal">
             <div className="section-heading align-left">
-              <p className="section-kicker">Combo gợi ý</p>
-              <h2>Tối ưu lựa chọn theo số người</h2>
+              <p className="section-kicker">
+                {landingConfig.comboSectionKicker || DEFAULT_LANDING_PAGE_CONFIG.comboSectionKicker}
+              </p>
+              <h2>{landingConfig.comboSectionTitle || DEFAULT_LANDING_PAGE_CONFIG.comboSectionTitle}</h2>
             </div>
             <div className="combo-grid">
-              {combos.map((combo) => (
+              {resolvedCombos.map((combo) => (
                 <article className="combo-card" key={combo.title}>
                   <span className="combo-badge">{combo.badge}</span>
                   <h3>{combo.title}</h3>
@@ -1285,32 +1332,34 @@ export default function LandingPage({
           <img className="space-coral" src="/assets/coral-pattern.png" alt="" />
           <div className="container">
             <div className="section-heading reveal">
-              <p className="section-kicker">Không gian</p>
-              <h2>Đa dạng khu vực, linh hoạt cho mọi nhu cầu dùng bữa</h2>
+              <p className="section-kicker">
+                {landingConfig.spaceKicker || DEFAULT_LANDING_PAGE_CONFIG.spaceKicker}
+              </p>
+              <h2>{landingConfig.spaceTitle || DEFAULT_LANDING_PAGE_CONFIG.spaceTitle}</h2>
             </div>
             <div className="space-grid">
               <article className="space-card reveal">
                 <img
-                  src="/assets/drive-space-dining-1.jpg"
+                  src={spaceImageOneUrl}
                   alt="Khu vực bàn tiệc lớn với tủ rượu phía sau"
                 />
               </article>
               <article className="space-card reveal">
                 <img
-                  src="/assets/drive-space-dining-2.jpg"
+                  src={spaceImageTwoUrl}
                   alt="Khu vực bàn tròn sang trọng trong nhà hàng"
                 />
               </article>
               <article className="space-card reveal">
-                <img src="/assets/drive-space-lobby.jpg" alt="Sảnh đón khách và khu trưng bày" />
+                <img src={spaceImageThreeUrl} alt="Sảnh đón khách và khu trưng bày" />
               </article>
               <article className="space-card reveal">
-                <img src="/assets/drive-space-private.jpg" alt="Phòng riêng ấm cúng cho nhóm nhỏ" />
+                <img src={spaceImageFourUrl} alt="Phòng riêng ấm cúng cho nhóm nhỏ" />
               </article>
             </div>
             <div className="section-action reveal">
               <a className="button button-secondary" href="#contact">
-                Xem thêm hình ảnh
+                {landingConfig.spaceActionLabel || DEFAULT_LANDING_PAGE_CONFIG.spaceActionLabel}
               </a>
             </div>
           </div>
@@ -1563,54 +1612,69 @@ export default function LandingPage({
         <section className="news section" id="news">
           <div className="container">
             <div className="section-heading align-left reveal">
-              <p className="section-kicker">Tin tức &amp; Ưu đãi</p>
-              <h2>Những góc ấn tượng từ không gian thực tế của nhà hàng</h2>
+              <p className="section-kicker">
+                {landingConfig.newsKicker || DEFAULT_LANDING_PAGE_CONFIG.newsKicker}
+              </p>
+              <h2>{landingConfig.newsTitle || DEFAULT_LANDING_PAGE_CONFIG.newsTitle}</h2>
             </div>
 
             <div className="news-grid">
               <article className="news-card news-card-drive reveal">
                 <img
-                  src="/assets/drive-news-winewall.jpg"
+                  src={newsImageOneUrl}
                   alt="Tủ rượu và khu vực bàn tiệc sang trọng"
                 />
                 <div className="news-body">
-                  <span className="news-tag">Không gian</span>
-                  <h3>Tủ rượu lớn tạo điểm nhấn cho khu vực dùng bữa</h3>
+                  <span className="news-tag">
+                    {landingConfig.newsOneTag || DEFAULT_LANDING_PAGE_CONFIG.newsOneTag}
+                  </span>
+                  <h3>{landingConfig.newsOneTitle || DEFAULT_LANDING_PAGE_CONFIG.newsOneTitle}</h3>
                   <p>
-                    Khu vực trung tâm được bố trí hệ tủ rượu sang trọng, phù hợp cho những buổi gặp
-                    gỡ cần sự chỉn chu.
+                    {landingConfig.newsOneDescription ||
+                      DEFAULT_LANDING_PAGE_CONFIG.newsOneDescription}
                   </p>
-                  <span className="news-date">Bộ ảnh thực tế</span>
+                  <span className="news-date">
+                    {landingConfig.newsOneDateLabel || DEFAULT_LANDING_PAGE_CONFIG.newsOneDateLabel}
+                  </span>
                 </div>
               </article>
               <article className="news-card news-card-drive reveal">
                 <img
-                  src="/assets/drive-news-table-close.jpg"
+                  src={newsImageTwoUrl}
                   alt="Cận cảnh bàn ăn được chuẩn bị sẵn"
                 />
                 <div className="news-body">
-                  <span className="news-tag news-tag-alt">Chi tiết</span>
-                  <h3>Bàn tiệc được chuẩn bị gọn gàng và đồng bộ</h3>
+                  <span className="news-tag news-tag-alt">
+                    {landingConfig.newsTwoTag || DEFAULT_LANDING_PAGE_CONFIG.newsTwoTag}
+                  </span>
+                  <h3>{landingConfig.newsTwoTitle || DEFAULT_LANDING_PAGE_CONFIG.newsTwoTitle}</h3>
                   <p>
-                    Từ ly tách, khăn bàn đến cách đặt món đều được chuẩn bị kỹ để nâng trải nghiệm
-                    của thực khách.
+                    {landingConfig.newsTwoDescription ||
+                      DEFAULT_LANDING_PAGE_CONFIG.newsTwoDescription}
                   </p>
-                  <span className="news-date">Bộ ảnh thực tế</span>
+                  <span className="news-date">
+                    {landingConfig.newsTwoDateLabel || DEFAULT_LANDING_PAGE_CONFIG.newsTwoDateLabel}
+                  </span>
                 </div>
               </article>
               <article className="news-card news-card-drive reveal">
                 <img
-                  src="/assets/drive-news-place-setting.jpg"
+                  src={newsImageThreeUrl}
                   alt="Không gian bàn riêng với cách bày trí tinh tế"
                 />
                 <div className="news-body">
-                  <span className="news-tag">Riêng tư</span>
-                  <h3>Không gian riêng phù hợp cho nhóm nhỏ và tiếp khách</h3>
+                  <span className="news-tag">
+                    {landingConfig.newsThreeTag || DEFAULT_LANDING_PAGE_CONFIG.newsThreeTag}
+                  </span>
+                  <h3>{landingConfig.newsThreeTitle || DEFAULT_LANDING_PAGE_CONFIG.newsThreeTitle}</h3>
                   <p>
-                    Một lựa chọn phù hợp cho bữa tối thân mật, gặp gỡ đối tác hoặc những buổi sum
-                    họp cần sự riêng tư.
+                    {landingConfig.newsThreeDescription ||
+                      DEFAULT_LANDING_PAGE_CONFIG.newsThreeDescription}
                   </p>
-                  <span className="news-date">Bộ ảnh thực tế</span>
+                  <span className="news-date">
+                    {landingConfig.newsThreeDateLabel ||
+                      DEFAULT_LANDING_PAGE_CONFIG.newsThreeDateLabel}
+                  </span>
                 </div>
               </article>
             </div>
