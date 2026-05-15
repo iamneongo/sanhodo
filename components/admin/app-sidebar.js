@@ -85,7 +85,10 @@ export default function AppSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg">
-              <Link href={withBranchQuery("/admin/overview", branchFilterId)} onClick={closeMobileSidebar}>
+              <Link
+                href={withBranchQuery("/admin/overview", branchFilterId)}
+                onClick={closeMobileSidebar}
+              >
                 <div className="flex size-9 items-center justify-center overflow-hidden rounded-full bg-[#fff7ee] ring-1 ring-[#eadfca]">
                   <Image
                     src="/assets/logo-coral.png"
@@ -137,7 +140,10 @@ export default function AppSidebar({
               return (
                 <SidebarMenuItem key={key}>
                   <SidebarMenuButton asChild isActive={activeSection === key}>
-                    <Link href={withBranchQuery(`/admin/${key}`, branchFilterId)} onClick={closeMobileSidebar}>
+                    <Link
+                      href={withBranchQuery(`/admin/${key}`, branchFilterId)}
+                      onClick={closeMobileSidebar}
+                    >
                       <Icon className="size-4" />
                       <NavLabel>{ADMIN_SECTIONS.find((item) => item.key === key)?.label || key}</NavLabel>
                       {state === "expanded" && key === "reservations" && reservationStats.pending ? <Badge variant="secondary" className="ml-auto">{reservationStats.pending}</Badge> : null}
