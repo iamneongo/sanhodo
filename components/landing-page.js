@@ -10,6 +10,10 @@ import {
   getBranchLandingPath
 } from "../lib/branches";
 import {
+  DEFAULT_LANDING_PAGE_CONFIG,
+  normalizeLandingPageConfig
+} from "../lib/landing-page-config";
+import {
   RESERVATION_TIME_SLOTS,
   VOUCHER_PRESET,
   buildFallbackVoucherCampaign,
@@ -257,13 +261,27 @@ export default function LandingPage({
     () => branches.find((item) => item.id === selectedBranchId) || branches[0] || null,
     [branches, selectedBranchId]
   );
+  const landingConfig = useMemo(
+    () => normalizeLandingPageConfig(selectedBranch?.landingConfig || {}),
+    [selectedBranch]
+  );
   const displayBranchName = selectedBranch?.name || "San Hô Đỏ Hồ Tràm";
   const displayBranchShortName = selectedBranch?.shortName || "Hồ Tràm";
-  const brandPrimaryLine = displayBranchName;
-  const brandSecondaryLine =
+  const defaultSecondaryLine =
     displayBranchShortName && !displayBranchName.toLowerCase().includes(displayBranchShortName.toLowerCase())
       ? displayBranchShortName
       : "";
+  const brandPrimaryLine = landingConfig.brandPrimary || displayBranchName;
+  const brandSecondaryLine = landingConfig.brandSecondary || defaultSecondaryLine;
+  const heroEyebrow = landingConfig.heroEyebrow || DEFAULT_LANDING_PAGE_CONFIG.heroEyebrow;
+  const heroTitle = landingConfig.heroTitle || brandPrimaryLine;
+  const heroSubtitle = landingConfig.heroSubtitle || brandSecondaryLine;
+  const heroDescriptionLines = String(
+    landingConfig.heroDescription || DEFAULT_LANDING_PAGE_CONFIG.heroDescription
+  )
+    .split("\n")
+    .map((item) => item.trim())
+    .filter(Boolean);
   const activeHotline = selectedBranch?.phone || hotline;
   const activeHotlineDisplay = selectedBranch?.phone || hotlineDisplay;
   const activeZaloLink = `https://zalo.me/${String(activeHotline || hotline).replace(/[^\d]/g, "")}`;
@@ -871,27 +889,32 @@ export default function LandingPage({
           <img className="hero-coral hero-coral-left" src="/assets/coral-pattern.png" alt="" />
           <div className="container hero-inner">
             <div className="hero-copy">
-              <p className="eyebrow">Nhà hàng</p>
+              <p className="eyebrow">{heroEyebrow}</p>
               <h1>
-                {brandPrimaryLine}
-                {brandSecondaryLine ? (
+                {heroTitle}
+                {heroSubtitle ? (
                   <>
                     <br />
-                    {brandSecondaryLine}
+                    {heroSubtitle}
                   </>
                 ) : null}
               </h1>
               <p className="hero-text">
-                Không gian ẩm thực sang trọng - Dấu ấn riêng tinh tế
-                <br />
-                Trải nghiệm đáng nhớ trong từng bữa tiệc sum vầy
+                {heroDescriptionLines.map((line, index) => (
+                  <span key={`${line}-${index}`}>
+                    {index > 0 ? <br /> : null}
+                    {line}
+                  </span>
+                ))}
               </p>
               <div className="hero-actions">
                 <button className="button button-primary" type="button" onClick={() => focusReservation()}>
-                  Đặt bàn ngay
+                  {landingConfig.primaryCtaLabel || DEFAULT_LANDING_PAGE_CONFIG.primaryCtaLabel}
                 </button>
                 <a className="button button-secondary" href={`tel:${activeHotline}`}>
-                  Gọi {activeHotlineDisplay}
+                  {(landingConfig.secondaryCtaLabel || DEFAULT_LANDING_PAGE_CONFIG.secondaryCtaLabel) === "Gọi ngay"
+                    ? `Gọi ${activeHotlineDisplay}`
+                    : `${landingConfig.secondaryCtaLabel || DEFAULT_LANDING_PAGE_CONFIG.secondaryCtaLabel} ${activeHotlineDisplay}`}
                 </a>
               </div>
               <div className="hero-micro-trust reveal is-visible">
@@ -917,16 +940,9 @@ export default function LandingPage({
           <div className="container about-grid">
             <div className="about-copy reveal">
               <p className="section-kicker">Về chúng tôi</p>
-              <h2>Không gian chỉn chu cho những buổi gặp gỡ đáng nhớ</h2>
-              <p>
-                San Hô Đỏ mang đến trải nghiệm ẩm thực trọn vẹn với mặt tiền nổi bật, sảnh đón
-                tiếp sang trọng và không gian bài trí chỉn chu cho những bữa ăn gia đình, tiếp
-                khách hay hội họp.
-              </p>
-              <p>
-                Từ khu vực bàn tiệc rộng rãi đến phòng riêng ấm cúng, từng góc nhỏ đều được chăm
-                chút để tạo cảm giác thoải mái, lịch sự và dễ lưu lại ấn tượng tốt với thực khách.
-              </p>
+              <h2>{landingConfig.aboutTitle || DEFAULT_LANDING_PAGE_CONFIG.aboutTitle}</h2>
+              <p>{landingConfig.aboutParagraphOne || DEFAULT_LANDING_PAGE_CONFIG.aboutParagraphOne}</p>
+              <p>{landingConfig.aboutParagraphTwo || DEFAULT_LANDING_PAGE_CONFIG.aboutParagraphTwo}</p>
               <a className="button button-primary" href="#space">
                 Khám phá thêm
               </a>
@@ -935,8 +951,8 @@ export default function LandingPage({
             <div className="about-card about-card-drive reveal">
               <img src="/assets/drive-about-facade.jpg" alt="Mặt tiền nhà hàng San Hô Đỏ" />
               <div className="about-card-badge">
-                <strong>Mặt tiền</strong>
-                <span>ấn tượng và sang trọng</span>
+                <strong>{landingConfig.aboutBadgeTitle || DEFAULT_LANDING_PAGE_CONFIG.aboutBadgeTitle}</strong>
+                <span>{landingConfig.aboutBadgeSubtitle || DEFAULT_LANDING_PAGE_CONFIG.aboutBadgeSubtitle}</span>
               </div>
             </div>
           </div>
@@ -945,29 +961,29 @@ export default function LandingPage({
             <article className="feature-item">
               <span className="feature-icon">✺</span>
               <div>
-                <h3>Hải sản tươi sống</h3>
-                <p>Nguồn hải sản tươi sống được tuyển chọn mỗi ngày cho chi nhánh {displayBranchShortName}.</p>
+                <h3>{landingConfig.featureSeafoodTitle || DEFAULT_LANDING_PAGE_CONFIG.featureSeafoodTitle}</h3>
+                <p>{landingConfig.featureSeafoodDescription || DEFAULT_LANDING_PAGE_CONFIG.featureSeafoodDescription}</p>
               </div>
             </article>
             <article className="feature-item">
               <span className="feature-icon">⌘</span>
               <div>
-                <h3>Đầu bếp chuyên nghiệp</h3>
-                <p>Đội ngũ đầu bếp giàu kinh nghiệm, chế biến tinh tế.</p>
+                <h3>{landingConfig.featureChefTitle || DEFAULT_LANDING_PAGE_CONFIG.featureChefTitle}</h3>
+                <p>{landingConfig.featureChefDescription || DEFAULT_LANDING_PAGE_CONFIG.featureChefDescription}</p>
               </div>
             </article>
             <article className="feature-item">
               <span className="feature-icon">◌</span>
               <div>
-                <h3>Không gian tuyệt đẹp</h3>
-                <p>Không gian sang trọng, nhiều khu vực phù hợp tiếp khách và gia đình.</p>
+                <h3>{landingConfig.featureSpaceTitle || DEFAULT_LANDING_PAGE_CONFIG.featureSpaceTitle}</h3>
+                <p>{landingConfig.featureSpaceDescription || DEFAULT_LANDING_PAGE_CONFIG.featureSpaceDescription}</p>
               </div>
             </article>
             <article className="feature-item">
               <span className="feature-icon">♡</span>
               <div>
-                <h3>Phục vụ tận tâm</h3>
-                <p>Đội ngũ nhân viên nhiệt tình, chu đáo, chuyên nghiệp.</p>
+                <h3>{landingConfig.featureServiceTitle || DEFAULT_LANDING_PAGE_CONFIG.featureServiceTitle}</h3>
+                <p>{landingConfig.featureServiceDescription || DEFAULT_LANDING_PAGE_CONFIG.featureServiceDescription}</p>
               </div>
             </article>
           </div>
@@ -1621,8 +1637,7 @@ export default function LandingPage({
               </span>
             </a>
             <p className="footer-text">
-              Bộ ảnh thực tế cho thấy một không gian chỉn chu, sang trọng và phù hợp cho nhiều nhu
-              cầu dùng bữa, từ họp mặt gia đình đến tiếp khách và tổ chức tiệc nhỏ.
+              {landingConfig.footerDescription || DEFAULT_LANDING_PAGE_CONFIG.footerDescription}
             </p>
           </div>
 

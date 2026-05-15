@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { getBranchLandingPath } from "../../../lib/branches";
 import styles from "../../admin.module.css";
 
 export default function AdminBranchesSection({
@@ -88,6 +89,14 @@ export default function AdminBranchesSection({
     profiles.find((item) => item.id === profileId)?.fullName ||
     profiles.find((item) => item.id === profileId)?.email ||
     "Nhân sự nội bộ";
+  const updateLandingConfig = (key, value) =>
+    setBranchEdit((prev) => ({
+      ...prev,
+      landingConfig: {
+        ...(prev.landingConfig || {}),
+        [key]: value
+      }
+    }));
 
   return (
     <section className="grid w-full min-w-0 gap-4">
@@ -383,6 +392,241 @@ export default function AdminBranchesSection({
                     </Button>
                   </div>
                 ) : null}
+              </AdminSurfaceCard>
+
+              <AdminSurfaceCard
+                kicker="Landing page chi nhánh"
+                title="Nội dung công khai cho landing page"
+                actions={
+                  <a
+                    className="inline-flex h-9 items-center justify-center rounded-lg border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+                    href={getBranchLandingPath(selectedManagedBranch)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Mở landing page
+                  </a>
+                }
+                className={styles.subsectionCard}
+              >
+                <div className={styles.editGrid}>
+                  <label>
+                    <span>SEO title</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.seoTitle || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("seoTitle", event.target.value)}
+                    />
+                  </label>
+                  <label className={styles.fullWidth}>
+                    <span>SEO description</span>
+                    <Textarea
+                      rows={3}
+                      value={branchEdit.landingConfig?.seoDescription || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("seoDescription", event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Brand dòng 1</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.brandPrimary || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("brandPrimary", event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Brand dòng 2</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.brandSecondary || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("brandSecondary", event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Hero eyebrow</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.heroEyebrow || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("heroEyebrow", event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Hero title</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.heroTitle || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("heroTitle", event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Hero subtitle</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.heroSubtitle || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("heroSubtitle", event.target.value)}
+                    />
+                  </label>
+                  <label className={styles.fullWidth}>
+                    <span>Mô tả hero</span>
+                    <Textarea
+                      rows={4}
+                      value={branchEdit.landingConfig?.heroDescription || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("heroDescription", event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Nút chính</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.primaryCtaLabel || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("primaryCtaLabel", event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Nút phụ</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.secondaryCtaLabel || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("secondaryCtaLabel", event.target.value)}
+                    />
+                  </label>
+                  <label className={styles.fullWidth}>
+                    <span>Tiêu đề giới thiệu</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.aboutTitle || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("aboutTitle", event.target.value)}
+                    />
+                  </label>
+                  <label className={styles.fullWidth}>
+                    <span>Đoạn giới thiệu 1</span>
+                    <Textarea
+                      rows={4}
+                      value={branchEdit.landingConfig?.aboutParagraphOne || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("aboutParagraphOne", event.target.value)}
+                    />
+                  </label>
+                  <label className={styles.fullWidth}>
+                    <span>Đoạn giới thiệu 2</span>
+                    <Textarea
+                      rows={4}
+                      value={branchEdit.landingConfig?.aboutParagraphTwo || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("aboutParagraphTwo", event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Badge mặt tiền</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.aboutBadgeTitle || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("aboutBadgeTitle", event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Badge phụ</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.aboutBadgeSubtitle || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("aboutBadgeSubtitle", event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Feature 1</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.featureSeafoodTitle || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("featureSeafoodTitle", event.target.value)}
+                    />
+                  </label>
+                  <label className={styles.fullWidth}>
+                    <span>Mô tả feature 1</span>
+                    <Textarea
+                      rows={3}
+                      value={branchEdit.landingConfig?.featureSeafoodDescription || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("featureSeafoodDescription", event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Feature 2</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.featureChefTitle || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("featureChefTitle", event.target.value)}
+                    />
+                  </label>
+                  <label className={styles.fullWidth}>
+                    <span>Mô tả feature 2</span>
+                    <Textarea
+                      rows={3}
+                      value={branchEdit.landingConfig?.featureChefDescription || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("featureChefDescription", event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Feature 3</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.featureSpaceTitle || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("featureSpaceTitle", event.target.value)}
+                    />
+                  </label>
+                  <label className={styles.fullWidth}>
+                    <span>Mô tả feature 3</span>
+                    <Textarea
+                      rows={3}
+                      value={branchEdit.landingConfig?.featureSpaceDescription || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("featureSpaceDescription", event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Feature 4</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.featureServiceTitle || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("featureServiceTitle", event.target.value)}
+                    />
+                  </label>
+                  <label className={styles.fullWidth}>
+                    <span>Mô tả feature 4</span>
+                    <Textarea
+                      rows={3}
+                      value={branchEdit.landingConfig?.featureServiceDescription || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("featureServiceDescription", event.target.value)}
+                    />
+                  </label>
+                  <label className={styles.fullWidth}>
+                    <span>Mô tả footer</span>
+                    <Textarea
+                      rows={4}
+                      value={branchEdit.landingConfig?.footerDescription || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("footerDescription", event.target.value)}
+                    />
+                  </label>
+                </div>
               </AdminSurfaceCard>
 
               <AdminSurfaceCard

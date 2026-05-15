@@ -7,6 +7,7 @@ import {
   getBranchLandingPath,
   normalizeBranchCode
 } from "../../lib/branches";
+import { normalizeLandingPageConfig } from "../../lib/landing-page-config";
 import { isSupabaseSchemaMissingError, listBranches } from "../../lib/restaurant-db";
 import { createClient } from "../../lib/supabase/server";
 
@@ -39,9 +40,15 @@ export async function generateMetadata({ params }) {
     return {};
   }
 
+  const landingConfig = normalizeLandingPageConfig(selectedBranch.landingConfig || {});
+
   return {
-    title: `${selectedBranch.name} | Hải sản cao cấp, đặt bàn nhanh, combo tiết kiệm`,
-    description: `Landing page riêng cho chi nhánh ${selectedBranch.name}. Xem menu, nhận voucher và gửi đặt bàn trực tiếp cho đúng chi nhánh.`
+    title:
+      landingConfig.seoTitle ||
+      `${selectedBranch.name} | Hải sản cao cấp, đặt bàn nhanh, combo tiết kiệm`,
+    description:
+      landingConfig.seoDescription ||
+      `Landing page riêng cho chi nhánh ${selectedBranch.name}. Xem menu, nhận voucher và gửi đặt bàn trực tiếp cho đúng chi nhánh.`
   };
 }
 

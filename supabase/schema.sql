@@ -17,6 +17,7 @@ create table if not exists public.branches (
   short_name text not null default '',
   address text not null default '',
   phone text not null default '',
+  landing_config jsonb not null default '{}'::jsonb,
   is_active boolean not null default true,
   sort_order integer not null default 0,
   created_at timestamptz not null default timezone('utc', now()),
