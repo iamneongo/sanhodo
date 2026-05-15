@@ -78,7 +78,7 @@ export function Sidebar({ className, children }) {
         <>
           <button
             type="button"
-            aria-label="Close sidebar"
+            aria-label="Đóng thanh bên"
             onClick={() => setOpen(false)}
             className={cn(
               "fixed inset-0 z-40 cursor-pointer bg-zinc-950/40 transition-opacity md:hidden",
@@ -143,7 +143,7 @@ export function SidebarTrigger({ className, ...props }) {
       {...props}
     >
       <PanelLeftIcon className="size-4" />
-      <span className="sr-only">Toggle Sidebar</span>
+      <span className="sr-only">Bật hoặc tắt thanh bên</span>
     </button>
   );
 }

@@ -235,6 +235,7 @@ function getDetailTitle({
   currentSection,
   detailOnlyLayout,
   selectedManagedBranch,
+  selectedStaff,
   selectedReservation,
   selectedOrder,
   selectedTable,
