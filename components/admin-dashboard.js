@@ -618,6 +618,7 @@ export default function AdminDashboard({
   activeSection = "overview",
   detailMode = false,
   detailId = "",
+  renderShell = true,
   initialBranches,
   initialProfiles,
   initialBranchStaffAssignments,
@@ -2298,38 +2299,8 @@ export default function AdminDashboard({
     selectedIntegration
   });
 
-  return (
-    <SidebarProvider
-      defaultOpen
-      style={{
-        "--sidebar-width": "17rem",
-        "--sidebar-width-collapsed": "4.5rem"
-      }}
-    >
-      <AdminToast message={message} onClose={() => setMessage("")} />
-      <div className="flex min-h-svh w-full bg-zinc-50">
-        <AppSidebar
-          visibleSections={visibleSections}
-          activeSection={currentSection}
-          reservationStats={reservationStats}
-          orderStats={orderStats}
-          voucherStats={voucherStats}
-          driverStats={driverStats}
-          partnerStats={partnerStats}
-          adminProfile={adminProfile}
-          roleLabels={roleLabels}
-          branches={branches}
-          activeBranchId={activeBranchId || "all"}
-          canViewAllBranches={canViewAllBranches}
-          selectedBranch={selectedBranch}
-          onBranchChange={handleBranchChange}
-          canExport={permissions.canExport}
-          branchFilterId={branchFilterId}
-          onLogout={logout}
-        />
-
-        <SidebarInset className="w-full min-w-0 bg-zinc-50">
-        <section className="flex min-h-svh w-full min-w-0 flex-col">
+  const pageBody = (
+    <section className="flex min-h-svh w-full min-w-0 flex-col">
         <AdminHeader
           title={currentSectionLabel}
           adminProfile={adminProfile}
@@ -2752,8 +2723,49 @@ export default function AdminDashboard({
         ) : null}
         </div>
         </div>
-        </section>
-        </SidebarInset>
+    </section>
+  );
+
+  if (!renderShell) {
+    return (
+      <>
+        <AdminToast message={message} onClose={() => setMessage("")} />
+        {pageBody}
+      </>
+    );
+  }
+
+  return (
+    <SidebarProvider
+      defaultOpen
+      style={{
+        "--sidebar-width": "17rem",
+        "--sidebar-width-collapsed": "4.5rem"
+      }}
+    >
+      <AdminToast message={message} onClose={() => setMessage("")} />
+      <div className="flex min-h-svh w-full bg-zinc-50">
+        <AppSidebar
+          visibleSections={visibleSections}
+          activeSection={currentSection}
+          reservationStats={reservationStats}
+          orderStats={orderStats}
+          voucherStats={voucherStats}
+          driverStats={driverStats}
+          partnerStats={partnerStats}
+          adminProfile={adminProfile}
+          roleLabels={roleLabels}
+          branches={branches}
+          activeBranchId={activeBranchId || "all"}
+          canViewAllBranches={canViewAllBranches}
+          selectedBranch={selectedBranch}
+          onBranchChange={handleBranchChange}
+          canExport={permissions.canExport}
+          branchFilterId={branchFilterId}
+          onLogout={logout}
+        />
+
+        <SidebarInset className="w-full min-w-0 bg-zinc-50">{pageBody}</SidebarInset>
       </div>
     </SidebarProvider>
   );

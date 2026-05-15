@@ -38,6 +38,7 @@ export default async function AdminSectionDetailPage({ params, searchParams }) {
     return (
       <AdminDashboard
         key={`${section}:${branchScope.activeBranchId}:${itemId}`}
+        renderShell={false}
         activeSection={section}
         detailMode
         detailId={itemId}

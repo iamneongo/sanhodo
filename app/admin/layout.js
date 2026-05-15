@@ -1,4 +1,5 @@
 import { Manrope } from "next/font/google";
+import AdminSidebarLayout from "../../components/admin/admin-sidebar-layout";
 
 const manrope = Manrope({
   subsets: ["latin", "vietnamese"],
@@ -103,7 +104,9 @@ export default function AdminLayout({ children }) {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: adminThemeCss }} />
-      <div className="admin-theme">{children}</div>
+      <div className="admin-theme">
+        <AdminSidebarLayout>{children}</AdminSidebarLayout>
+      </div>
     </>
   );
 }
