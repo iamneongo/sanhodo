@@ -178,10 +178,9 @@ p {
 }
 
 .header-inner {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: nowrap;
   gap: clamp(16px, 2vw, 24px);
   min-height: var(--header-offset);
 }
@@ -190,8 +189,8 @@ p {
   display: inline-flex;
   align-items: center;
   gap: 14px;
-  min-width: max-content;
-  flex-shrink: 0;
+  min-width: 0;
+  max-width: min(340px, 28vw);
   font-weight: 800;
   color: var(--brand);
 }
@@ -215,26 +214,31 @@ p {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  min-width: max-content;
+  min-width: 0;
   text-transform: uppercase;
 }
 
 .brand-copy strong {
   display: block;
   font-family: var(--font-cormorant), serif;
-  font-size: clamp(1.25rem, 1vw + 0.95rem, 1.55rem);
+  font-size: clamp(1rem, 0.55vw + 0.85rem, 1.28rem);
   line-height: 1;
   letter-spacing: -0.01em;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .brand-copy span {
   display: block;
   color: #d97c5a;
   line-height: 1;
-  letter-spacing: 0.12em;
-  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  font-size: 0.74rem;
   font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .site-nav {
@@ -246,7 +250,7 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(18px, 2vw, 34px);
+  gap: clamp(12px, 1.25vw, 24px);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -254,10 +258,10 @@ p {
 
 .site-nav a {
   position: relative;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   white-space: nowrap;
 }
 
@@ -297,6 +301,9 @@ p {
 
 .header-cta {
   flex-shrink: 0;
+  min-height: 48px;
+  padding-inline: 22px;
+  font-size: 0.84rem;
 }
 
 .hero {
@@ -1713,6 +1720,30 @@ p {
     align-items: flex-start;
     gap: 16px;
     width: 100%;
+  }
+}
+
+@media (max-width: 1320px) {
+  .brand {
+    max-width: min(280px, 24vw);
+  }
+
+  .brand-mark {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+
+  .site-nav ul {
+    gap: 14px;
+  }
+
+  .site-nav a {
+    font-size: 0.78rem;
+  }
+
+  .header-cta {
+    padding-inline: 18px;
   }
 }
 
