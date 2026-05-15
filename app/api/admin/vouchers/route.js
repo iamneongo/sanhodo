@@ -9,7 +9,8 @@ import {
 import {
   buildFallbackVoucherCampaign,
   generateVoucherPayload,
-  isValidVietnamPhone
+  isValidVietnamPhone,
+  toPersistedVoucherCampaignId
 } from "../../../../lib/business-rules";
 
 export async function GET(request) {
@@ -42,6 +43,10 @@ export async function POST(request) {
       campaigns[0] ||
       buildFallbackVoucherCampaign(branchId);
     const voucherInfo = generateVoucherPayload(body.phone || "", selectedCampaign, branchId);
+    const persistedCampaignId =
+      toPersistedVoucherCampaignId(body.campaignId) ||
+      toPersistedVoucherCampaignId(selectedCampaign.id) ||
+      toPersistedVoucherCampaignId(voucherInfo.campaignId);
     const customerProfile = await upsertCustomerProfileByPhone(context.supabase, {
       phone: body.phone || "",
       fullName: body.fullName || "",
@@ -60,7 +65,7 @@ export async function POST(request) {
       voucherDiscountType: body.voucherDiscountType || voucherInfo.voucherDiscountType,
       voucherDiscountValue: body.voucherDiscountValue ?? voucherInfo.voucherDiscountValue,
       voucherDescription: body.voucherDescription || voucherInfo.voucherDescription,
-      campaignId: selectedCampaign.id || voucherInfo.campaignId || "",
+      campaignId: persistedCampaignId,
       customerProfileId: customerProfile?.id || "",
       expiresAt: body.expiresAt || voucherInfo.expiresAt,
       notes: body.notes || ""
