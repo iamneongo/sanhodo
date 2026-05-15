@@ -69,6 +69,11 @@ export default function AdminLayout({ children }) {
       background: #f4f4f5;
     }
 
+    .admin-theme main,
+    .admin-theme [data-slot="sidebar-inset"] {
+      padding-top: 0 !important;
+    }
+
     [data-slot="dialog-content"] {
       font-family: var(--admin-font), sans-serif !important;
     }

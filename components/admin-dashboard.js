@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import AdminBranchesSection from "./admin/sections/admin-branches-section";
-import AdminContentSkeleton from "./admin/admin-content-skeleton";
 import AdminHeader from "./admin/admin-header";
 import AdminIntegrationsSection from "./admin/sections/admin-integrations-section";
 import AdminMenuSection from "./admin/sections/admin-menu-section";
@@ -644,8 +643,6 @@ export default function AdminDashboard({
   adminProfile
 }) {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const currentRole = adminProfile?.role || "admin";
   const branchFilterId = activeBranchId && activeBranchId !== "all" ? activeBranchId : "";
   const [message, setMessage] = useState("");
@@ -686,7 +683,6 @@ export default function AdminDashboard({
   const [integrations, setIntegrations] = useState(initialIntegrations);
   const [syncLogs, setSyncLogs] = useState(initialSyncLogs);
   const driverFeatureStatus = initialFeatureStatus?.drivers || { ready: true, message: "" };
-  const [isNavigating, setIsNavigating] = useState(false);
 
   const [reservationQuery, setReservationQuery] = useState("");
   const [reservationStatus, setReservationStatus] = useState("all");
@@ -879,13 +875,8 @@ export default function AdminDashboard({
   const branchQueryString = branchFilterId ? `?branch=${encodeURIComponent(branchFilterId)}` : "";
   const buildAdminHref = (section, itemId = "") =>
     `/admin/${section}${itemId ? `/${itemId}` : ""}${branchQueryString}`;
-  const startNavigation = (callback) => {
-    setIsNavigating(true);
-    callback();
-  };
-  const openSectionDetail = (section, itemId) =>
-    startNavigation(() => router.push(buildAdminHref(section, itemId)));
-  const openSection = (section) => startNavigation(() => router.push(buildAdminHref(section)));
+  const openSectionDetail = (section, itemId) => router.push(buildAdminHref(section, itemId));
+  const openSection = (section) => router.push(buildAdminHref(section));
   const openNotificationItem = (item) => {
     if (!item?.section) {
       return;
@@ -898,8 +889,7 @@ export default function AdminDashboard({
 
     openSection(item.section);
   };
-  const backToSection = (section = currentSection) =>
-    startNavigation(() => router.push(buildAdminHref(section)));
+  const backToSection = (section = currentSection) => router.push(buildAdminHref(section));
   const detailOnlyLayout = detailMode && currentSection !== "overview";
   const detailHeaderActions = (section, extra = null) => (
     <div className={styles.detailHeaderActions}>
@@ -1015,7 +1005,6 @@ export default function AdminDashboard({
     }
     const query = params.toString();
     const basePath = detailOnlyLayout && detailId ? `/admin/${currentSection}/${detailId}` : `/admin/${currentSection}`;
-    setIsNavigating(true);
     router.replace(query ? `${basePath}?${query}` : basePath);
     router.refresh();
   };
@@ -2139,14 +2128,9 @@ export default function AdminDashboard({
 
   const logout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
-    setIsNavigating(true);
     router.push("/admin/login");
     router.refresh();
   };
-
-  useEffect(() => {
-    setIsNavigating(false);
-  }, [pathname, searchParams?.toString(), activeBranchId, detailId, currentSection]);
 
   useEffect(() => {
     if (!message) return undefined;
@@ -2358,7 +2342,6 @@ export default function AdminDashboard({
         />
 
         <div className="relative flex-1 w-full min-w-0 p-4 md:p-6">
-        {isNavigating ? <AdminContentSkeleton detail={detailOnlyLayout} overlay /> : null}
         <div className="flex w-full min-w-0 flex-col gap-4 md:gap-6">
         {currentSection === "overview" ? (
           <AdminOverviewSection
