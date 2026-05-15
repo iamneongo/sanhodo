@@ -2345,7 +2345,7 @@ export default function AdminDashboard({
         />
 
         <SidebarInset className="w-full min-w-0 bg-zinc-50">
-        <section className="flex min-h-svh w-full min-w-0 flex-col gap-4 md:gap-6">
+        <section className="flex min-h-svh w-full min-w-0 flex-col">
         <AdminHeader
           title={currentSectionLabel}
           adminProfile={adminProfile}

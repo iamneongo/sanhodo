@@ -119,7 +119,7 @@ export function SidebarInset({ className, children }) {
     <main
       data-slot="sidebar-inset"
       className={cn(
-        "relative flex min-h-svh min-w-0 flex-1 flex-col bg-background md:m-2 md:ml-0 md:rounded-xl md:border md:border-zinc-200/80 md:bg-white md:shadow-sm",
+        "relative flex min-h-svh min-w-0 flex-1 flex-col bg-zinc-50",
         className
       )}
     >
