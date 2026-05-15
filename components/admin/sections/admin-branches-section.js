@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AdminActiveFilters from "../admin-active-filters";
 import AdminEmptyState from "../admin-empty-state";
 import AdminFormDialog from "../admin-form-dialog";
@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { getBranchLandingPath } from "../../../lib/branches";
+import { getAbsoluteBranchLandingUrl, getBranchLandingPath } from "../../../lib/branches";
 import styles from "../../admin.module.css";
 
 export default function AdminBranchesSection({
@@ -92,6 +92,14 @@ export default function AdminBranchesSection({
     profiles.find((item) => item.id === profileId)?.email ||
     "Nhân sự nội bộ";
   const [uploadingLandingField, setUploadingLandingField] = useState("");
+  const [runtimeOrigin, setRuntimeOrigin] = useState("");
+  const [copiedLandingUrl, setCopiedLandingUrl] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setRuntimeOrigin(window.location.origin);
+    }
+  }, []);
   const updateLandingConfig = (key, value) =>
     setBranchEdit((prev) => ({
       ...prev,
@@ -114,6 +122,18 @@ export default function AdminBranchesSection({
     } finally {
       setUploadingLandingField("");
     }
+  };
+  const landingPageUrl = selectedManagedBranch
+    ? getAbsoluteBranchLandingUrl(selectedManagedBranch, runtimeOrigin)
+    : "";
+  const copyLandingPageUrl = async () => {
+    if (!landingPageUrl || typeof navigator === "undefined" || !navigator.clipboard) {
+      return;
+    }
+
+    await navigator.clipboard.writeText(landingPageUrl);
+    setCopiedLandingUrl(true);
+    window.setTimeout(() => setCopiedLandingUrl(false), 1800);
   };
   const renderLandingImageField = (fieldKey, label, helperText) => {
     const value = branchEdit.landingConfig?.[fieldKey] || "";
@@ -469,18 +489,32 @@ export default function AdminBranchesSection({
                 kicker="Landing page chi nhánh"
                 title="Nội dung công khai cho landing page"
                 actions={
-                  <a
-                    className="inline-flex h-9 items-center justify-center rounded-lg border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
-                    href={getBranchLandingPath(selectedManagedBranch)}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Mở landing page
-                  </a>
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={copyLandingPageUrl}
+                      disabled={!landingPageUrl}
+                    >
+                      {copiedLandingUrl ? "Đã sao chép" : "Sao chép link"}
+                    </Button>
+                    <a
+                      className="inline-flex h-9 items-center justify-center rounded-lg border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+                      href={landingPageUrl || getBranchLandingPath(selectedManagedBranch)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Mở landing page
+                    </a>
+                  </div>
                 }
                 className={styles.subsectionCard}
               >
                 <div className={styles.editGrid}>
+                  <label className={styles.fullWidth}>
+                    <span>Link landing page theo domain hiện tại</span>
+                    <Input type="text" value={landingPageUrl} readOnly />
+                  </label>
                   <label>
                     <span>SEO title</span>
                     <Input
