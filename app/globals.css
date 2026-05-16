@@ -361,9 +361,10 @@ p {
 .hero-text {
   max-width: 560px;
   margin-top: 24px;
-  color: #4f392f;
+  color: #fff7f1;
   font-size: 1.08rem;
   line-height: 1.72;
+  text-shadow: 0 10px 24px rgba(34, 19, 11, 0.38);
 }
 
 .hero-scroll {
@@ -406,7 +407,7 @@ p {
 }
 
 .hero-micro-trust {
-  margin-top: 20px;
+  margin-top: 18px;
 }
 
 .hero-trust-card {
@@ -432,7 +433,7 @@ p {
 }
 
 .branch-trust-card {
-  margin-top: 12px;
+  margin-top: 0;
 }
 
 .about::before,
@@ -1437,9 +1438,9 @@ p {
   bottom: 18px;
   z-index: 60;
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
   gap: 8px;
-  width: min(720px, calc(100vw - 24px));
+  width: min(520px, calc(100vw - 24px));
   padding: 8px;
   border: 1px solid rgba(130, 84, 61, 0.12);
   border-radius: 24px;
@@ -1470,26 +1471,40 @@ p {
   color: #fff8f0;
 }
 
-.chat-toggle {
+.floating-contact-actions {
   position: fixed;
   right: 18px;
-  bottom: 106px;
+  bottom: 100px;
   z-index: 61;
-  min-height: 50px;
-  padding: 0 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.contact-float {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
   border: 0;
   border-radius: 999px;
-  background: linear-gradient(135deg, #113250, #264f74);
   color: #fff;
-  font-weight: 800;
   cursor: pointer;
   box-shadow: 0 14px 32px rgba(13, 34, 53, 0.24);
+}
+
+.contact-float-call {
+  background: linear-gradient(135deg, #e6654c, #c94d38);
+}
+
+.chat-toggle {
+  background: linear-gradient(135deg, #113250, #264f74);
 }
 
 .chat-panel {
   position: fixed;
   right: 18px;
-  bottom: 164px;
+  bottom: 168px;
   z-index: 62;
   width: min(380px, calc(100vw - 24px));
   overflow: hidden;
@@ -1511,10 +1526,12 @@ p {
 .chat-panel-header strong {
   display: block;
   margin-bottom: 4px;
+  color: #183850;
+  font-size: 0.98rem;
 }
 
 .chat-panel-header span {
-  color: var(--muted);
+  color: #5c6772;
   font-size: 0.88rem;
   line-height: 1.5;
 }
@@ -2031,11 +2048,8 @@ p {
   }
 
   .sticky-cta-bar {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-areas:
-      "book book"
-      "call zalo";
-    width: min(calc(100vw - 16px), 430px);
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    width: min(calc(100vw - 16px), 400px);
     bottom: 8px;
     padding: 6px;
     border-radius: 18px;
@@ -2047,29 +2061,20 @@ p {
     padding: 0 10px;
   }
 
-  .sticky-cta-item:nth-child(1) {
-    grid-area: book;
-  }
-
-  .sticky-cta-item:nth-child(2) {
-    grid-area: call;
-  }
-
-  .sticky-cta-item:nth-child(3) {
-    grid-area: zalo;
-  }
-
-  .chat-toggle {
+  .floating-contact-actions {
     right: 12px;
-    bottom: 124px;
-    min-height: 44px;
-    padding: 0 12px;
-    font-size: 0.8rem;
+    bottom: 116px;
+    gap: 8px;
+  }
+
+  .contact-float {
+    width: 46px;
+    height: 46px;
   }
 
   .chat-panel {
     right: 8px;
-    bottom: 178px;
+    bottom: 170px;
     width: min(calc(100vw - 16px), 360px);
   }
 
@@ -2105,7 +2110,7 @@ p {
     width: 92px;
   }
 
-  .chat-toggle,
+  .floating-contact-actions,
   .chat-panel {
     display: none;
   }

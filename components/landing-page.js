@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { MessageCircle, Phone, X } from "lucide-react";
 import {
   DEFAULT_BRANCHES,
   MAIN_BRANCH_CODE,
@@ -117,7 +118,7 @@ const quickAnswers = [
   {
     keywords: ["đặt bàn", "book", "reservation"],
     answer:
-      "Bạn có thể bấm Đặt bàn nhanh ở cuối màn hình hoặc điền form đặt bàn. Chỉ cần tên, số điện thoại, số khách và thời gian là xong."
+      "Bạn chỉ cần để lại tên, số điện thoại, số khách và thời gian. Đội ngũ sẽ xác nhận nhanh qua Zalo hoặc điện thoại của chi nhánh."
   },
   {
     keywords: ["đường đi", "địa chỉ", "map"],
@@ -220,7 +221,7 @@ export default function LandingPage({
   const [chatMessages, setChatMessages] = useState([
     {
       role: "bot",
-      text: "Xin chào, mình là GOECO Chatbot demo. Mình có thể tư vấn menu, giá, đặt bàn, đường đi và gợi ý combo tiết kiệm."
+      text: "Xin chào. Mình có thể hỗ trợ menu, giá, đặt bàn, đường đi và gợi ý combo phù hợp."
     }
   ]);
   const [upsellModal, setUpsellModal] = useState(null);
@@ -326,6 +327,9 @@ export default function LandingPage({
   const activeHotline = selectedBranch?.phone || hotline;
   const activeHotlineDisplay = selectedBranch?.phone || hotlineDisplay;
   const activeZaloLink = `https://zalo.me/${String(activeHotline || hotline).replace(/[^\d]/g, "")}`;
+  const chatBranchLabel = displayBranchShortName || displayBranchName || "San Hô Đỏ";
+  const chatTitle = `${chatBranchLabel} xin chào`;
+  const chatSummary = `${displayBranchName} hỗ trợ menu, giá, đặt bàn nhanh và hướng dẫn Zalo.`;
   const activeVoucherCampaign = useMemo(() => {
     const branchFallback = buildFallbackVoucherCampaign(selectedBranchId);
     return (
@@ -334,6 +338,15 @@ export default function LandingPage({
       branchFallback
     );
   }, [selectedBranchId, selectedVoucherCampaignId, voucherCampaigns]);
+
+  useEffect(() => {
+    setChatMessages([
+      {
+        role: "bot",
+        text: `Xin chào từ ${displayBranchName}. Mình có thể hỗ trợ menu, giá, đặt bàn, đường đi và gợi ý combo phù hợp.`
+      }
+    ]);
+  }, [displayBranchName]);
 
   const structuredData = useMemo(
     () => ({
@@ -956,17 +969,11 @@ export default function LandingPage({
                 <button className="button button-primary" type="button" onClick={() => focusReservation()}>
                   {landingConfig.primaryCtaLabel || DEFAULT_LANDING_PAGE_CONFIG.primaryCtaLabel}
                 </button>
-                <a className="button button-secondary" href={`tel:${activeHotline}`}>
-                  {(landingConfig.secondaryCtaLabel || DEFAULT_LANDING_PAGE_CONFIG.secondaryCtaLabel) === "Gọi ngay"
-                    ? `Gọi ${activeHotlineDisplay}`
-                    : `${landingConfig.secondaryCtaLabel || DEFAULT_LANDING_PAGE_CONFIG.secondaryCtaLabel} ${activeHotlineDisplay}`}
+                <a className="button button-secondary" href={activeZaloLink} target="_blank" rel="noreferrer">
+                  Zalo {activeHotlineDisplay}
                 </a>
               </div>
               <div className="hero-micro-trust reveal is-visible">
-                <div className="hero-trust-card">
-                  <strong>Đặt bàn nhanh</strong>
-                  <span>Form 1 phút, tự động lưu lead và sẵn sàng đẩy CRM / Sheet / Zalo.</span>
-                </div>
                 <div className="hero-trust-card branch-trust-card">
                   <strong>Chi nhánh phục vụ</strong>
                   <span>{displayBranchName}</span>
@@ -1768,24 +1775,35 @@ export default function LandingPage({
         <button className="sticky-cta-item sticky-cta-book" type="button" onClick={() => focusReservation()}>
           Đặt bàn ngay
         </button>
-        <a className="sticky-cta-item" href={`tel:${activeHotline}`}>
-          Gọi ngay
-        </a>
         <a className="sticky-cta-item" href={activeZaloLink} target="_blank" rel="noreferrer">
           Zalo
         </a>
       </div>
 
-      <button className="chat-toggle" type="button" onClick={() => setChatOpen((prev) => !prev)}>
-        {chatOpen ? "Đóng chat" : "GOECO Chatbot"}
-      </button>
+      <div className="floating-contact-actions">
+        <a
+          className="contact-float contact-float-call"
+          href={`tel:${activeHotline}`}
+          aria-label={`Gọi ${displayBranchName}`}
+        >
+          <Phone className="size-5" />
+        </a>
+        <button
+          className="contact-float chat-toggle"
+          type="button"
+          onClick={() => setChatOpen((prev) => !prev)}
+          aria-label={chatOpen ? "Đóng trò chuyện" : `Mở trò chuyện với ${displayBranchName}`}
+        >
+          {chatOpen ? <X className="size-5" /> : <MessageCircle className="size-5" />}
+        </button>
+      </div>
 
       {chatOpen ? (
         <div className="chat-panel">
           <div className="chat-panel-header">
             <div>
-              <strong>GOECO Chatbot</strong>
-              <span>Tư vấn menu, giá, đặt bàn, đường đi, combo</span>
+              <strong>{chatTitle}</strong>
+              <span>{chatSummary}</span>
             </div>
             <button type="button" onClick={() => setChatOpen(false)}>
               ×
