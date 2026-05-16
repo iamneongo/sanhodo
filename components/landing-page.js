@@ -145,6 +145,17 @@ function getChatReply(input) {
   return "Mình có thể hỗ trợ nhanh về menu, giá, đặt bàn, đường đi hoặc gợi ý combo phù hợp số người. Bạn cứ nhắn ngắn gọn là được.";
 }
 
+function buildChatReply(input, branchName, hotlineValue, hotlineText) {
+  const baseReply = getChatReply(input);
+
+  return baseReply
+    .replaceAll("Nhà hàng", branchName)
+    .replaceAll("chi nhánh", branchName)
+    .replaceAll("Zalo hoặc điện thoại của chi nhánh", `Zalo hoặc số ${hotlineText} của ${branchName}`)
+    .replaceAll("đường đi tới nhà hàng", `đường đi tới ${branchName}`)
+    .replaceAll("gửi hướng dẫn ngay sau", `gửi hướng dẫn qua Zalo ${hotlineValue} ngay sau`);
+}
+
 function parseMoneyToNumber(value) {
   return Number(String(value || "0").replace(/[^\d]/g, "")) || 0;
 }
@@ -228,8 +239,13 @@ export default function LandingPage({
   const [selectedOffer, setSelectedOffer] = useState("");
 
   const chatSuggestions = useMemo(
-    () => ["Menu hôm nay", "Giá combo 4 người", "Cách đặt bàn nhanh", "Đường đi tới nhà hàng"],
-    []
+    () => [
+      `Menu ${displayBranchShortName || "hôm nay"}`,
+      "Giá combo 4 người",
+      `Zalo ${activeHotlineDisplay}`,
+      `Đường đi tới ${displayBranchShortName || "nhà hàng"}`
+    ],
+    [activeHotlineDisplay, displayBranchShortName]
   );
 
   const menuCategories = useMemo(
@@ -864,7 +880,10 @@ export default function LandingPage({
     setChatMessages((prev) => [
       ...prev,
       { role: "user", text: trimmed },
-      { role: "bot", text: getChatReply(trimmed) }
+      {
+        role: "bot",
+        text: buildChatReply(trimmed, displayBranchName, activeHotline, activeHotlineDisplay)
+      }
     ]);
     setChatInput("");
   };
