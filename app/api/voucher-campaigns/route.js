@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { buildFallbackVoucherCampaign } from "../../../lib/business-rules";
 import { createClient } from "../../../lib/supabase/server";
 import { isSupabaseSchemaMissingError, listVoucherCampaigns } from "../../../lib/restaurant-db";
+import {
+  getSupabaseEnvMissingMessage,
+  isSupabaseEnvMissingError
+} from "../../../lib/supabase/config";
 
 export async function GET(request) {
   try {
@@ -19,6 +23,15 @@ export async function GET(request) {
       data: items
     });
   } catch (error) {
+    if (isSupabaseEnvMissingError(error)) {
+      return NextResponse.json({
+        ok: true,
+        data: [buildFallbackVoucherCampaign("")],
+        setupRequired: true,
+        message: getSupabaseEnvMissingMessage()
+      });
+    }
+
     if (isSupabaseSchemaMissingError(error)) {
       return NextResponse.json({
         ok: true,

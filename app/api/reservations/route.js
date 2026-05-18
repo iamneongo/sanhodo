@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../lib/supabase/server";
 import {
+  getSupabaseEnvMissingMessage,
+  isSupabaseEnvMissingError
+} from "../../../lib/supabase/config";
+import {
   createPublicReservation,
   forwardToWebhooks,
   isSupabaseSchemaMissingError,
@@ -89,6 +93,16 @@ export async function POST(request) {
       message: "Đã nhận yêu cầu đặt bàn. Đội ngũ sẽ liên hệ xác nhận qua điện thoại hoặc Zalo."
     });
   } catch (error) {
+    if (isSupabaseEnvMissingError(error)) {
+      return NextResponse.json(
+        {
+          error: getSupabaseEnvMissingMessage(),
+          setupRequired: true
+        },
+        { status: 503 }
+      );
+    }
+
     if (isSupabaseSchemaMissingError(error)) {
       return NextResponse.json(
         {

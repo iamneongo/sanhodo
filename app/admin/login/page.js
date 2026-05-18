@@ -16,5 +16,12 @@ export default async function AdminLoginPage({ searchParams }) {
     redirect("/admin");
   }
 
-  return <AdminLoginForm initialError={params.error === "forbidden" ? "Tài khoản này chưa có quyền vào admin." : ""} />;
+  const initialError =
+    params.error === "forbidden"
+      ? "Tài khoản này chưa có quyền vào admin."
+      : params.error === "missing-env"
+        ? "Môi trường deploy đang thiếu biến Supabase. Hãy thêm NEXT_PUBLIC_SUPABASE_URL và NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY trên Vercel."
+        : "";
+
+  return <AdminLoginForm initialError={initialError} />;
 }

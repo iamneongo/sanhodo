@@ -238,16 +238,6 @@ export default function LandingPage({
   const [upsellModal, setUpsellModal] = useState(null);
   const [selectedOffer, setSelectedOffer] = useState("");
 
-  const chatSuggestions = useMemo(
-    () => [
-      `Menu ${displayBranchShortName || "hôm nay"}`,
-      "Giá combo 4 người",
-      `Zalo ${activeHotlineDisplay}`,
-      `Đường đi tới ${displayBranchShortName || "nhà hàng"}`
-    ],
-    [activeHotlineDisplay, displayBranchShortName]
-  );
-
   const menuCategories = useMemo(
     () => ["Tất cả", ...new Set(featuredDishes.map((item) => item.category || "Khác"))],
     [featuredDishes]
@@ -346,6 +336,15 @@ export default function LandingPage({
   const chatBranchLabel = displayBranchShortName || displayBranchName || "San Hô Đỏ";
   const chatTitle = `${chatBranchLabel} xin chào`;
   const chatSummary = `${displayBranchName} hỗ trợ menu, giá, đặt bàn nhanh và hướng dẫn Zalo.`;
+  const chatSuggestions = useMemo(
+    () => [
+      `Menu ${displayBranchShortName || "hôm nay"}`,
+      "Giá combo 4 người",
+      `Zalo ${activeHotlineDisplay}`,
+      `Đường đi tới ${displayBranchShortName || "nhà hàng"}`
+    ],
+    [activeHotlineDisplay, displayBranchShortName]
+  );
   const activeVoucherCampaign = useMemo(() => {
     const branchFallback = buildFallbackVoucherCampaign(selectedBranchId);
     return (

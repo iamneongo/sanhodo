@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../lib/supabase/server";
 import {
+  getSupabaseEnvMissingMessage,
+  isSupabaseEnvMissingError
+} from "../../../lib/supabase/config";
+import {
   createPublicVoucherLead,
   forwardToWebhooks,
   isSupabaseSchemaMissingError,
@@ -83,6 +87,16 @@ export async function POST(request) {
       }
     });
   } catch (error) {
+    if (isSupabaseEnvMissingError(error)) {
+      return NextResponse.json(
+        {
+          error: getSupabaseEnvMissingMessage(),
+          setupRequired: true
+        },
+        { status: 503 }
+      );
+    }
+
     if (isSupabaseSchemaMissingError(error)) {
       return NextResponse.json(
         {

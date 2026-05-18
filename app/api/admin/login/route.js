@@ -14,6 +14,10 @@ import {
 } from "../../../../lib/local-admin";
 import { hasDashboardAccess } from "../../../../lib/admin-permissions";
 import { isSupabaseSchemaMissingError } from "../../../../lib/restaurant-db";
+import {
+  getSupabaseEnvMissingMessage,
+  isSupabaseEnvMissingError
+} from "../../../../lib/supabase/config";
 import { createClient } from "../../../../lib/supabase/server";
 
 async function loadAdminProfile(supabase, userId) {
@@ -147,6 +151,13 @@ export async function POST(request) {
 
     return response;
   } catch (error) {
+    if (isSupabaseEnvMissingError(error)) {
+      return NextResponse.json(
+        { error: getSupabaseEnvMissingMessage(), setupRequired: true },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       { error: error.message || "Không thể đăng nhập với Supabase" },
       { status: 500 }

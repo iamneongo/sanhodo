@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../lib/supabase/server";
+import { DEFAULT_BRANCHES } from "../../../lib/branches";
 import { isSupabaseSchemaMissingError, listBranches } from "../../../lib/restaurant-db";
+import {
+  getSupabaseEnvMissingMessage,
+  isSupabaseEnvMissingError
+} from "../../../lib/supabase/config";
 
 export async function GET() {
   try {
@@ -8,6 +13,15 @@ export async function GET() {
     const branches = await listBranches(supabase, { activeOnly: true });
     return NextResponse.json({ ok: true, data: branches });
   } catch (error) {
+    if (isSupabaseEnvMissingError(error)) {
+      return NextResponse.json({
+        ok: true,
+        data: DEFAULT_BRANCHES,
+        setupRequired: true,
+        message: getSupabaseEnvMissingMessage()
+      });
+    }
+
     if (isSupabaseSchemaMissingError(error)) {
       return NextResponse.json({
         ok: true,
