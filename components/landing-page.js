@@ -28,9 +28,9 @@ import {
 
 const hotline = "0814645999";
 const hotlineDisplay = "0814 645 999";
-const secondaryHotline = "0522282229";
 const secondaryHotlineDisplay = "0522 282 229";
 const reservationMinDate = getTodayDateInput();
+const DEFAULT_BRAND_NAME = "San Hô Đỏ";
 
 const fallbackFeaturedDishes = [
   {
@@ -229,12 +229,7 @@ export default function LandingPage({
   const [orderStatus, setOrderStatus] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
-  const [chatMessages, setChatMessages] = useState([
-    {
-      role: "bot",
-      text: "Xin chào. Mình có thể hỗ trợ menu, giá, đặt bàn, đường đi và gợi ý combo phù hợp."
-    }
-  ]);
+  const [chatReply, setChatReply] = useState("");
   const [upsellModal, setUpsellModal] = useState(null);
   const [selectedOffer, setSelectedOffer] = useState("");
 
@@ -278,10 +273,14 @@ export default function LandingPage({
     displayBranchShortName && !displayBranchName.toLowerCase().includes(displayBranchShortName.toLowerCase())
       ? displayBranchShortName
       : "";
-  const brandPrimaryLine = landingConfig.brandPrimary || displayBranchName;
-  const brandSecondaryLine = landingConfig.brandSecondary || defaultSecondaryLine;
+  const derivedBranchLabel = displayBranchName
+    .replace(/^San Hô Đỏ\s*/i, "")
+    .trim();
+  const brandPrimaryLine = landingConfig.brandPrimary || DEFAULT_BRAND_NAME;
+  const brandSecondaryLine =
+    landingConfig.brandSecondary || derivedBranchLabel || defaultSecondaryLine || displayBranchShortName;
   const heroEyebrow = landingConfig.heroEyebrow || DEFAULT_LANDING_PAGE_CONFIG.heroEyebrow;
-  const heroTitle = landingConfig.heroTitle || brandPrimaryLine;
+  const heroTitle = landingConfig.heroTitle || DEFAULT_BRAND_NAME;
   const heroSubtitle = landingConfig.heroSubtitle || brandSecondaryLine;
   const heroDescriptionLines = String(
     landingConfig.heroDescription || DEFAULT_LANDING_PAGE_CONFIG.heroDescription
@@ -333,17 +332,16 @@ export default function LandingPage({
   const activeHotline = selectedBranch?.phone || hotline;
   const activeHotlineDisplay = selectedBranch?.phone || hotlineDisplay;
   const activeZaloLink = `https://zalo.me/${String(activeHotline || hotline).replace(/[^\d]/g, "")}`;
-  const chatBranchLabel = displayBranchShortName || displayBranchName || "San Hô Đỏ";
-  const chatTitle = `${chatBranchLabel} xin chào`;
-  const chatSummary = `${displayBranchName} hỗ trợ menu, giá, đặt bàn nhanh và hướng dẫn Zalo.`;
+  const chatTitle = DEFAULT_BRAND_NAME;
+  const chatSummary = `${displayBranchName} xin chào`;
   const chatSuggestions = useMemo(
     () => [
       `Menu ${displayBranchShortName || "hôm nay"}`,
       "Giá combo 4 người",
-      `Zalo ${activeHotlineDisplay}`,
-      `Đường đi tới ${displayBranchShortName || "nhà hàng"}`
+      `Đặt bàn tại ${displayBranchShortName || "chi nhánh"}`,
+      `Đường đi ${displayBranchShortName || "chi nhánh"}`
     ],
-    [activeHotlineDisplay, displayBranchShortName]
+    [displayBranchShortName]
   );
   const activeVoucherCampaign = useMemo(() => {
     const branchFallback = buildFallbackVoucherCampaign(selectedBranchId);
@@ -355,13 +353,21 @@ export default function LandingPage({
   }, [selectedBranchId, selectedVoucherCampaignId, voucherCampaigns]);
 
   useEffect(() => {
-    setChatMessages([
-      {
-        role: "bot",
-        text: `Xin chào từ ${displayBranchName}. Mình có thể hỗ trợ menu, giá, đặt bàn, đường đi và gợi ý combo phù hợp.`
-      }
-    ]);
+    setChatReply(
+      `${displayBranchName} đang sẵn sàng hỗ trợ menu, đặt bàn nhanh và hướng dẫn liên hệ.`
+    );
   }, [displayBranchName]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    const titleBase =
+      landingConfig.seoTitle ||
+      `${displayBranchName} | Hải sản cao cấp, đặt bàn nhanh, combo tiết kiệm`;
+    document.title = titleBase;
+  }, [displayBranchName, landingConfig.seoTitle]);
 
   const structuredData = useMemo(
     () => ({
@@ -876,14 +882,7 @@ export default function LandingPage({
       return;
     }
 
-    setChatMessages((prev) => [
-      ...prev,
-      { role: "user", text: trimmed },
-      {
-        role: "bot",
-        text: buildChatReply(trimmed, displayBranchName, activeHotline, activeHotlineDisplay)
-      }
-    ]);
+    setChatReply(buildChatReply(trimmed, displayBranchName, activeHotline, activeHotlineDisplay));
     setChatInput("");
   };
 
@@ -946,6 +945,41 @@ export default function LandingPage({
                 <a href="#contact">Liên hệ</a>
               </li>
             </ul>
+            <div className="nav-mobile-panels">
+              <div className="nav-mobile-card">
+                <span className="nav-mobile-kicker">Chi nhánh đang xem</span>
+                <strong>{displayBranchName}</strong>
+                <span>{selectedBranch?.address || "Đường ven biển, Hồ Tràm, Xuyên Mộc"}</span>
+                {(branches || []).length > 1 ? (
+                  <select
+                    className="nav-mobile-select"
+                    value={selectedBranchId}
+                    onChange={(event) => handleBranchSelect(event.target.value)}
+                  >
+                    {branches.map((branch) => (
+                      <option key={branch.id} value={branch.id}>
+                        {branch.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : null}
+              </div>
+              <div className="nav-mobile-card">
+                <span className="nav-mobile-kicker">Ngôn ngữ</span>
+                <div className="nav-language-list">
+                  <button type="button" className="nav-language-chip is-active">
+                    VI
+                  </button>
+                  <button type="button" className="nav-language-chip" disabled>
+                    EN
+                  </button>
+                  <button type="button" className="nav-language-chip" disabled>
+                    中文
+                  </button>
+                </div>
+                <span>Tiếng Việt đang được áp dụng cho landing page hiện tại.</span>
+              </div>
+            </div>
           </nav>
 
           <a className="button button-primary header-cta" href="#reservation">
@@ -988,14 +1022,8 @@ export default function LandingPage({
                   {landingConfig.primaryCtaLabel || DEFAULT_LANDING_PAGE_CONFIG.primaryCtaLabel}
                 </button>
                 <a className="button button-secondary" href={activeZaloLink} target="_blank" rel="noreferrer">
-                  Zalo {activeHotlineDisplay}
+                  Zalo
                 </a>
-              </div>
-              <div className="hero-micro-trust reveal is-visible">
-                <div className="hero-trust-card branch-trust-card">
-                  <strong>Chi nhánh phục vụ</strong>
-                  <span>{displayBranchName}</span>
-                </div>
               </div>
               <div className="hero-scroll">
                 <span>Scroll</span>
@@ -1817,7 +1845,7 @@ export default function LandingPage({
       </div>
 
       {chatOpen ? (
-        <div className="chat-panel">
+          <div className="chat-panel">
           <div className="chat-panel-header">
             <div>
               <strong>{chatTitle}</strong>
@@ -1827,13 +1855,7 @@ export default function LandingPage({
               ×
             </button>
           </div>
-          <div className="chat-messages">
-            {chatMessages.map((message, index) => (
-              <div className={`chat-bubble chat-${message.role}`} key={`${message.role}-${index}`}>
-                {message.text}
-              </div>
-            ))}
-          </div>
+          {chatReply ? <div className="chat-response">{chatReply}</div> : null}
           <div className="chat-suggestions">
             {chatSuggestions.map((suggestion) => (
               <button key={suggestion} type="button" onClick={() => sendChat(suggestion)}>
