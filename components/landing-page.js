@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle, Phone, X } from "lucide-react";
+import { Check, ChevronDown, MessageCircle, Phone, X } from "lucide-react";
 import {
   DEFAULT_BRANCHES,
   MAIN_BRANCH_CODE,
@@ -666,6 +666,8 @@ export default function LandingPage({
 }) {
   const router = useRouter();
   const [locale, setLocale] = useState("vi");
+  const [localeMenuOpen, setLocaleMenuOpen] = useState(false);
+  const [branchMenuOpen, setBranchMenuOpen] = useState(false);
   const [featuredDishes, setFeaturedDishes] = useState(fallbackFeaturedDishes);
   const [branches, setBranches] = useState(initialBranches?.length ? initialBranches : fallbackBranches);
   const [selectedBranchId, setSelectedBranchId] = useState(() =>
@@ -980,6 +982,28 @@ export default function LandingPage({
     setChatReply(ui.chatReply(displayBranchName));
   }, [displayBranchName, ui]);
 
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    const handleOutsideClick = (event) => {
+      const localeDropdown = document.querySelector("[data-locale-dropdown]");
+      const branchDropdown = document.querySelector("[data-branch-dropdown]");
+
+      if (localeDropdown && !localeDropdown.contains(event.target)) {
+        setLocaleMenuOpen(false);
+      }
+
+      if (branchDropdown && !branchDropdown.contains(event.target)) {
+        setBranchMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handleOutsideClick);
+    return () => document.removeEventListener("pointerdown", handleOutsideClick);
+  }, []);
+
   const structuredData = useMemo(
     () => ({
       "@context": "https://schema.org",
@@ -1287,6 +1311,7 @@ export default function LandingPage({
   const switchLocale = (nextLocale) => {
     const normalizedLocale = normalizeLocale(nextLocale);
     setLocale(normalizedLocale);
+    setLocaleMenuOpen(false);
 
     if (typeof window !== "undefined") {
       window.localStorage.setItem("landing-locale", normalizedLocale);
@@ -1309,6 +1334,7 @@ export default function LandingPage({
 
     setSelectedBranchId(nextBranch.id);
     setSelectedVoucherCampaignId("");
+    setBranchMenuOpen(false);
     const nextPath = getBranchLandingPath(nextBranch);
     router.push(locale === "vi" ? nextPath : `${nextPath}?lang=${locale}`);
   };
@@ -1550,15 +1576,39 @@ export default function LandingPage({
           </a>
 
           <div className="mobile-header-actions">
-            <button
-              className="header-language-chip"
-              type="button"
-              aria-label={ui.currentLanguageAria}
-              title={ui.localeName}
-              onClick={cycleLocale}
-            >
-              <span>{ui.localeLabel}</span>
-            </button>
+            <div className={`header-language-dropdown${localeMenuOpen ? " is-open" : ""}`} data-locale-dropdown>
+              <button
+                className="header-language-trigger"
+                type="button"
+                aria-label={ui.currentLanguageAria}
+                title={ui.localeName}
+                aria-expanded={localeMenuOpen}
+                onClick={() => setLocaleMenuOpen((prev) => !prev)}
+              >
+                <span>{ui.localeLabel}</span>
+                <ChevronDown className="size-4" />
+              </button>
+              {localeMenuOpen ? (
+                <div className="header-language-menu">
+                  {LANDING_LOCALES.map((item) => {
+                    const optionUi = LANDING_COPY[item];
+                    const active = item === locale;
+
+                    return (
+                      <button
+                        key={item}
+                        type="button"
+                        className={`header-language-option${active ? " is-active" : ""}`}
+                        onClick={() => switchLocale(item)}
+                      >
+                        <span>{optionUi.localeLabel}</span>
+                        {active ? <Check className="size-4" /> : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
 
             <button
               className="menu-toggle"
@@ -1604,17 +1654,39 @@ export default function LandingPage({
                 <strong>{displayBranchName}</strong>
                 <span>{selectedBranch?.address || "Đường ven biển, Hồ Tràm, Xuyên Mộc"}</span>
                 {(branches || []).length > 1 ? (
-                  <select
-                    className="nav-mobile-select"
-                    value={selectedBranchId}
-                    onChange={(event) => handleBranchSelect(event.target.value)}
+                  <div
+                    className={`nav-mobile-dropdown${branchMenuOpen ? " is-open" : ""}`}
+                    data-branch-dropdown
                   >
-                    {branches.map((branch) => (
-                      <option key={branch.id} value={branch.id}>
-                        {branch.name}
-                      </option>
-                    ))}
-                  </select>
+                    <button
+                      type="button"
+                      className="nav-mobile-select"
+                      aria-expanded={branchMenuOpen}
+                      onClick={() => setBranchMenuOpen((prev) => !prev)}
+                    >
+                      <span>{displayBranchName}</span>
+                      <ChevronDown className="size-4" />
+                    </button>
+                    {branchMenuOpen ? (
+                      <div className="nav-mobile-dropdown-menu">
+                        {branches.map((branch) => {
+                          const active = branch.id === selectedBranchId;
+
+                          return (
+                            <button
+                              key={branch.id}
+                              type="button"
+                              className={`nav-mobile-dropdown-option${active ? " is-active" : ""}`}
+                              onClick={() => handleBranchSelect(branch.id)}
+                            >
+                              <span>{branch.name}</span>
+                              {active ? <Check className="size-4" /> : null}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
                 ) : null}
               </div>
               <div className="nav-mobile-card">

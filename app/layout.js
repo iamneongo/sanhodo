@@ -34,7 +34,7 @@ export const metadata = {
     type: "website",
     images: [
       {
-        url: "/assets/drive-hero-exterior.jpg",
+        url: "/assets/drive-hero-exterior.webp",
         width: 1600,
         height: 900,
         alt: "Không gian nhà hàng San Hô Đỏ Hồ Tràm"
@@ -46,7 +46,7 @@ export const metadata = {
     title: "San Hô Đỏ Hồ Tràm | Đặt bàn nhanh, combo tối ưu",
     description:
       "Đặt bàn nhanh, gọi ngay, nhận ưu đãi và chọn món trước cho nhà hàng San Hô Đỏ Hồ Tràm.",
-    images: ["/assets/drive-hero-exterior.jpg"]
+    images: ["/assets/drive-hero-exterior.webp"]
   }
 };
 
