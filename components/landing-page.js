@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Languages, MessageCircle, Phone, X } from "lucide-react";
+import { MessageCircle, Phone, X } from "lucide-react";
 import {
   DEFAULT_BRANCHES,
   MAIN_BRANCH_CODE,
@@ -908,7 +908,6 @@ export default function LandingPage({
               type="button"
               aria-label="Ngôn ngữ hiện tại: Tiếng Việt"
             >
-              <Languages className="size-4" />
               <span>VI</span>
             </button>
 
