@@ -1575,53 +1575,6 @@ export default function LandingPage({
             <img src="/assets/logo-full.png" alt={displayBranchName} />
           </a>
 
-          <div className="mobile-header-actions">
-            <div className={`header-language-dropdown${localeMenuOpen ? " is-open" : ""}`} data-locale-dropdown>
-              <button
-                className="header-language-trigger"
-                type="button"
-                aria-label={ui.currentLanguageAria}
-                title={ui.localeName}
-                aria-expanded={localeMenuOpen}
-                onClick={() => setLocaleMenuOpen((prev) => !prev)}
-              >
-                <span>{ui.localeLabel}</span>
-                <ChevronDown className="size-4" />
-              </button>
-              {localeMenuOpen ? (
-                <div className="header-language-menu">
-                  {LANDING_LOCALES.map((item) => {
-                    const optionUi = LANDING_COPY[item];
-                    const active = item === locale;
-
-                    return (
-                      <button
-                        key={item}
-                        type="button"
-                        className={`header-language-option${active ? " is-active" : ""}`}
-                        onClick={() => switchLocale(item)}
-                      >
-                        <span>{optionUi.localeLabel}</span>
-                        {active ? <Check className="size-4" /> : null}
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : null}
-            </div>
-
-            <button
-              className="menu-toggle"
-              type="button"
-              aria-expanded="false"
-              aria-controls="nav-list"
-            >
-              <span></span>
-              <span></span>
-              <span></span>
-            </button>
-          </div>
-
           <nav className="site-nav" aria-label={ui.nav.home}>
             <ul id="nav-list">
               <li>
@@ -1719,9 +1672,57 @@ export default function LandingPage({
             </div>
           </nav>
 
-          <a className="button button-primary header-cta" href="#reservation">
-            {ui.nav.reservation}
-          </a>
+          <div className="header-actions">
+            <div className={`header-language-dropdown${localeMenuOpen ? " is-open" : ""}`} data-locale-dropdown>
+              <button
+                className="header-language-trigger"
+                type="button"
+                aria-label={ui.currentLanguageAria}
+                title={ui.localeName}
+                aria-expanded={localeMenuOpen}
+                onClick={() => setLocaleMenuOpen((prev) => !prev)}
+              >
+                <span>{ui.localeLabel}</span>
+                <ChevronDown className="size-4" />
+              </button>
+              {localeMenuOpen ? (
+                <div className="header-language-menu">
+                  {LANDING_LOCALES.map((item) => {
+                    const optionUi = LANDING_COPY[item];
+                    const active = item === locale;
+
+                    return (
+                      <button
+                        key={item}
+                        type="button"
+                        className={`header-language-option${active ? " is-active" : ""}`}
+                        onClick={() => switchLocale(item)}
+                      >
+                        <span>{optionUi.localeLabel}</span>
+                        {active ? <Check className="size-4" /> : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
+
+            <a className="button button-primary header-cta" href="#reservation">
+              {ui.nav.reservation}
+            </a>
+
+            <button
+              className="menu-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="nav-list"
+            >
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+          </div>
+
         </div>
       </header>
 

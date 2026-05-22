@@ -268,15 +268,17 @@ p {
   display: none;
 }
 
-.mobile-header-actions {
-  display: none;
+.header-actions {
+  display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
+  min-width: 0;
 }
 
 .header-language-dropdown {
   position: relative;
+  flex-shrink: 0;
 }
 
 .header-language-trigger {
@@ -1752,10 +1754,6 @@ p {
     display: none;
   }
 
-  .mobile-header-actions {
-    display: inline-flex;
-  }
-
   .menu-toggle {
     display: inline-block;
   }
@@ -2161,7 +2159,7 @@ p {
     max-height: 44px;
   }
 
-  .mobile-header-actions {
+  .header-actions {
     gap: 6px;
   }
 
