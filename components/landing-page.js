@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle, Phone, X } from "lucide-react";
+import { Languages, MessageCircle, Phone, X } from "lucide-react";
 import {
   DEFAULT_BRANCHES,
   MAIN_BRANCH_CODE,
@@ -898,26 +898,31 @@ export default function LandingPage({
       />
       <header className="site-header" id="top">
         <div className="container header-inner">
-          <a className="brand" href="#top" aria-label={displayBranchName}>
-            <span className="brand-mark" aria-hidden="true">
-              <img src="/assets/logo-coral.png" alt="" />
-            </span>
-            <span className="brand-copy">
-              <strong>{brandPrimaryLine}</strong>
-              <span>{brandSecondaryLine || displayBranchShortName}</span>
-            </span>
+          <a className="brand brand-lockup" href="#top" aria-label={displayBranchName}>
+            <img src="/assets/logo-full.png" alt={displayBranchName} />
           </a>
 
-          <button
-            className="menu-toggle"
-            type="button"
-            aria-expanded="false"
-            aria-controls="nav-list"
-          >
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
+          <div className="mobile-header-actions">
+            <button
+              className="header-language-chip"
+              type="button"
+              aria-label="Ngôn ngữ hiện tại: Tiếng Việt"
+            >
+              <Languages className="size-4" />
+              <span>VI</span>
+            </button>
+
+            <button
+              className="menu-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="nav-list"
+            >
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+          </div>
 
           <nav className="site-nav" aria-label="Điều hướng chính">
             <ul id="nav-list">
@@ -1021,9 +1026,6 @@ export default function LandingPage({
                 <button className="button button-primary" type="button" onClick={() => focusReservation()}>
                   {landingConfig.primaryCtaLabel || DEFAULT_LANDING_PAGE_CONFIG.primaryCtaLabel}
                 </button>
-                <a className="button button-secondary" href={activeZaloLink} target="_blank" rel="noreferrer">
-                  Zalo
-                </a>
               </div>
               <div className="hero-scroll">
                 <span>Scroll</span>
@@ -1744,14 +1746,8 @@ export default function LandingPage({
         <img className="footer-coral" src="/assets/coral-pattern.png" alt="" />
         <div className="container footer-grid">
           <div>
-            <a className="brand footer-brand" href="#top">
-              <span className="brand-mark" aria-hidden="true">
-                <img src="/assets/logo-coral.png" alt="" />
-              </span>
-              <span className="brand-copy">
-                <strong>{brandPrimaryLine}</strong>
-                <span>{brandSecondaryLine || displayBranchShortName}</span>
-              </span>
+            <a className="brand brand-lockup footer-brand" href="#top">
+              <img src="/assets/logo-full.png" alt={displayBranchName} />
             </a>
             <p className="footer-text">
               {landingConfig.footerDescription || DEFAULT_LANDING_PAGE_CONFIG.footerDescription}
@@ -1821,9 +1817,6 @@ export default function LandingPage({
         <button className="sticky-cta-item sticky-cta-book" type="button" onClick={() => focusReservation()}>
           Đặt bàn ngay
         </button>
-        <a className="sticky-cta-item" href={activeZaloLink} target="_blank" rel="noreferrer">
-          Zalo
-        </a>
       </div>
 
       <div className="floating-contact-actions">

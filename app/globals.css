@@ -195,6 +195,19 @@ p {
   color: var(--brand);
 }
 
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  max-width: min(260px, 22vw);
+}
+
+.brand-lockup img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
 .brand-mark {
   display: inline-flex;
   width: 42px;
@@ -243,6 +256,30 @@ p {
 
 .nav-mobile-panels {
   display: none;
+}
+
+.mobile-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.header-language-chip {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(198, 71, 56, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 250, 244, 0.9);
+  color: var(--brand-deep);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: 0 10px 22px rgba(74, 38, 21, 0.08);
 }
 
 .site-nav {
@@ -367,8 +404,9 @@ p {
   margin-top: 24px;
   color: #fff7f1;
   font-size: 1.08rem;
+  font-weight: 600;
   line-height: 1.72;
-  text-shadow: 0 10px 24px rgba(34, 19, 11, 0.38);
+  text-shadow: 0 12px 28px rgba(22, 12, 7, 0.48);
 }
 
 .hero-scroll {
@@ -1343,8 +1381,8 @@ p {
   color: #ff7757;
 }
 
-.footer-brand .brand-mark img {
-  filter: saturate(1.02) brightness(1.02);
+.footer-brand.brand-lockup {
+  max-width: min(280px, 100%);
 }
 
 .footer-text {
@@ -1412,7 +1450,7 @@ p {
   bottom: 18px;
   z-index: 60;
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   width: min(520px, calc(100vw - 24px));
   padding: 8px;
@@ -1663,9 +1701,12 @@ p {
     display: none;
   }
 
+  .header-language-chip {
+    display: inline-flex;
+  }
+
   .menu-toggle {
     display: inline-block;
-    margin-left: auto;
   }
 
   .site-nav {
@@ -1812,8 +1853,10 @@ p {
 
   .hero-text {
     margin-top: 16px;
-    font-size: 0.92rem;
-    line-height: 1.62;
+    font-size: 0.98rem;
+    font-weight: 600;
+    line-height: 1.68;
+    text-shadow: 0 10px 26px rgba(17, 9, 5, 0.58);
   }
 
   .hero-actions {
@@ -1855,6 +1898,10 @@ p {
     gap: 8px;
   }
 
+  .brand-lockup {
+    max-width: 140px;
+  }
+
   .brand-mark {
     width: 28px;
     height: 28px;
@@ -1875,6 +1922,7 @@ p {
 
   .header-inner {
     gap: 10px;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 
   .menu-toggle span {
@@ -2111,7 +2159,6 @@ p {
   }
 
   .sticky-cta-bar {
-    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
     width: min(calc(100vw - 16px), 400px);
     bottom: 8px;
     padding: 6px;
@@ -2165,6 +2212,12 @@ p {
 
   .hero-copy {
     padding-top: 10px;
+  }
+
+  .hero-text {
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.7;
   }
 
   .hero-coral-left {
