@@ -201,6 +201,10 @@ p {
   max-width: min(220px, 18vw);
 }
 
+.site-header .brand-lockup {
+  max-width: min(172px, 14vw);
+}
+
 .brand-lockup img {
   display: block;
   width: auto;
@@ -208,6 +212,10 @@ p {
   max-height: 84px;
   height: auto;
   object-fit: contain;
+}
+
+.site-header .brand-lockup img {
+  max-height: 62px;
 }
 
 .brand-mark {
@@ -1900,11 +1908,11 @@ p {
     gap: 8px;
   }
 
-  .brand-lockup {
+  .site-header .brand-lockup {
     max-width: 128px;
   }
 
-  .brand-lockup img {
+  .site-header .brand-lockup img {
     max-height: 56px;
   }
 
@@ -2060,12 +2068,12 @@ p {
     gap: 8px;
   }
 
-  .brand-lockup {
-    max-width: 116px;
+  .site-header .brand-lockup {
+    max-width: 108px;
   }
 
-  .brand-lockup img {
-    max-height: 48px;
+  .site-header .brand-lockup img {
+    max-height: 44px;
   }
 
   .mobile-header-actions {
@@ -2213,8 +2221,12 @@ p {
     max-width: 108px;
   }
 
-  .brand-lockup {
-    max-width: 100px;
+  .site-header .brand-lockup {
+    max-width: 94px;
+  }
+
+  .site-header .brand-lockup img {
+    max-height: 38px;
   }
 
   .site-nav {

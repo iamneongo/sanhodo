@@ -31,6 +31,400 @@ const hotlineDisplay = "0814 645 999";
 const secondaryHotlineDisplay = "0522 282 229";
 const reservationMinDate = getTodayDateInput();
 const DEFAULT_BRAND_NAME = "San Hô Đỏ";
+const LANDING_LOCALES = ["vi", "en", "zh"];
+
+const LANDING_COPY = {
+  vi: {
+    localeLabel: "VI",
+    localeName: "Tiếng Việt",
+    currentLanguageAria: "Ngôn ngữ hiện tại: Tiếng Việt",
+    nav: {
+      home: "Trang chủ",
+      about: "Giới thiệu",
+      menu: "Thực đơn",
+      reservation: "Đặt bàn",
+      space: "Không gian",
+      news: "Tin tức",
+      contact: "Liên hệ"
+    },
+    currentBranch: "Chi nhánh đang xem",
+    language: "Ngôn ngữ",
+    languageApplied: "Tiếng Việt đang được áp dụng cho landing page hiện tại.",
+    heroScroll: "Scroll",
+    aboutKicker: "Về chúng tôi",
+    aboutMore: "Khám phá thêm",
+    reservationKicker: "Đặt bàn nhanh",
+    reservationTitle: "Chốt khách nhanh hơn với form đặt bàn và hotline rõ ràng",
+    reservationDescription:
+      "Thanh CTA cố định giúp khách gọi, đặt bàn hoặc nhắn Zalo chỉ với 1 chạm. Form này đã sẵn API nhận lead để đẩy tiếp sang CRM, Google Sheet và Zalo webhook.",
+    callNow: "Gọi ngay",
+    zaloLabel: "Zalo",
+    zaloQuick: "Nhắn tư vấn nhanh",
+    selectBranch: "Chọn chi nhánh phục vụ",
+    receivingLeadsAt: "Đang nhận lead tại:",
+    form: {
+      name: "Tên",
+      phone: "SĐT",
+      guests: "Số khách",
+      arrivalDate: "Ngày đến",
+      timeSlot: "Khung giờ",
+      referralCode: "Mã tài xế / giới thiệu (nếu có)",
+      notes: "Ghi chú thêm",
+      phonePlaceholder: "Ví dụ: 0814 645 999",
+      referralPlaceholder: "Ví dụ: DRV-HOTRAM-01",
+      notesPlaceholder: "Ví dụ: cần ghế em bé, bàn yên tĩnh, có sinh nhật..."
+    },
+    reservationNotePrefix: "Khung giờ nhận đặt bàn:",
+    reservationNoteHours: "10:00 - 21:30 mỗi ngày.",
+    selectedSchedule: "Lịch hẹn đang chọn:",
+    handlingBranch: "Chi nhánh tiếp nhận:",
+    submitReservation: "Gửi yêu cầu đặt bàn",
+    submitting: "Đang gửi...",
+    interestedIn: "Đang quan tâm:",
+    menuKicker: "Thực đơn",
+    menuTitle: "Menu thông minh với giá, mô tả và combo gợi ý sẵn",
+    menuDescription:
+      "Mỗi món đều có giá, mô tả ngắn và nút đặt ngay. Khi khách bấm chọn món hoặc combo, hệ thống sẽ bật gợi ý upsell để tăng giá trị đơn hàng.",
+    prevDish: "Món trước",
+    nextDish: "Món tiếp",
+    chooseDish: "Chọn món",
+    bookNow: "Đặt luôn",
+    chooseCombo: "Chọn combo",
+    bookCombo: "Đặt bàn theo combo",
+    dishChooser: "Chọn món",
+    dishNumber: (index) => `Món ${index + 1}`,
+    orderKicker: "Đặt món nhanh",
+    orderTitle: "Chọn món trước, admin nhận order trực tiếp trong dashboard",
+    orderDescription:
+      "Khách có thể chọn trước các món nổi bật và gửi yêu cầu đặt món. Dữ liệu sẽ đi vào Supabase thật và xuất hiện trong tab Orders của admin để đội ngũ xử lý.",
+    noDishes:
+      "Chưa có món nổi bật trong nhóm này. Bạn có thể chọn nhóm khác hoặc gọi hotline để được tư vấn nhanh.",
+    subtotal: "Tạm tính",
+    selectedItems: "món đã chọn",
+    customerName: "Tên khách",
+    additionalNotes: "Ghi chú thêm",
+    orderNotesPlaceholder: "Ví dụ: giao trước món khai vị, không cay...",
+    submitOrder: "Gửi yêu cầu đặt món",
+    voucherKicker: "Voucher",
+    voucherTitle: "Nhập SĐT để nhận ưu đãi và thu data khách hàng",
+    voucherDescription:
+      "Form này phù hợp để kết hợp cùng WiFi Ads GOECO, popup khuyến mãi hoặc chiến dịch remarketing về sau.",
+    voucherBranch: "Ưu đãi đang áp dụng tại:",
+    voucherCampaign: "Chiến dịch ưu đãi",
+    voucherPhone: "Số điện thoại",
+    voucherPhonePlaceholder: "Nhập SĐT để nhận ưu đãi",
+    voucherSubmit: "Nhận ưu đãi ngay",
+    voucherProcessing: "Đang xử lý...",
+    voucherCode: "Mã ưu đãi của bạn",
+    voucherExpires: "Hạn dùng:",
+    voucherMinOrder: "Áp dụng cho hóa đơn từ",
+    voucherValidity: "hiệu lực trong",
+    voucherDays: "ngày kể từ lúc nhận mã.",
+    viewAllNews: "Xem tất cả tin tức",
+    footerLinks: "Liên kết nhanh",
+    footerContact: "Thông tin liên hệ",
+    footerQuickOffer: "Ưu đãi nhanh",
+    footerVoucherPlaceholder: "Nhập SĐT để nhận ưu đãi",
+    footerVoucherButton: "Nhận voucher",
+    footerCopyright: (branchName) => `© 2024 Nhà hàng ${branchName}. All rights reserved.`,
+    footerCredit: "Thiết kế bởi Web Designer",
+    stickyBook: "Đặt bàn ngay",
+    bookWithOffer: "Đặt bàn với ưu đãi này",
+    viewMoreCombos: "Xem thêm combo",
+    openChat: (branchName) => `Mở trò chuyện với ${branchName}`,
+    closeChat: "Đóng trò chuyện",
+    chatSummary: (branchName) => `${branchName} xin chào`,
+    chatPlaceholder: "Hỏi menu, giá, đường đi...",
+    chatSubmit: "Gửi",
+    chatReply: (branchName) =>
+      `${branchName} đang sẵn sàng hỗ trợ menu, đặt bàn nhanh và hướng dẫn liên hệ.`,
+    chatSuggestions: (shortName) => [
+      `Menu ${shortName || "hôm nay"}`,
+      "Giá combo 4 người",
+      `Đặt bàn tại ${shortName || "chi nhánh"}`,
+      `Đường đi ${shortName || "chi nhánh"}`
+    ],
+    chatFallback:
+      "Mình có thể hỗ trợ nhanh về menu, giá, đặt bàn, đường đi hoặc gợi ý combo phù hợp số người. Bạn cứ nhắn ngắn gọn là được."
+  },
+  en: {
+    localeLabel: "EN",
+    localeName: "English",
+    currentLanguageAria: "Current language: English",
+    nav: {
+      home: "Home",
+      about: "About",
+      menu: "Menu",
+      reservation: "Book",
+      space: "Space",
+      news: "News",
+      contact: "Contact"
+    },
+    currentBranch: "Current branch",
+    language: "Language",
+    languageApplied: "English is now applied for this landing page.",
+    heroScroll: "Scroll",
+    aboutKicker: "About us",
+    aboutMore: "Explore more",
+    reservationKicker: "Quick booking",
+    reservationTitle: "Convert guests faster with a clear booking form and hotline",
+    reservationDescription:
+      "The sticky CTA helps guests call or reserve with one tap. This form is already wired to push leads to CRM, Google Sheets and Zalo webhooks.",
+    callNow: "Call now",
+    zaloLabel: "Zalo",
+    zaloQuick: "Chat quickly",
+    selectBranch: "Choose branch",
+    receivingLeadsAt: "Receiving leads at:",
+    form: {
+      name: "Name",
+      phone: "Phone",
+      guests: "Guests",
+      arrivalDate: "Arrival date",
+      timeSlot: "Time slot",
+      referralCode: "Driver / referral code",
+      notes: "Notes",
+      phonePlaceholder: "Example: 0814 645 999",
+      referralPlaceholder: "Example: DRV-HOTRAM-01",
+      notesPlaceholder: "Example: baby chair, quiet table, birthday setup..."
+    },
+    reservationNotePrefix: "Reservation hours:",
+    reservationNoteHours: "10:00 - 21:30 daily.",
+    selectedSchedule: "Selected schedule:",
+    handlingBranch: "Serving branch:",
+    submitReservation: "Send booking request",
+    submitting: "Submitting...",
+    interestedIn: "Interested in:",
+    menuKicker: "Menu",
+    menuTitle: "Smart menu with pricing, short descriptions and combo prompts",
+    menuDescription:
+      "Each dish shows price, description and a direct action. When guests choose a dish or combo, the upsell flow helps increase basket value.",
+    prevDish: "Previous dish",
+    nextDish: "Next dish",
+    chooseDish: "Choose dish",
+    bookNow: "Book now",
+    chooseCombo: "Choose combo",
+    bookCombo: "Book with combo",
+    dishChooser: "Choose dish",
+    dishNumber: (index) => `Dish ${index + 1}`,
+    orderKicker: "Quick order",
+    orderTitle: "Let guests pre-select dishes while admin receives the order in dashboard",
+    orderDescription:
+      "Guests can pre-select featured dishes and submit an order request. The data goes to Supabase and appears directly in the admin Orders tab.",
+    noDishes:
+      "No featured dishes in this group yet. You can switch category or call the hotline for quick assistance.",
+    subtotal: "Subtotal",
+    selectedItems: "selected items",
+    customerName: "Customer name",
+    additionalNotes: "Notes",
+    orderNotesPlaceholder: "Example: starters first, non-spicy...",
+    submitOrder: "Send order request",
+    voucherKicker: "Voucher",
+    voucherTitle: "Collect phone numbers and hand out offers instantly",
+    voucherDescription:
+      "This form works well with WiFi Ads GOECO, promo popups or remarketing campaigns afterwards.",
+    voucherBranch: "Offer applied at:",
+    voucherCampaign: "Campaign",
+    voucherPhone: "Phone number",
+    voucherPhonePlaceholder: "Enter phone number to receive the offer",
+    voucherSubmit: "Get the offer now",
+    voucherProcessing: "Processing...",
+    voucherCode: "Your voucher code",
+    voucherExpires: "Expires:",
+    voucherMinOrder: "Applied for orders from",
+    voucherValidity: "valid for",
+    voucherDays: "days after claiming.",
+    viewAllNews: "View all news",
+    footerLinks: "Quick links",
+    footerContact: "Contact info",
+    footerQuickOffer: "Quick offer",
+    footerVoucherPlaceholder: "Enter phone number for the offer",
+    footerVoucherButton: "Get voucher",
+    footerCopyright: (branchName) => `© 2024 ${branchName} restaurant. All rights reserved.`,
+    footerCredit: "Designed by Web Designer",
+    stickyBook: "Book now",
+    bookWithOffer: "Book with this offer",
+    viewMoreCombos: "View more combos",
+    openChat: (branchName) => `Open chat with ${branchName}`,
+    closeChat: "Close chat",
+    chatSummary: (branchName) => `${branchName} says hello`,
+    chatPlaceholder: "Ask about menu, prices, directions...",
+    chatSubmit: "Send",
+    chatReply: (branchName) =>
+      `${branchName} is ready to help with menu suggestions, reservations and contact directions.`,
+    chatSuggestions: (shortName) => [
+      `${shortName || "today"} menu`,
+      "Price for 4-person combo",
+      `Book at ${shortName || "this branch"}`,
+      `Directions to ${shortName || "this branch"}`
+    ],
+    chatFallback:
+      "I can quickly help with the menu, pricing, reservations, directions or combo suggestions based on party size."
+  },
+  zh: {
+    localeLabel: "中文",
+    localeName: "中文",
+    currentLanguageAria: "当前语言：中文",
+    nav: {
+      home: "首页",
+      about: "介绍",
+      menu: "菜单",
+      reservation: "订位",
+      space: "空间",
+      news: "资讯",
+      contact: "联系"
+    },
+    currentBranch: "当前分店",
+    language: "语言",
+    languageApplied: "当前落地页已切换为中文。",
+    heroScroll: "继续",
+    aboutKicker: "关于我们",
+    aboutMore: "查看更多",
+    reservationKicker: "快速订位",
+    reservationTitle: "用清晰的订位表单和热线更快完成转化",
+    reservationDescription:
+      "固定 CTA 让客人一键拨打或订位。表单已经可把线索推送到 CRM、Google Sheet 与 Zalo webhook。",
+    callNow: "立即致电",
+    zaloLabel: "Zalo",
+    zaloQuick: "快速咨询",
+    selectBranch: "选择分店",
+    receivingLeadsAt: "当前接收线索：",
+    form: {
+      name: "姓名",
+      phone: "电话",
+      guests: "人数",
+      arrivalDate: "到店日期",
+      timeSlot: "时间段",
+      referralCode: "司机 / 推荐码",
+      notes: "备注",
+      phonePlaceholder: "例如：0814 645 999",
+      referralPlaceholder: "例如：DRV-HOTRAM-01",
+      notesPlaceholder: "例如：需要宝宝椅、安静位置、生日布置..."
+    },
+    reservationNotePrefix: "可预订时段：",
+    reservationNoteHours: "每日 10:00 - 21:30。",
+    selectedSchedule: "当前选择：",
+    handlingBranch: "服务分店：",
+    submitReservation: "提交订位请求",
+    submitting: "提交中...",
+    interestedIn: "当前关注：",
+    menuKicker: "菜单",
+    menuTitle: "带价格、简介和套餐推荐的智能菜单",
+    menuDescription:
+      "每道菜都有价格、简短说明和直接操作。客人选择菜品或套餐后，系统会给出加购推荐，提高客单价。",
+    prevDish: "上一道",
+    nextDish: "下一道",
+    chooseDish: "选择菜品",
+    bookNow: "立即订位",
+    chooseCombo: "选择套餐",
+    bookCombo: "按套餐订位",
+    dishChooser: "选择菜品",
+    dishNumber: (index) => `菜品 ${index + 1}`,
+    orderKicker: "快速点餐",
+    orderTitle: "让客人先选菜，后台直接收到订单",
+    orderDescription:
+      "客人可以先选热门菜品并提交点餐请求，数据会进入 Supabase，并直接出现在后台 Orders 模块。",
+    noDishes: "当前分类暂无推荐菜品。你可以切换分类或直接拨打热线咨询。",
+    subtotal: "小计",
+    selectedItems: "已选菜品",
+    customerName: "顾客姓名",
+    additionalNotes: "备注",
+    orderNotesPlaceholder: "例如：先上前菜、不要辣...",
+    submitOrder: "提交点餐请求",
+    voucherKicker: "优惠券",
+    voucherTitle: "输入手机号即可领取优惠并收集客户线索",
+    voucherDescription:
+      "这个表单适合搭配 WiFi Ads GOECO、促销弹窗或后续再营销活动一起使用。",
+    voucherBranch: "当前优惠适用于：",
+    voucherCampaign: "优惠活动",
+    voucherPhone: "手机号码",
+    voucherPhonePlaceholder: "输入手机号领取优惠",
+    voucherSubmit: "立即领取优惠",
+    voucherProcessing: "处理中...",
+    voucherCode: "你的优惠码",
+    voucherExpires: "有效期：",
+    voucherMinOrder: "适用于订单金额满",
+    voucherValidity: "领取后有效",
+    voucherDays: "天。",
+    viewAllNews: "查看全部资讯",
+    footerLinks: "快速链接",
+    footerContact: "联系信息",
+    footerQuickOffer: "快速优惠",
+    footerVoucherPlaceholder: "输入手机号领取优惠",
+    footerVoucherButton: "领取优惠券",
+    footerCopyright: (branchName) => `© 2024 ${branchName}。保留所有权利。`,
+    footerCredit: "由 Web Designer 设计",
+    stickyBook: "立即订位",
+    bookWithOffer: "用此优惠订位",
+    viewMoreCombos: "查看更多套餐",
+    openChat: (branchName) => `打开与 ${branchName} 的聊天`,
+    closeChat: "关闭聊天",
+    chatSummary: (branchName) => `${branchName} 向你问好`,
+    chatPlaceholder: "可以问菜单、价格、路线...",
+    chatSubmit: "发送",
+    chatReply: (branchName) =>
+      `${branchName} 已准备好为你提供菜单建议、订位帮助和联系指引。`,
+    chatSuggestions: (shortName) => [
+      `${shortName || "今日"}菜单`,
+      "4人套餐价格",
+      `在${shortName || "本分店"}订位`,
+      `${shortName || "本分店"}路线`
+    ],
+    chatFallback: "我可以帮你快速了解菜单、价格、订位、路线，或根据人数推荐合适套餐。"
+  }
+};
+
+const LOCALIZED_DEFAULT_CONFIG = {
+  en: {
+    heroEyebrow: "Restaurant",
+    heroDescription:
+      "Refined dining atmosphere - a signature mark with character\nA memorable experience in every shared gathering",
+    aboutTitle: "A polished space for meaningful gatherings",
+    aboutParagraphOne:
+      "San Hô Đỏ delivers a complete dining experience with a striking facade, elegant reception area and carefully composed spaces for family meals, guest hosting and group occasions.",
+    aboutParagraphTwo:
+      "From spacious dining tables to cozy private rooms, every corner is arranged to feel comfortable, refined and memorable for guests.",
+    aboutBadgeTitle: "Facade",
+    aboutBadgeSubtitle: "bold and elegant",
+    featureSeafoodTitle: "Fresh seafood",
+    featureSeafoodDescription: "Fresh seafood is selected daily for each branch.",
+    featureChefTitle: "Professional chefs",
+    featureChefDescription: "An experienced kitchen team with refined execution.",
+    featureSpaceTitle: "Beautiful spaces",
+    featureSpaceDescription: "Elegant dining zones suitable for guests, families and private occasions.",
+    featureServiceTitle: "Attentive service",
+    featureServiceDescription: "A warm, thoughtful and professional service team.",
+    spaceKicker: "Space",
+    spaceTitle: "Flexible dining zones for different dining moments",
+    spaceActionLabel: "View more images",
+    newsKicker: "News & Offers",
+    newsTitle: "A closer look at the restaurant's real atmosphere"
+  },
+  zh: {
+    heroEyebrow: "餐厅",
+    heroDescription:
+      "精致高雅的用餐氛围 - 独特而鲜明的印记\n让每一次相聚都留下值得回味的体验",
+    aboutTitle: "为重要相聚而打造的讲究空间",
+    aboutParagraphOne:
+      "San Hô Đỏ 提供完整的用餐体验，拥有醒目的门面、优雅的接待区，以及适合家庭聚餐、接待宾客和小型聚会的精心布局空间。",
+    aboutParagraphTwo:
+      "从宽敞的宴会餐桌到温馨的包厢，每一个角落都经过细致安排，力求舒适、体面并让客人留下深刻印象。",
+    aboutBadgeTitle: "门面",
+    aboutBadgeSubtitle: "醒目而有质感",
+    featureSeafoodTitle: "新鲜海鲜",
+    featureSeafoodDescription: "每个分店每日精选新鲜海鲜食材。",
+    featureChefTitle: "专业主厨",
+    featureChefDescription: "经验丰富的厨房团队，出品更细致稳定。",
+    featureSpaceTitle: "优雅空间",
+    featureSpaceDescription: "多样而讲究的用餐区域，适合家庭、接待与私密聚会。",
+    featureServiceTitle: "贴心服务",
+    featureServiceDescription: "热情、周到且专业的服务团队。",
+    spaceKicker: "空间",
+    spaceTitle: "多样化用餐区域，适配不同场景",
+    spaceActionLabel: "查看更多图片",
+    newsKicker: "资讯与优惠",
+    newsTitle: "从真实空间细节感受餐厅氛围"
+  }
+};
 
 const fallbackFeaturedDishes = [
   {
@@ -104,36 +498,97 @@ const combos = [
   }
 ];
 
-const quickAnswers = [
-  {
-    keywords: ["menu", "thực đơn", "món"],
-    answer:
-      "Nhà hàng đang nổi bật với cua huỳnh đế, tôm hùm nướng, sashimi tổng hợp và các combo 2 người, 4 người, tiệc. Bạn muốn mình gợi ý theo số người luôn không?"
-  },
-  {
-    keywords: ["giá", "bao nhiêu", "price"],
-    answer:
-      "Các món nổi bật hiện hiển thị ngay trong phần Thực đơn. Combo 2 người từ 1.590.000đ, combo 4 người từ 2.990.000đ và combo tiệc từ 6.890.000đ."
-  },
-  {
-    keywords: ["đặt bàn", "book", "reservation"],
-    answer:
-      "Bạn chỉ cần để lại tên, số điện thoại, số khách và thời gian. Đội ngũ sẽ xác nhận nhanh qua Zalo hoặc điện thoại của chi nhánh."
-  },
-  {
-    keywords: ["đường đi", "địa chỉ", "map"],
-    answer:
-      "Nhà hàng ở Đường ven biển, Ấp Hồ Tràm, Xã Phước Thuận, H. Xuyên Mộc, Bà Rịa - Vũng Tàu. Nếu bạn muốn, mình có thể ưu tiên đặt bàn trước rồi gửi hướng dẫn ngay sau."
-  },
-  {
-    keywords: ["combo", "set", "tiệc", "upsell"],
-    answer:
-      "Nếu đi 2 người, mình khuyên Combo 2 người. Nếu đi gia đình 4 người, Combo 4 người tiết kiệm hơn gọi lẻ. Với tiệc hoặc tiếp khách, Combo tiệc là lựa chọn tối ưu."
-  }
-];
+const QUICK_ANSWERS_BY_LOCALE = {
+  vi: [
+    {
+      keywords: ["menu", "thực đơn", "món"],
+      answer:
+        "Nhà hàng đang nổi bật với cua huỳnh đế, tôm hùm nướng, sashimi tổng hợp và các combo 2 người, 4 người, tiệc. Bạn muốn mình gợi ý theo số người luôn không?"
+    },
+    {
+      keywords: ["giá", "bao nhiêu", "price"],
+      answer:
+        "Các món nổi bật hiện hiển thị ngay trong phần Thực đơn. Combo 2 người từ 1.590.000đ, combo 4 người từ 2.990.000đ và combo tiệc từ 6.890.000đ."
+    },
+    {
+      keywords: ["đặt bàn", "book", "reservation"],
+      answer:
+        "Bạn chỉ cần để lại tên, số điện thoại, số khách và thời gian. Đội ngũ sẽ xác nhận nhanh qua Zalo hoặc điện thoại của chi nhánh."
+    },
+    {
+      keywords: ["đường đi", "địa chỉ", "map"],
+      answer:
+        "Nhà hàng ở Đường ven biển, Ấp Hồ Tràm, Xã Phước Thuận, H. Xuyên Mộc, Bà Rịa - Vũng Tàu. Nếu bạn muốn, mình có thể ưu tiên đặt bàn trước rồi gửi hướng dẫn ngay sau."
+    },
+    {
+      keywords: ["combo", "set", "tiệc", "upsell"],
+      answer:
+        "Nếu đi 2 người, mình khuyên Combo 2 người. Nếu đi gia đình 4 người, Combo 4 người tiết kiệm hơn gọi lẻ. Với tiệc hoặc tiếp khách, Combo tiệc là lựa chọn tối ưu."
+    }
+  ],
+  en: [
+    {
+      keywords: ["menu", "dish", "food"],
+      answer:
+        "The restaurant is currently highlighting king crab, grilled lobster, assorted sashimi and combos for 2, 4 and party tables. I can suggest the best fit by group size."
+    },
+    {
+      keywords: ["price", "cost", "how much"],
+      answer:
+        "Featured dishes are listed in the Menu section. The 2-person combo starts from 1,590,000 VND, the 4-person combo from 2,990,000 VND and the party combo from 6,890,000 VND."
+    },
+    {
+      keywords: ["book", "reservation", "reserve"],
+      answer:
+        "Just leave your name, phone number, guest count and preferred time. The team will confirm quickly via Zalo or the branch hotline."
+    },
+    {
+      keywords: ["direction", "address", "map"],
+      answer:
+        "The restaurant is on the coastal road in Ho Tram, Xuyen Moc, Ba Ria - Vung Tau. If you'd like, I can prioritize your reservation first and send directions right after."
+    },
+    {
+      keywords: ["combo", "set", "party"],
+      answer:
+        "For 2 guests, I recommend the 2-person combo. For a family of 4, the 4-person combo gives better value than ordering items separately. For events or business dining, the party combo is the best fit."
+    }
+  ],
+  zh: [
+    {
+      keywords: ["菜单", "menu", "菜"],
+      answer:
+        "餐厅目前主推帝王蟹、烤龙虾、综合刺身，以及适合 2 人、4 人和聚会的套餐。我也可以按人数给你推荐。"
+    },
+    {
+      keywords: ["价格", "多少钱", "price"],
+      answer:
+        "热门菜品都展示在菜单区域。2 人套餐从 1,590,000 越南盾起，4 人套餐从 2,990,000 越南盾起，宴会套餐从 6,890,000 越南盾起。"
+    },
+    {
+      keywords: ["订位", "预订", "book", "reservation"],
+      answer:
+        "只要留下姓名、电话、人数和到店时间，团队就会通过 Zalo 或分店电话尽快与你确认。"
+    },
+    {
+      keywords: ["路线", "地址", "map"],
+      answer:
+        "餐厅位于 Hồ Tràm 沿海路，Xuyên Mộc，Bà Rịa - Vũng Tàu。如果你愿意，我可以先帮你优先订位，再发送路线。"
+    },
+    {
+      keywords: ["套餐", "combo", "set"],
+      answer:
+        "2 位客人建议选择 2 人套餐；4 人家庭更适合 4 人套餐；如果是聚会或商务接待，宴会套餐会更合适。"
+    }
+  ]
+};
 
-function getChatReply(input) {
+function normalizeLocale(value) {
+  return LANDING_LOCALES.includes(value) ? value : "vi";
+}
+
+function getChatReply(input, locale = "vi") {
   const normalized = input.toLowerCase();
+  const quickAnswers = QUICK_ANSWERS_BY_LOCALE[normalizeLocale(locale)] || QUICK_ANSWERS_BY_LOCALE.vi;
   const matched = quickAnswers.find((item) =>
     item.keywords.some((keyword) => normalized.includes(keyword))
   );
@@ -142,11 +597,11 @@ function getChatReply(input) {
     return matched.answer;
   }
 
-  return "Mình có thể hỗ trợ nhanh về menu, giá, đặt bàn, đường đi hoặc gợi ý combo phù hợp số người. Bạn cứ nhắn ngắn gọn là được.";
+  return LANDING_COPY[normalizeLocale(locale)].chatFallback;
 }
 
-function buildChatReply(input, branchName, hotlineValue, hotlineText) {
-  const baseReply = getChatReply(input);
+function buildChatReply(input, branchName, hotlineValue, hotlineText, locale = "vi") {
+  const baseReply = getChatReply(input, locale);
 
   return baseReply
     .replaceAll("Nhà hàng", branchName)
@@ -177,6 +632,23 @@ function getAvailabilityLabel(status) {
   }
 }
 
+function getLocalizedText(locale, fallbackByLocale) {
+  return fallbackByLocale[normalizeLocale(locale)] || fallbackByLocale.vi;
+}
+
+function resolveLocalizedConfigText(configValue, defaultValue, locale, key) {
+  if (locale === "vi") {
+    return configValue || defaultValue;
+  }
+
+  const localizedDefaults = LOCALIZED_DEFAULT_CONFIG[normalizeLocale(locale)] || {};
+  if (!configValue || configValue === defaultValue) {
+    return localizedDefaults[key] || defaultValue;
+  }
+
+  return configValue;
+}
+
 function resolveInitialBranchId(branches, branchCode) {
   const normalizedBranches = branches?.length ? branches : DEFAULT_BRANCHES;
   const matchedBranch =
@@ -193,6 +665,7 @@ export default function LandingPage({
   initialBranchCode = MAIN_BRANCH_CODE
 }) {
   const router = useRouter();
+  const [locale, setLocale] = useState("vi");
   const [featuredDishes, setFeaturedDishes] = useState(fallbackFeaturedDishes);
   const [branches, setBranches] = useState(initialBranches?.length ? initialBranches : fallbackBranches);
   const [selectedBranchId, setSelectedBranchId] = useState(() =>
@@ -267,6 +740,7 @@ export default function LandingPage({
     () => normalizeLandingPageConfig(selectedBranch?.landingConfig || {}),
     [selectedBranch]
   );
+  const ui = useMemo(() => LANDING_COPY[normalizeLocale(locale)], [locale]);
   const displayBranchName = selectedBranch?.name || "San Hô Đỏ Hồ Tràm";
   const displayBranchShortName = selectedBranch?.shortName || "Hồ Tràm";
   const defaultSecondaryLine =
@@ -279,24 +753,152 @@ export default function LandingPage({
   const brandPrimaryLine = landingConfig.brandPrimary || DEFAULT_BRAND_NAME;
   const brandSecondaryLine =
     landingConfig.brandSecondary || derivedBranchLabel || defaultSecondaryLine || displayBranchShortName;
-  const heroEyebrow = landingConfig.heroEyebrow || DEFAULT_LANDING_PAGE_CONFIG.heroEyebrow;
+  const heroEyebrow = resolveLocalizedConfigText(
+    landingConfig.heroEyebrow,
+    DEFAULT_LANDING_PAGE_CONFIG.heroEyebrow,
+    locale,
+    "heroEyebrow"
+  );
   const heroTitle = landingConfig.heroTitle || DEFAULT_BRAND_NAME;
   const heroSubtitle = landingConfig.heroSubtitle || brandSecondaryLine;
   const heroDescriptionLines = String(
-    landingConfig.heroDescription || DEFAULT_LANDING_PAGE_CONFIG.heroDescription
+    resolveLocalizedConfigText(
+      landingConfig.heroDescription,
+      DEFAULT_LANDING_PAGE_CONFIG.heroDescription,
+      locale,
+      "heroDescription"
+    )
   )
     .split("\n")
     .map((item) => item.trim())
     .filter(Boolean);
-  const heroImageUrl = landingConfig.heroImageUrl || "/assets/drive-hero-exterior.jpg";
-  const aboutImageUrl = landingConfig.aboutImageUrl || "/assets/drive-about-facade.jpg";
-  const spaceImageOneUrl = landingConfig.spaceImageOneUrl || "/assets/drive-space-dining-1.jpg";
-  const spaceImageTwoUrl = landingConfig.spaceImageTwoUrl || "/assets/drive-space-dining-2.jpg";
-  const spaceImageThreeUrl = landingConfig.spaceImageThreeUrl || "/assets/drive-space-lobby.jpg";
-  const spaceImageFourUrl = landingConfig.spaceImageFourUrl || "/assets/drive-space-private.jpg";
-  const newsImageOneUrl = landingConfig.newsImageOneUrl || "/assets/drive-news-winewall.jpg";
-  const newsImageTwoUrl = landingConfig.newsImageTwoUrl || "/assets/drive-news-table-close.jpg";
-  const newsImageThreeUrl = landingConfig.newsImageThreeUrl || "/assets/drive-news-place-setting.jpg";
+  const aboutTitle = resolveLocalizedConfigText(
+    landingConfig.aboutTitle,
+    DEFAULT_LANDING_PAGE_CONFIG.aboutTitle,
+    locale,
+    "aboutTitle"
+  );
+  const aboutParagraphOne = resolveLocalizedConfigText(
+    landingConfig.aboutParagraphOne,
+    DEFAULT_LANDING_PAGE_CONFIG.aboutParagraphOne,
+    locale,
+    "aboutParagraphOne"
+  );
+  const aboutParagraphTwo = resolveLocalizedConfigText(
+    landingConfig.aboutParagraphTwo,
+    DEFAULT_LANDING_PAGE_CONFIG.aboutParagraphTwo,
+    locale,
+    "aboutParagraphTwo"
+  );
+  const aboutBadgeTitle = resolveLocalizedConfigText(
+    landingConfig.aboutBadgeTitle,
+    DEFAULT_LANDING_PAGE_CONFIG.aboutBadgeTitle,
+    locale,
+    "aboutBadgeTitle"
+  );
+  const aboutBadgeSubtitle = resolveLocalizedConfigText(
+    landingConfig.aboutBadgeSubtitle,
+    DEFAULT_LANDING_PAGE_CONFIG.aboutBadgeSubtitle,
+    locale,
+    "aboutBadgeSubtitle"
+  );
+  const featureSeafoodTitle = resolveLocalizedConfigText(
+    landingConfig.featureSeafoodTitle,
+    DEFAULT_LANDING_PAGE_CONFIG.featureSeafoodTitle,
+    locale,
+    "featureSeafoodTitle"
+  );
+  const featureSeafoodDescription = resolveLocalizedConfigText(
+    landingConfig.featureSeafoodDescription,
+    DEFAULT_LANDING_PAGE_CONFIG.featureSeafoodDescription,
+    locale,
+    "featureSeafoodDescription"
+  );
+  const featureChefTitle = resolveLocalizedConfigText(
+    landingConfig.featureChefTitle,
+    DEFAULT_LANDING_PAGE_CONFIG.featureChefTitle,
+    locale,
+    "featureChefTitle"
+  );
+  const featureChefDescription = resolveLocalizedConfigText(
+    landingConfig.featureChefDescription,
+    DEFAULT_LANDING_PAGE_CONFIG.featureChefDescription,
+    locale,
+    "featureChefDescription"
+  );
+  const featureSpaceTitle = resolveLocalizedConfigText(
+    landingConfig.featureSpaceTitle,
+    DEFAULT_LANDING_PAGE_CONFIG.featureSpaceTitle,
+    locale,
+    "featureSpaceTitle"
+  );
+  const featureSpaceDescription = resolveLocalizedConfigText(
+    landingConfig.featureSpaceDescription,
+    DEFAULT_LANDING_PAGE_CONFIG.featureSpaceDescription,
+    locale,
+    "featureSpaceDescription"
+  );
+  const featureServiceTitle = resolveLocalizedConfigText(
+    landingConfig.featureServiceTitle,
+    DEFAULT_LANDING_PAGE_CONFIG.featureServiceTitle,
+    locale,
+    "featureServiceTitle"
+  );
+  const featureServiceDescription = resolveLocalizedConfigText(
+    landingConfig.featureServiceDescription,
+    DEFAULT_LANDING_PAGE_CONFIG.featureServiceDescription,
+    locale,
+    "featureServiceDescription"
+  );
+  const spaceKicker = resolveLocalizedConfigText(
+    landingConfig.spaceKicker,
+    DEFAULT_LANDING_PAGE_CONFIG.spaceKicker,
+    locale,
+    "spaceKicker"
+  );
+  const spaceTitle = resolveLocalizedConfigText(
+    landingConfig.spaceTitle,
+    DEFAULT_LANDING_PAGE_CONFIG.spaceTitle,
+    locale,
+    "spaceTitle"
+  );
+  const spaceActionLabel = resolveLocalizedConfigText(
+    landingConfig.spaceActionLabel,
+    DEFAULT_LANDING_PAGE_CONFIG.spaceActionLabel,
+    locale,
+    "spaceActionLabel"
+  );
+  const newsKicker = resolveLocalizedConfigText(
+    landingConfig.newsKicker,
+    DEFAULT_LANDING_PAGE_CONFIG.newsKicker,
+    locale,
+    "newsKicker"
+  );
+  const newsTitle = resolveLocalizedConfigText(
+    landingConfig.newsTitle,
+    DEFAULT_LANDING_PAGE_CONFIG.newsTitle,
+    locale,
+    "newsTitle"
+  );
+  const primaryCtaLabel =
+    locale !== "vi" &&
+    (!landingConfig.primaryCtaLabel ||
+      landingConfig.primaryCtaLabel === DEFAULT_LANDING_PAGE_CONFIG.primaryCtaLabel)
+      ? getLocalizedText(locale, {
+          vi: DEFAULT_LANDING_PAGE_CONFIG.primaryCtaLabel,
+          en: "Book now",
+          zh: "立即订位"
+        })
+      : landingConfig.primaryCtaLabel || DEFAULT_LANDING_PAGE_CONFIG.primaryCtaLabel;
+  const heroImageUrl = landingConfig.heroImageUrl || "/assets/drive-hero-exterior.webp";
+  const aboutImageUrl = landingConfig.aboutImageUrl || "/assets/drive-about-facade.webp";
+  const spaceImageOneUrl = landingConfig.spaceImageOneUrl || "/assets/drive-space-dining-1.webp";
+  const spaceImageTwoUrl = landingConfig.spaceImageTwoUrl || "/assets/drive-space-dining-2.webp";
+  const spaceImageThreeUrl = landingConfig.spaceImageThreeUrl || "/assets/drive-space-lobby.webp";
+  const spaceImageFourUrl = landingConfig.spaceImageFourUrl || "/assets/drive-space-private.webp";
+  const newsImageOneUrl = landingConfig.newsImageOneUrl || "/assets/drive-news-winewall.webp";
+  const newsImageTwoUrl = landingConfig.newsImageTwoUrl || "/assets/drive-news-table-close.webp";
+  const newsImageThreeUrl = landingConfig.newsImageThreeUrl || "/assets/drive-news-place-setting.webp";
   const resolvedCombos = [
     {
       title: landingConfig.comboOneTitle || DEFAULT_LANDING_PAGE_CONFIG.comboOneTitle,
@@ -333,15 +935,10 @@ export default function LandingPage({
   const activeHotlineDisplay = selectedBranch?.phone || hotlineDisplay;
   const activeZaloLink = `https://zalo.me/${String(activeHotline || hotline).replace(/[^\d]/g, "")}`;
   const chatTitle = DEFAULT_BRAND_NAME;
-  const chatSummary = `${displayBranchName} xin chào`;
+  const chatSummary = ui.chatSummary(displayBranchName);
   const chatSuggestions = useMemo(
-    () => [
-      `Menu ${displayBranchShortName || "hôm nay"}`,
-      "Giá combo 4 người",
-      `Đặt bàn tại ${displayBranchShortName || "chi nhánh"}`,
-      `Đường đi ${displayBranchShortName || "chi nhánh"}`
-    ],
-    [displayBranchShortName]
+    () => ui.chatSuggestions(displayBranchShortName),
+    [displayBranchShortName, ui]
   );
   const activeVoucherCampaign = useMemo(() => {
     const branchFallback = buildFallbackVoucherCampaign(selectedBranchId);
@@ -353,21 +950,35 @@ export default function LandingPage({
   }, [selectedBranchId, selectedVoucherCampaignId, voucherCampaigns]);
 
   useEffect(() => {
-    setChatReply(
-      `${displayBranchName} đang sẵn sàng hỗ trợ menu, đặt bàn nhanh và hướng dẫn liên hệ.`
-    );
-  }, [displayBranchName]);
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const storedLocale = window.localStorage.getItem("landing-locale");
+    const nextLocale = normalizeLocale(params.get("lang") || storedLocale || "vi");
+    setLocale(nextLocale);
+  }, []);
 
   useEffect(() => {
     if (typeof document === "undefined") {
       return;
     }
 
-    const titleBase =
-      landingConfig.seoTitle ||
-      `${displayBranchName} | Hải sản cao cấp, đặt bàn nhanh, combo tiết kiệm`;
+    document.documentElement.lang = locale === "zh" ? "zh-CN" : locale;
+
+    const localizedTitle = getLocalizedText(locale, {
+      vi: `${displayBranchName} | Hải sản cao cấp, đặt bàn nhanh, combo tiết kiệm`,
+      en: `${displayBranchName} | Premium seafood, quick reservation, value combos`,
+      zh: `${displayBranchName} | 高级海鲜，快速订位，精选套餐`
+    });
+    const titleBase = locale === "vi" ? landingConfig.seoTitle || localizedTitle : localizedTitle;
     document.title = titleBase;
-  }, [displayBranchName, landingConfig.seoTitle]);
+  }, [displayBranchName, landingConfig.seoTitle, locale]);
+
+  useEffect(() => {
+    setChatReply(ui.chatReply(displayBranchName));
+  }, [displayBranchName, ui]);
 
   const structuredData = useMemo(
     () => ({
@@ -657,6 +1268,39 @@ export default function LandingPage({
     document.getElementById("order-online")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const updateLocaleUrl = (nextLocale) => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const url = new URL(window.location.href);
+
+    if (nextLocale === "vi") {
+      url.searchParams.delete("lang");
+    } else {
+      url.searchParams.set("lang", nextLocale);
+    }
+
+    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  };
+
+  const switchLocale = (nextLocale) => {
+    const normalizedLocale = normalizeLocale(nextLocale);
+    setLocale(normalizedLocale);
+
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("landing-locale", normalizedLocale);
+    }
+
+    updateLocaleUrl(normalizedLocale);
+  };
+
+  const cycleLocale = () => {
+    const currentIndex = LANDING_LOCALES.indexOf(locale);
+    const nextLocale = LANDING_LOCALES[(currentIndex + 1) % LANDING_LOCALES.length];
+    switchLocale(nextLocale);
+  };
+
   const handleBranchSelect = (branchId) => {
     const nextBranch = branches.find((item) => item.id === branchId);
     if (!nextBranch) {
@@ -665,7 +1309,8 @@ export default function LandingPage({
 
     setSelectedBranchId(nextBranch.id);
     setSelectedVoucherCampaignId("");
-    router.push(getBranchLandingPath(nextBranch));
+    const nextPath = getBranchLandingPath(nextBranch);
+    router.push(locale === "vi" ? nextPath : `${nextPath}?lang=${locale}`);
   };
 
   const addDishToOrder = (dish) => {
@@ -882,7 +1527,9 @@ export default function LandingPage({
       return;
     }
 
-    setChatReply(buildChatReply(trimmed, displayBranchName, activeHotline, activeHotlineDisplay));
+    setChatReply(
+      buildChatReply(trimmed, displayBranchName, activeHotline, activeHotlineDisplay, locale)
+    );
     setChatInput("");
   };
 
@@ -906,9 +1553,11 @@ export default function LandingPage({
             <button
               className="header-language-chip"
               type="button"
-              aria-label="Ngôn ngữ hiện tại: Tiếng Việt"
+              aria-label={ui.currentLanguageAria}
+              title={ui.localeName}
+              onClick={cycleLocale}
             >
-              <span>VI</span>
+              <span>{ui.localeLabel}</span>
             </button>
 
             <button
@@ -923,35 +1572,35 @@ export default function LandingPage({
             </button>
           </div>
 
-          <nav className="site-nav" aria-label="Điều hướng chính">
+          <nav className="site-nav" aria-label={ui.nav.home}>
             <ul id="nav-list">
               <li>
                 <a href="#top" className="is-active">
-                  Trang chủ
+                  {ui.nav.home}
                 </a>
               </li>
               <li>
-                <a href="#about">Giới thiệu</a>
+                <a href="#about">{ui.nav.about}</a>
               </li>
               <li>
-                <a href="#menu">Thực đơn</a>
+                <a href="#menu">{ui.nav.menu}</a>
               </li>
               <li>
-                <a href="#reservation">Đặt bàn</a>
+                <a href="#reservation">{ui.nav.reservation}</a>
               </li>
               <li>
-                <a href="#space">Không gian</a>
+                <a href="#space">{ui.nav.space}</a>
               </li>
               <li>
-                <a href="#news">Tin tức</a>
+                <a href="#news">{ui.nav.news}</a>
               </li>
               <li>
-                <a href="#contact">Liên hệ</a>
+                <a href="#contact">{ui.nav.contact}</a>
               </li>
             </ul>
             <div className="nav-mobile-panels">
               <div className="nav-mobile-card">
-                <span className="nav-mobile-kicker">Chi nhánh đang xem</span>
+                <span className="nav-mobile-kicker">{ui.currentBranch}</span>
                 <strong>{displayBranchName}</strong>
                 <span>{selectedBranch?.address || "Đường ven biển, Hồ Tràm, Xuyên Mộc"}</span>
                 {(branches || []).length > 1 ? (
@@ -969,25 +1618,37 @@ export default function LandingPage({
                 ) : null}
               </div>
               <div className="nav-mobile-card">
-                <span className="nav-mobile-kicker">Ngôn ngữ</span>
+                <span className="nav-mobile-kicker">{ui.language}</span>
                 <div className="nav-language-list">
-                  <button type="button" className="nav-language-chip is-active">
+                  <button
+                    type="button"
+                    className={`nav-language-chip${locale === "vi" ? " is-active" : ""}`}
+                    onClick={() => switchLocale("vi")}
+                  >
                     VI
                   </button>
-                  <button type="button" className="nav-language-chip" disabled>
+                  <button
+                    type="button"
+                    className={`nav-language-chip${locale === "en" ? " is-active" : ""}`}
+                    onClick={() => switchLocale("en")}
+                  >
                     EN
                   </button>
-                  <button type="button" className="nav-language-chip" disabled>
+                  <button
+                    type="button"
+                    className={`nav-language-chip${locale === "zh" ? " is-active" : ""}`}
+                    onClick={() => switchLocale("zh")}
+                  >
                     中文
                   </button>
                 </div>
-                <span>Tiếng Việt đang được áp dụng cho landing page hiện tại.</span>
+                <span>{ui.languageApplied}</span>
               </div>
             </div>
           </nav>
 
           <a className="button button-primary header-cta" href="#reservation">
-            Đặt bàn
+            {ui.nav.reservation}
           </a>
         </div>
       </header>
@@ -1023,11 +1684,11 @@ export default function LandingPage({
               </p>
               <div className="hero-actions">
                 <button className="button button-primary" type="button" onClick={() => focusReservation()}>
-                  {landingConfig.primaryCtaLabel || DEFAULT_LANDING_PAGE_CONFIG.primaryCtaLabel}
+                  {primaryCtaLabel}
                 </button>
               </div>
               <div className="hero-scroll">
-                <span>Scroll</span>
+                <span>{ui.heroScroll}</span>
                 <span className="hero-scroll-line" aria-hidden="true"></span>
               </div>
             </div>
@@ -1038,20 +1699,20 @@ export default function LandingPage({
         <section className="about section" id="about">
           <div className="container about-grid">
             <div className="about-copy reveal">
-              <p className="section-kicker">Về chúng tôi</p>
-              <h2>{landingConfig.aboutTitle || DEFAULT_LANDING_PAGE_CONFIG.aboutTitle}</h2>
-              <p>{landingConfig.aboutParagraphOne || DEFAULT_LANDING_PAGE_CONFIG.aboutParagraphOne}</p>
-              <p>{landingConfig.aboutParagraphTwo || DEFAULT_LANDING_PAGE_CONFIG.aboutParagraphTwo}</p>
+              <p className="section-kicker">{ui.aboutKicker}</p>
+              <h2>{aboutTitle}</h2>
+              <p>{aboutParagraphOne}</p>
+              <p>{aboutParagraphTwo}</p>
               <a className="button button-primary" href="#space">
-                Khám phá thêm
+                {ui.aboutMore}
               </a>
             </div>
 
             <div className="about-card about-card-drive reveal">
-              <img src={aboutImageUrl} alt={`Mặt tiền ${displayBranchName}`} />
+              <img src={aboutImageUrl} alt={`Mặt tiền ${displayBranchName}`} loading="lazy" decoding="async" />
               <div className="about-card-badge">
-                <strong>{landingConfig.aboutBadgeTitle || DEFAULT_LANDING_PAGE_CONFIG.aboutBadgeTitle}</strong>
-                <span>{landingConfig.aboutBadgeSubtitle || DEFAULT_LANDING_PAGE_CONFIG.aboutBadgeSubtitle}</span>
+                <strong>{aboutBadgeTitle}</strong>
+                <span>{aboutBadgeSubtitle}</span>
               </div>
             </div>
           </div>
@@ -1060,29 +1721,29 @@ export default function LandingPage({
             <article className="feature-item">
               <span className="feature-icon">✺</span>
               <div>
-                <h3>{landingConfig.featureSeafoodTitle || DEFAULT_LANDING_PAGE_CONFIG.featureSeafoodTitle}</h3>
-                <p>{landingConfig.featureSeafoodDescription || DEFAULT_LANDING_PAGE_CONFIG.featureSeafoodDescription}</p>
+                <h3>{featureSeafoodTitle}</h3>
+                <p>{featureSeafoodDescription}</p>
               </div>
             </article>
             <article className="feature-item">
               <span className="feature-icon">⌘</span>
               <div>
-                <h3>{landingConfig.featureChefTitle || DEFAULT_LANDING_PAGE_CONFIG.featureChefTitle}</h3>
-                <p>{landingConfig.featureChefDescription || DEFAULT_LANDING_PAGE_CONFIG.featureChefDescription}</p>
+                <h3>{featureChefTitle}</h3>
+                <p>{featureChefDescription}</p>
               </div>
             </article>
             <article className="feature-item">
               <span className="feature-icon">◌</span>
               <div>
-                <h3>{landingConfig.featureSpaceTitle || DEFAULT_LANDING_PAGE_CONFIG.featureSpaceTitle}</h3>
-                <p>{landingConfig.featureSpaceDescription || DEFAULT_LANDING_PAGE_CONFIG.featureSpaceDescription}</p>
+                <h3>{featureSpaceTitle}</h3>
+                <p>{featureSpaceDescription}</p>
               </div>
             </article>
             <article className="feature-item">
               <span className="feature-icon">♡</span>
               <div>
-                <h3>{landingConfig.featureServiceTitle || DEFAULT_LANDING_PAGE_CONFIG.featureServiceTitle}</h3>
-                <p>{landingConfig.featureServiceDescription || DEFAULT_LANDING_PAGE_CONFIG.featureServiceDescription}</p>
+                <h3>{featureServiceTitle}</h3>
+                <p>{featureServiceDescription}</p>
               </div>
             </article>
           </div>
@@ -1091,25 +1752,22 @@ export default function LandingPage({
         <section className="reservation section" id="reservation">
           <div className="container reservation-grid">
             <div className="reservation-copy reveal">
-              <p className="section-kicker">Đặt bàn nhanh</p>
-              <h2>Chốt khách nhanh hơn với form đặt bàn và hotline rõ ràng</h2>
-              <p>
-                Thanh CTA cố định giúp khách gọi, đặt bàn hoặc nhắn Zalo chỉ với 1 chạm. Form này
-                đã sẵn API nhận lead để đẩy tiếp sang CRM, Google Sheet và Zalo webhook.
-              </p>
+              <p className="section-kicker">{ui.reservationKicker}</p>
+              <h2>{ui.reservationTitle}</h2>
+              <p>{ui.reservationDescription}</p>
               <div className="contact-quick-cards">
                 <a className="contact-quick-card" href={`tel:${activeHotline}`}>
-                  <strong>Gọi ngay</strong>
+                  <strong>{ui.callNow}</strong>
                   <span>{activeHotlineDisplay}</span>
                 </a>
                 <a className="contact-quick-card" href={activeZaloLink} target="_blank" rel="noreferrer">
-                  <strong>Zalo</strong>
-                  <span>Nhắn tư vấn nhanh</span>
+                  <strong>{ui.zaloLabel}</strong>
+                  <span>{ui.zaloQuick}</span>
                 </a>
               </div>
               {(branches || []).length > 1 ? (
                 <label className="branch-selector">
-                  <span>Chọn chi nhánh phục vụ</span>
+                  <span>{ui.selectBranch}</span>
                   <select
                     value={selectedBranchId}
                     onChange={(event) => handleBranchSelect(event.target.value)}
@@ -1123,7 +1781,7 @@ export default function LandingPage({
                 </label>
               ) : (
                 <div className="branch-inline-note">
-                  <strong>Đang nhận lead tại:</strong> {selectedBranch?.name || "San Hô Đỏ Hồ Tràm"}
+                  <strong>{ui.receivingLeadsAt}</strong> {selectedBranch?.name || "San Hô Đỏ Hồ Tràm"}
                 </div>
               )}
             </div>
@@ -1131,11 +1789,11 @@ export default function LandingPage({
             <form className="reservation-form reveal" onSubmit={handleReservationSubmit}>
               {selectedOffer ? (
                 <div className="selected-offer-banner">
-                  <strong>Đang quan tâm:</strong> {selectedOffer}
+                  <strong>{ui.interestedIn}</strong> {selectedOffer}
                 </div>
               ) : null}
               <label>
-                <span>Tên</span>
+                <span>{ui.form.name}</span>
                 <input
                   type="text"
                   value={reservationForm.name}
@@ -1146,20 +1804,20 @@ export default function LandingPage({
                 />
               </label>
               <label>
-                <span>SĐT</span>
+                <span>{ui.form.phone}</span>
                 <input
                   type="tel"
                   value={reservationForm.phone}
                   onChange={(event) =>
                     setReservationForm((prev) => ({ ...prev, phone: event.target.value }))
                   }
-                  placeholder="Ví dụ: 0814 645 999"
+                  placeholder={ui.form.phonePlaceholder}
                   required
                 />
               </label>
               <div className="reservation-form-row">
                 <label>
-                  <span>Số khách</span>
+                  <span>{ui.form.guests}</span>
                   <select
                     value={reservationForm.guests}
                     onChange={(event) =>
@@ -1174,7 +1832,7 @@ export default function LandingPage({
                   </select>
                 </label>
                 <label>
-                  <span>Ngày đến</span>
+                  <span>{ui.form.arrivalDate}</span>
                   <input
                     type="date"
                     min={reservationMinDate}
@@ -1187,7 +1845,7 @@ export default function LandingPage({
                 </label>
               </div>
               <label>
-                <span>Khung giờ</span>
+                <span>{ui.form.timeSlot}</span>
                 <select
                   value={reservationForm.timeSlot}
                   onChange={(event) =>
@@ -1202,36 +1860,36 @@ export default function LandingPage({
                 </select>
               </label>
               <label>
-                <span>Mã tài xế / giới thiệu (nếu có)</span>
+                <span>{ui.form.referralCode}</span>
                 <input
                   type="text"
                   value={reservationForm.referralCode || ""}
                   onChange={(event) =>
                     setReservationForm((prev) => ({ ...prev, referralCode: event.target.value }))
                   }
-                  placeholder="Ví dụ: DRV-HOTRAM-01"
+                  placeholder={ui.form.referralPlaceholder}
                 />
               </label>
               <div className="form-note">
-                <strong>Khung giờ nhận đặt bàn:</strong> 10:00 - 21:30 mỗi ngày.
+                <strong>{ui.reservationNotePrefix}</strong> {ui.reservationNoteHours}
                 {reservationPreview ? (
-                  <span> Lịch hẹn đang chọn: {reservationPreview}.</span>
+                  <span> {ui.selectedSchedule} {reservationPreview}.</span>
                 ) : null}
-                {selectedBranch ? <span> Chi nhánh tiếp nhận: {selectedBranch.name}.</span> : null}
+                {selectedBranch ? <span> {ui.handlingBranch} {selectedBranch.name}.</span> : null}
               </div>
               <label>
-                <span>Ghi chú thêm</span>
+                <span>{ui.form.notes}</span>
                 <textarea
                   rows={3}
                   value={reservationForm.notes || ""}
                   onChange={(event) =>
                     setReservationForm((prev) => ({ ...prev, notes: event.target.value }))
                   }
-                  placeholder="Ví dụ: cần ghế em bé, bàn yên tĩnh, có sinh nhật..."
+                  placeholder={ui.form.notesPlaceholder}
                 />
               </label>
               <button className="button button-primary" type="submit" disabled={reservationLoading}>
-                {reservationLoading ? "Đang gửi..." : "Gửi yêu cầu đặt bàn"}
+                {reservationLoading ? ui.submitting : ui.submitReservation}
               </button>
               {reservationError ? <p className="form-status is-error">{reservationError}</p> : null}
               {reservationStatus ? <div className="form-success-card">{reservationStatus}</div> : null}
@@ -1243,12 +1901,9 @@ export default function LandingPage({
           <div className="menu-backdrop" aria-hidden="true"></div>
           <div className="container menu-layout">
             <div className="menu-copy reveal">
-              <p className="section-kicker">Thực đơn</p>
-              <h2>Menu thông minh với giá, mô tả và combo gợi ý sẵn</h2>
-              <p>
-                Mỗi món đều có giá, mô tả ngắn và nút đặt ngay. Khi khách bấm chọn món hoặc combo,
-                hệ thống sẽ bật gợi ý upsell để tăng giá trị đơn hàng.
-              </p>
+              <p className="section-kicker">{ui.menuKicker}</p>
+              <h2>{ui.menuTitle}</h2>
+              <p>{ui.menuDescription}</p>
               <div className="menu-category-pills">
                 {menuCategories.map((category) => (
                   <button
@@ -1271,7 +1926,7 @@ export default function LandingPage({
                   className="slider-button"
                   type="button"
                   data-direction="prev"
-                  aria-label="Món trước"
+                  aria-label={ui.prevDish}
                 >
                   &#8592;
                 </button>
@@ -1279,7 +1934,7 @@ export default function LandingPage({
                   className="slider-button"
                   type="button"
                   data-direction="next"
-                  aria-label="Món tiếp"
+                  aria-label={ui.nextDish}
                 >
                   &#8594;
                 </button>
@@ -1290,7 +1945,7 @@ export default function LandingPage({
               <div className="menu-track">
                 {featuredDishes.map((dish, index) => (
                   <article className={`dish-card${index === 0 ? " is-current" : ""}`} key={dish.name}>
-                    <img src={dish.image} alt={dish.name} />
+                    <img src={dish.image} alt={dish.name} loading="lazy" decoding="async" />
                     <div className="dish-card-body">
                       <div className="dish-card-flags">
                         <span className={`dish-flag is-${dish.availabilityStatus || "available"}`}>
@@ -1314,28 +1969,28 @@ export default function LandingPage({
                             focusOrderSection();
                           }}
                         >
-                          Chọn món
+                          {ui.chooseDish}
                         </button>
                         <button
                           className="button button-secondary"
                           type="button"
                           onClick={() => focusReservation(dish.name)}
                         >
-                          Đặt luôn
+                          {ui.bookNow}
                         </button>
                       </div>
                     </div>
                   </article>
                 ))}
               </div>
-              <div className="slider-dots" aria-label="Chọn món">
+              <div className="slider-dots" aria-label={ui.dishChooser}>
                 {featuredDishes.map((dish, index) => (
                   <button
                     key={dish.name}
                     className={`dot${index === 0 ? " is-active" : ""}`}
                     type="button"
                     data-index={index}
-                    aria-label={`Món ${index + 1}`}
+                    aria-label={ui.dishNumber(index)}
                   ></button>
                 ))}
               </div>
@@ -1366,14 +2021,14 @@ export default function LandingPage({
                         openUpsell(combo.title, "Đặt combo này và thêm món khai vị sẽ giảm ngay 10%.")
                       }
                     >
-                      Chọn combo
+                      {ui.chooseCombo}
                     </button>
                     <button
                       className="button button-secondary"
                       type="button"
                       onClick={() => focusReservation(combo.title)}
                     >
-                      Đặt bàn theo combo
+                      {ui.bookCombo}
                     </button>
                   </div>
                 </article>
@@ -1386,34 +2041,36 @@ export default function LandingPage({
           <img className="space-coral" src="/assets/coral-pattern.png" alt="" />
           <div className="container">
             <div className="section-heading reveal">
-              <p className="section-kicker">
-                {landingConfig.spaceKicker || DEFAULT_LANDING_PAGE_CONFIG.spaceKicker}
-              </p>
-              <h2>{landingConfig.spaceTitle || DEFAULT_LANDING_PAGE_CONFIG.spaceTitle}</h2>
+              <p className="section-kicker">{spaceKicker}</p>
+              <h2>{spaceTitle}</h2>
             </div>
             <div className="space-grid">
               <article className="space-card reveal">
                 <img
                   src={spaceImageOneUrl}
                   alt="Khu vực bàn tiệc lớn với tủ rượu phía sau"
+                  loading="lazy"
+                  decoding="async"
                 />
               </article>
               <article className="space-card reveal">
                 <img
                   src={spaceImageTwoUrl}
                   alt="Khu vực bàn tròn sang trọng trong nhà hàng"
+                  loading="lazy"
+                  decoding="async"
                 />
               </article>
               <article className="space-card reveal">
-                <img src={spaceImageThreeUrl} alt="Sảnh đón khách và khu trưng bày" />
+                <img src={spaceImageThreeUrl} alt="Sảnh đón khách và khu trưng bày" loading="lazy" decoding="async" />
               </article>
               <article className="space-card reveal">
-                <img src={spaceImageFourUrl} alt="Phòng riêng ấm cúng cho nhóm nhỏ" />
+                <img src={spaceImageFourUrl} alt="Phòng riêng ấm cúng cho nhóm nhỏ" loading="lazy" decoding="async" />
               </article>
             </div>
             <div className="section-action reveal">
               <a className="button button-secondary" href="#contact">
-                {landingConfig.spaceActionLabel || DEFAULT_LANDING_PAGE_CONFIG.spaceActionLabel}
+                {spaceActionLabel}
               </a>
             </div>
           </div>
@@ -1422,12 +2079,9 @@ export default function LandingPage({
         <section className="order-online section" id="order-online">
           <div className="container order-online-grid">
             <div className="order-online-copy reveal">
-              <p className="section-kicker">Đặt món nhanh</p>
-              <h2>Chọn món trước, admin nhận order trực tiếp trong dashboard</h2>
-              <p>
-                Khách có thể chọn trước các món nổi bật và gửi yêu cầu đặt món. Dữ liệu sẽ đi vào
-                Supabase thật và xuất hiện trong tab `Orders` của admin để đội ngũ xử lý.
-              </p>
+              <p className="section-kicker">{ui.orderKicker}</p>
+              <h2>{ui.orderTitle}</h2>
+              <p>{ui.orderDescription}</p>
               <div className="menu-category-pills is-light">
                 {menuCategories.map((category) => (
                   <button
@@ -1471,10 +2125,7 @@ export default function LandingPage({
                 })}
               </div>
               {!filteredDishes.length ? (
-                <div className="form-note">
-                  Chưa có món nổi bật trong nhóm này. Bạn có thể chọn nhóm khác hoặc gọi hotline để
-                  được tư vấn nhanh.
-                </div>
+                <div className="form-note">{ui.noDishes}</div>
               ) : null}
 
               {orderForm.items.length ? (
@@ -1498,14 +2149,14 @@ export default function LandingPage({
 
               <div className="order-summary-card">
                 <div>
-                  <strong>Tạm tính</strong>
-                  <span>{orderForm.items.length} món đã chọn</span>
+                  <strong>{ui.subtotal}</strong>
+                  <span>{orderForm.items.length} {ui.selectedItems}</span>
                 </div>
                 <strong>{formatMoney(orderSubtotal)}</strong>
               </div>
 
               <label>
-                <span>Tên khách</span>
+                <span>{ui.customerName}</span>
                 <input
                   type="text"
                   value={orderForm.customerName}
@@ -1516,37 +2167,37 @@ export default function LandingPage({
                 />
               </label>
               <label>
-                <span>SĐT</span>
+                <span>{ui.form.phone}</span>
                 <input
                   type="tel"
                   value={orderForm.customerPhone}
                   onChange={(event) =>
                     setOrderForm((prev) => ({ ...prev, customerPhone: event.target.value }))
                   }
-                  placeholder="Ví dụ: 0814 645 999"
+                  placeholder={ui.form.phonePlaceholder}
                   required
                 />
               </label>
               <label>
-                <span>Mã tài xế / giới thiệu (nếu có)</span>
+                <span>{ui.form.referralCode}</span>
                 <input
                   type="text"
                   value={orderForm.referralCode || ""}
                   onChange={(event) =>
                     setOrderForm((prev) => ({ ...prev, referralCode: event.target.value }))
                   }
-                  placeholder="Ví dụ: DRV-HOTRAM-01"
+                  placeholder={ui.form.referralPlaceholder}
                 />
               </label>
               <label>
-                <span>Ghi chú thêm</span>
+                <span>{ui.additionalNotes}</span>
                 <textarea
                   rows={4}
                   value={orderForm.notes}
                   onChange={(event) =>
                     setOrderForm((prev) => ({ ...prev, notes: event.target.value }))
                   }
-                  placeholder="Ví dụ: giao trước món khai vị, không cay..."
+                  placeholder={ui.orderNotesPlaceholder}
                 />
               </label>
               <button
@@ -1554,7 +2205,7 @@ export default function LandingPage({
                 type="submit"
                 disabled={orderLoading || !orderForm.items.length}
               >
-                {orderLoading ? "Đang gửi..." : "Gửi yêu cầu đặt món"}
+                {orderLoading ? ui.submitting : ui.submitOrder}
               </button>
               {orderError ? <p className="form-status is-error">{orderError}</p> : null}
               {orderStatus ? <div className="form-success-card">{orderStatus}</div> : null}
@@ -1565,15 +2216,12 @@ export default function LandingPage({
         <section className="voucher section" id="voucher">
           <div className="container voucher-grid">
             <div className="voucher-copy reveal">
-              <p className="section-kicker">Voucher</p>
-              <h2>Nhập SĐT để nhận ưu đãi và thu data khách hàng</h2>
-              <p>
-                Form này phù hợp để kết hợp cùng WiFi Ads GOECO, popup khuyến mãi hoặc chiến dịch
-                remarketing về sau.
-              </p>
+              <p className="section-kicker">{ui.voucherKicker}</p>
+              <h2>{ui.voucherTitle}</h2>
+              <p>{ui.voucherDescription}</p>
               {selectedBranch ? (
                 <div className="branch-inline-note">
-                  <strong>Ưu đãi đang áp dụng tại:</strong> {selectedBranch.name}
+                  <strong>{ui.voucherBranch}</strong> {selectedBranch.name}
                 </div>
               ) : null}
               {voucherCampaigns.length > 1 ? (
@@ -1597,16 +2245,15 @@ export default function LandingPage({
                 <strong>{activeVoucherCampaign?.title || VOUCHER_PRESET.title}</strong>
                 <p>{activeVoucherCampaign?.description || VOUCHER_PRESET.description}</p>
                 <span>
-                  {formatVoucherBenefit(activeVoucherCampaign)} • hiệu lực trong{" "}
-                  {activeVoucherCampaign?.validDays || VOUCHER_PRESET.validDays} ngày kể từ lúc nhận
-                  mã.
+                  {formatVoucherBenefit(activeVoucherCampaign)} • {ui.voucherValidity}{" "}
+                  {activeVoucherCampaign?.validDays || VOUCHER_PRESET.validDays} {ui.voucherDays}
                 </span>
               </div>
             </div>
             <form className="voucher-form reveal" onSubmit={handleVoucherSubmit}>
               {voucherCampaigns.length > 1 ? (
                 <label>
-                  <span>Chiến dịch ưu đãi</span>
+                  <span>{ui.voucherCampaign}</span>
                   <select
                     value={selectedVoucherCampaignId}
                     onChange={(event) => setSelectedVoucherCampaignId(event.target.value)}
@@ -1620,23 +2267,23 @@ export default function LandingPage({
                 </label>
               ) : null}
               <label>
-                <span>Số điện thoại</span>
+                <span>{ui.voucherPhone}</span>
                 <input
                   type="tel"
                   value={voucherPhone}
                   onChange={(event) => setVoucherPhone(event.target.value)}
-                  placeholder="Nhập SĐT để nhận ưu đãi"
+                  placeholder={ui.voucherPhonePlaceholder}
                   required
                 />
               </label>
               <button className="button button-primary" type="submit" disabled={voucherLoading}>
-                {voucherLoading ? "Đang xử lý..." : "Nhận ưu đãi ngay"}
+                {voucherLoading ? ui.voucherProcessing : ui.voucherSubmit}
               </button>
               {voucherError ? <p className="form-status is-error">{voucherError}</p> : null}
               {voucherStatus ? <p className="form-status">{voucherStatus}</p> : null}
               {voucherResult ? (
                 <div className="voucher-result-card">
-                  <span>Mã ưu đãi của bạn</span>
+                  <span>{ui.voucherCode}</span>
                   <strong>{voucherResult.voucherCode}</strong>
                   <p>
                     {voucherResult.voucherTitle} -{" "}
@@ -1645,7 +2292,7 @@ export default function LandingPage({
                       : `giảm ${formatMoney(voucherResult.voucherDiscountValue)}`}
                   </p>
                   <small>
-                    Hạn dùng:{" "}
+                    {ui.voucherExpires}{" "}
                     {new Intl.DateTimeFormat("vi-VN", {
                       day: "2-digit",
                       month: "2-digit",
@@ -1654,7 +2301,7 @@ export default function LandingPage({
                   </small>
                   {activeVoucherCampaign?.minOrderValue ? (
                     <small>
-                      Áp dụng cho hóa đơn từ {formatMoney(activeVoucherCampaign.minOrderValue)}.
+                      {ui.voucherMinOrder} {formatMoney(activeVoucherCampaign.minOrderValue)}.
                     </small>
                   ) : null}
                 </div>
@@ -1666,10 +2313,8 @@ export default function LandingPage({
         <section className="news section" id="news">
           <div className="container">
             <div className="section-heading align-left reveal">
-              <p className="section-kicker">
-                {landingConfig.newsKicker || DEFAULT_LANDING_PAGE_CONFIG.newsKicker}
-              </p>
-              <h2>{landingConfig.newsTitle || DEFAULT_LANDING_PAGE_CONFIG.newsTitle}</h2>
+              <p className="section-kicker">{newsKicker}</p>
+              <h2>{newsTitle}</h2>
             </div>
 
             <div className="news-grid">
@@ -1677,6 +2322,8 @@ export default function LandingPage({
                 <img
                   src={newsImageOneUrl}
                   alt="Tủ rượu và khu vực bàn tiệc sang trọng"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="news-body">
                   <span className="news-tag">
@@ -1696,6 +2343,8 @@ export default function LandingPage({
                 <img
                   src={newsImageTwoUrl}
                   alt="Cận cảnh bàn ăn được chuẩn bị sẵn"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="news-body">
                   <span className="news-tag news-tag-alt">
@@ -1715,6 +2364,8 @@ export default function LandingPage({
                 <img
                   src={newsImageThreeUrl}
                   alt="Không gian bàn riêng với cách bày trí tinh tế"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="news-body">
                   <span className="news-tag">
@@ -1734,7 +2385,7 @@ export default function LandingPage({
             </div>
             <div className="section-action reveal">
               <a className="button button-secondary" href="#news">
-                Xem tất cả tin tức
+                {ui.viewAllNews}
               </a>
             </div>
           </div>
@@ -1754,31 +2405,31 @@ export default function LandingPage({
           </div>
 
           <div>
-            <h3>Liên kết nhanh</h3>
+            <h3>{ui.footerLinks}</h3>
             <ul className="footer-links">
               <li>
-                <a href="#top">Trang chủ</a>
+                <a href="#top">{ui.nav.home}</a>
               </li>
               <li>
-                <a href="#about">Giới thiệu</a>
+                <a href="#about">{ui.nav.about}</a>
               </li>
               <li>
-                <a href="#menu">Thực đơn</a>
+                <a href="#menu">{ui.nav.menu}</a>
               </li>
               <li>
-                <a href="#reservation">Đặt bàn</a>
+                <a href="#reservation">{ui.nav.reservation}</a>
               </li>
               <li>
-                <a href="#space">Không gian</a>
+                <a href="#space">{ui.nav.space}</a>
               </li>
               <li>
-                <a href="#news">Tin tức</a>
+                <a href="#news">{ui.nav.news}</a>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3>Thông tin liên hệ</h3>
+            <h3>{ui.footerContact}</h3>
             <ul className="footer-meta">
               <li>{selectedBranch?.address || "Đường ven biển, Ấp Hồ Tràm, Xã Phước Thuận, H. Xuyên Mộc, Bà Rịa - Vũng Tàu"}</li>
               <li>{activeHotlineDisplay}</li>
@@ -1789,32 +2440,32 @@ export default function LandingPage({
           </div>
 
           <div>
-            <h3>Ưu đãi nhanh</h3>
+            <h3>{ui.footerQuickOffer}</h3>
             <form className="subscribe-form" onSubmit={handleVoucherSubmit}>
               <input
                 type="tel"
-                placeholder="Nhập SĐT để nhận ưu đãi"
-                aria-label="Số điện thoại"
+                placeholder={ui.footerVoucherPlaceholder}
+                aria-label={ui.voucherPhone}
                 value={voucherPhone}
                 onChange={(event) => setVoucherPhone(event.target.value)}
               />
               <button className="button button-primary" type="submit" disabled={voucherLoading}>
-                {voucherLoading ? "Đang gửi..." : "Nhận voucher"}
+                {voucherLoading ? ui.submitting : ui.footerVoucherButton}
               </button>
             </form>
           </div>
         </div>
         <div className="footer-bar">
           <div className="container footer-bar-inner">
-            <span>&copy; 2024 Nhà hàng {displayBranchName}. All rights reserved.</span>
-            <span>Thiết kế bởi Web Designer</span>
+            <span>{ui.footerCopyright(displayBranchName)}</span>
+            <span>{ui.footerCredit}</span>
           </div>
         </div>
       </footer>
 
       <div className="sticky-cta-bar">
         <button className="sticky-cta-item sticky-cta-book" type="button" onClick={() => focusReservation()}>
-          Đặt bàn ngay
+          {ui.stickyBook}
         </button>
       </div>
 
@@ -1830,7 +2481,7 @@ export default function LandingPage({
           className="contact-float chat-toggle"
           type="button"
           onClick={() => setChatOpen((prev) => !prev)}
-          aria-label={chatOpen ? "Đóng trò chuyện" : `Mở trò chuyện với ${displayBranchName}`}
+          aria-label={chatOpen ? ui.closeChat : ui.openChat(displayBranchName)}
         >
           {chatOpen ? <X className="size-5" /> : <MessageCircle className="size-5" />}
         </button>
@@ -1866,9 +2517,9 @@ export default function LandingPage({
               type="text"
               value={chatInput}
               onChange={(event) => setChatInput(event.target.value)}
-              placeholder="Hỏi menu, giá, đường đi..."
+              placeholder={ui.chatPlaceholder}
             />
-            <button type="submit">Gửi</button>
+            <button type="submit">{ui.chatSubmit}</button>
           </form>
         </div>
       ) : null}
@@ -1889,10 +2540,10 @@ export default function LandingPage({
                   focusReservation(upsellModal.title);
                 }}
               >
-                Đặt bàn với ưu đãi này
+                {ui.bookWithOffer}
               </button>
               <button className="button button-secondary" type="button" onClick={() => setUpsellModal(null)}>
-                Xem thêm combo
+                {ui.viewMoreCombos}
               </button>
             </div>
           </div>
