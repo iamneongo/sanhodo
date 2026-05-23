@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronDown, MessageCircle, Phone, X } from "lucide-react";
+import { Check, ChevronDown, MapPin, MessageCircle, Phone, X } from "lucide-react";
 import {
   DEFAULT_BRANCHES,
   MAIN_BRANCH_CODE,
@@ -32,6 +32,104 @@ const secondaryHotlineDisplay = "0522 282 229";
 const reservationMinDate = getTodayDateInput();
 const DEFAULT_BRAND_NAME = "San Hô Đỏ";
 const LANDING_LOCALES = ["vi", "en", "zh"];
+const BRANCH_THEME_PRESETS = {
+  hotram: {
+    pageBackground:
+      "linear-gradient(rgba(247, 240, 231, 0.92), rgba(247, 240, 231, 0.92)), radial-gradient(circle at top right, rgba(233, 185, 151, 0.22), transparent 24%), radial-gradient(circle at bottom left, rgba(86, 140, 171, 0.12), transparent 22%), var(--bg)",
+    heroOverlay:
+      "linear-gradient(90deg, rgba(254, 248, 240, 0.9) 0%, rgba(254, 248, 240, 0.48) 43%, rgba(13, 9, 5, 0.12) 100%), linear-gradient(180deg, rgba(255, 243, 228, 0.12), rgba(255, 253, 251, 0.24))",
+    brand: "#c64738",
+    brandDeep: "#8e271d",
+    accent: "#16324a"
+  },
+  dalat: {
+    pageBackground:
+      "linear-gradient(rgba(241, 244, 238, 0.92), rgba(241, 244, 238, 0.92)), radial-gradient(circle at top right, rgba(118, 150, 113, 0.18), transparent 22%), radial-gradient(circle at bottom left, rgba(177, 140, 98, 0.15), transparent 20%), #edf2ea",
+    heroOverlay:
+      "linear-gradient(90deg, rgba(244, 247, 242, 0.9) 0%, rgba(244, 247, 242, 0.5) 42%, rgba(19, 20, 16, 0.18) 100%), linear-gradient(180deg, rgba(241, 245, 240, 0.12), rgba(245, 249, 244, 0.26))",
+    brand: "#5c7352",
+    brandDeep: "#31492b",
+    accent: "#6b543d"
+  },
+  default: {
+    pageBackground:
+      "linear-gradient(rgba(247, 240, 231, 0.92), rgba(247, 240, 231, 0.92)), radial-gradient(circle at top right, rgba(233, 185, 151, 0.22), transparent 24%), radial-gradient(circle at bottom left, rgba(86, 140, 171, 0.12), transparent 22%), var(--bg)",
+    heroOverlay:
+      "linear-gradient(90deg, rgba(254, 248, 240, 0.9) 0%, rgba(254, 248, 240, 0.48) 43%, rgba(13, 9, 5, 0.12) 100%), linear-gradient(180deg, rgba(255, 243, 228, 0.12), rgba(255, 253, 251, 0.24))",
+    brand: "#c64738",
+    brandDeep: "#8e271d",
+    accent: "#16324a"
+  }
+};
+
+const BRANCH_EXPERIENCE_BY_LOCALE = {
+  hotram: {
+    vi: {
+      branchLabel: "Chi nhánh gần bạn",
+      eyebrow: "Bạn đang ở chi nhánh",
+      subtitle: "Hải sản - Cơm niêu - Biển",
+      description:
+        "Hướng biển, không gian mở và thực đơn hải sản tươi cho nhóm bạn, gia đình và khách du lịch cuối tuần."
+    },
+    en: {
+      branchLabel: "Nearest branch",
+      eyebrow: "You're currently at",
+      subtitle: "Seafood - Claypot rice - Coastline",
+      description:
+        "A seaside dining atmosphere with fresh seafood, warm claypot dishes and spacious tables for families and travelers."
+    },
+    zh: {
+      branchLabel: "离你最近的分店",
+      eyebrow: "你当前所在分店",
+      subtitle: "海鲜 - 砂锅饭 - 海岸",
+      description: "面向海边的用餐体验，主打新鲜海鲜、砂锅热菜与适合家庭和游客的宽敞空间。"
+    }
+  },
+  dalat: {
+    vi: {
+      branchLabel: "San Hô Đỏ gần nhất",
+      eyebrow: "Bạn đang ở chi nhánh",
+      subtitle: "Coffee - Villa - Vườn hoa",
+      description:
+        "Không gian villa giữa vườn, phù hợp cà phê sáng, BBQ tối và những buổi hẹn riêng tư kiểu Đà Lạt."
+    },
+    en: {
+      branchLabel: "Nearest San Hô Đỏ",
+      eyebrow: "You're currently at",
+      subtitle: "Coffee - Villa - Garden bloom",
+      description:
+        "A villa-style branch with coffee, garden vibes and evening BBQ moments tailored for Da Lat getaways."
+    },
+    zh: {
+      branchLabel: "最近的 San Hô Đỏ",
+      eyebrow: "你当前所在分店",
+      subtitle: "咖啡 - 别墅 - 花园",
+      description: "花园别墅氛围，适合晨间咖啡、晚间烧烤和更有私密感的 Đà Lạt 约会体验。"
+    }
+  },
+  default: {
+    vi: {
+      branchLabel: "Bạn đang ở",
+      eyebrow: "Bạn đang ở chi nhánh",
+      subtitle: "Ẩm thực - Không gian - Trải nghiệm",
+      description:
+        "Mỗi chi nhánh San Hô Đỏ đều mang trải nghiệm riêng, tối ưu cho khách địa phương, gia đình và khách du lịch."
+    },
+    en: {
+      branchLabel: "You're at",
+      eyebrow: "You're currently at",
+      subtitle: "Cuisine - Space - Experience",
+      description:
+        "Each San Hô Đỏ branch is tailored for a distinct local experience, from family dining to destination visitors."
+    },
+    zh: {
+      branchLabel: "你当前所在",
+      eyebrow: "你当前所在分店",
+      subtitle: "餐饮 - 空间 - 体验",
+      description: "每家 San Hô Đỏ 分店都根据当地客群与旅行场景打造不同的体验。"
+    }
+  }
+};
 
 const LANDING_COPY = {
   vi: {
@@ -47,7 +145,7 @@ const LANDING_COPY = {
       news: "Tin tức",
       contact: "Liên hệ"
     },
-    currentBranch: "Chi nhánh đang xem",
+    currentBranch: "Bạn đang ở",
     language: "Ngôn ngữ",
     languageApplied: "Tiếng Việt đang được áp dụng cho landing page hiện tại.",
     heroScroll: "Scroll",
@@ -160,7 +258,7 @@ const LANDING_COPY = {
       news: "News",
       contact: "Contact"
     },
-    currentBranch: "Current branch",
+    currentBranch: "You're at",
     language: "Language",
     languageApplied: "English is now applied for this landing page.",
     heroScroll: "Scroll",
@@ -273,7 +371,7 @@ const LANDING_COPY = {
       news: "资讯",
       contact: "联系"
     },
-    currentBranch: "当前分店",
+    currentBranch: "你当前所在",
     language: "语言",
     languageApplied: "当前落地页已切换为中文。",
     heroScroll: "继续",
@@ -636,6 +734,41 @@ function getLocalizedText(locale, fallbackByLocale) {
   return fallbackByLocale[normalizeLocale(locale)] || fallbackByLocale.vi;
 }
 
+function getBranchExperiencePreset(branch, locale = "vi") {
+  const themeKey = branch?.themeKey || "default";
+  const group = BRANCH_EXPERIENCE_BY_LOCALE[themeKey] || BRANCH_EXPERIENCE_BY_LOCALE.default;
+  return group[normalizeLocale(locale)] || group.vi;
+}
+
+function toRadians(value) {
+  return (Number(value) * Math.PI) / 180;
+}
+
+function calculateDistanceKm(origin, target) {
+  if (
+    !origin ||
+    !target ||
+    !Number.isFinite(Number(origin.latitude)) ||
+    !Number.isFinite(Number(origin.longitude)) ||
+    !Number.isFinite(Number(target.latitude)) ||
+    !Number.isFinite(Number(target.longitude))
+  ) {
+    return null;
+  }
+
+  const earthRadiusKm = 6371;
+  const deltaLat = toRadians(Number(target.latitude) - Number(origin.latitude));
+  const deltaLng = toRadians(Number(target.longitude) - Number(origin.longitude));
+  const lat1 = toRadians(origin.latitude);
+  const lat2 = toRadians(target.latitude);
+
+  const a =
+    Math.sin(deltaLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLng / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadiusKm * c;
+}
+
 function resolveLocalizedConfigText(configValue, defaultValue, locale, key) {
   if (locale === "vi") {
     return configValue || defaultValue;
@@ -668,6 +801,7 @@ export default function LandingPage({
   const [locale, setLocale] = useState("vi");
   const [localeMenuOpen, setLocaleMenuOpen] = useState(false);
   const [branchMenuOpen, setBranchMenuOpen] = useState(false);
+  const [heroBranchMenuOpen, setHeroBranchMenuOpen] = useState(false);
   const [featuredDishes, setFeaturedDishes] = useState(fallbackFeaturedDishes);
   const [branches, setBranches] = useState(initialBranches?.length ? initialBranches : fallbackBranches);
   const [selectedBranchId, setSelectedBranchId] = useState(() =>
@@ -705,6 +839,11 @@ export default function LandingPage({
   const [chatOpen, setChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatReply, setChatReply] = useState("");
+  const [autoDetectState, setAutoDetectState] = useState({
+    source: "",
+    distanceKm: null,
+    label: ""
+  });
   const [upsellModal, setUpsellModal] = useState(null);
   const [selectedOffer, setSelectedOffer] = useState("");
 
@@ -743,6 +882,12 @@ export default function LandingPage({
     [selectedBranch]
   );
   const ui = useMemo(() => LANDING_COPY[normalizeLocale(locale)], [locale]);
+  const branchExperience = useMemo(
+    () => getBranchExperiencePreset(selectedBranch, locale),
+    [selectedBranch, locale]
+  );
+  const branchTheme = selectedBranch?.themeKey || "default";
+  const branchThemeVars = BRANCH_THEME_PRESETS[branchTheme] || BRANCH_THEME_PRESETS.default;
   const displayBranchName = selectedBranch?.name || "San Hô Đỏ Hồ Tràm";
   const displayBranchShortName = selectedBranch?.shortName || "Hồ Tràm";
   const defaultSecondaryLine =
@@ -755,21 +900,26 @@ export default function LandingPage({
   const brandPrimaryLine = landingConfig.brandPrimary || DEFAULT_BRAND_NAME;
   const brandSecondaryLine =
     landingConfig.brandSecondary || derivedBranchLabel || defaultSecondaryLine || displayBranchShortName;
-  const heroEyebrow = resolveLocalizedConfigText(
-    landingConfig.heroEyebrow,
-    DEFAULT_LANDING_PAGE_CONFIG.heroEyebrow,
-    locale,
-    "heroEyebrow"
-  );
-  const heroTitle = landingConfig.heroTitle || DEFAULT_BRAND_NAME;
-  const heroSubtitle = landingConfig.heroSubtitle || brandSecondaryLine;
+  const heroEyebrow =
+    landingConfig.heroEyebrow && landingConfig.heroEyebrow !== DEFAULT_LANDING_PAGE_CONFIG.heroEyebrow
+      ? landingConfig.heroEyebrow
+      : branchExperience.eyebrow;
+  const heroTitle = landingConfig.heroTitle || displayBranchName;
+  const heroSubtitle =
+    landingConfig.heroSubtitle ||
+    selectedBranch?.experienceTagline ||
+    branchExperience.subtitle ||
+    brandSecondaryLine;
   const heroDescriptionLines = String(
-    resolveLocalizedConfigText(
-      landingConfig.heroDescription,
-      DEFAULT_LANDING_PAGE_CONFIG.heroDescription,
-      locale,
-      "heroDescription"
-    )
+    !landingConfig.heroDescription ||
+      landingConfig.heroDescription === DEFAULT_LANDING_PAGE_CONFIG.heroDescription
+      ? branchExperience.description
+      : resolveLocalizedConfigText(
+          landingConfig.heroDescription,
+          DEFAULT_LANDING_PAGE_CONFIG.heroDescription,
+          locale,
+          "heroDescription"
+        )
   )
     .split("\n")
     .map((item) => item.trim())
@@ -936,7 +1086,11 @@ export default function LandingPage({
   const activeHotline = selectedBranch?.phone || hotline;
   const activeHotlineDisplay = selectedBranch?.phone || hotlineDisplay;
   const activeZaloLink = `https://zalo.me/${String(activeHotline || hotline).replace(/[^\d]/g, "")}`;
-  const chatTitle = DEFAULT_BRAND_NAME;
+  const messengerUrl = selectedBranch?.messengerUrl || "";
+  const mapDirectionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    selectedBranch?.address || displayBranchName
+  )}`;
+  const chatTitle = displayBranchShortName || displayBranchName || DEFAULT_BRAND_NAME;
   const chatSummary = ui.chatSummary(displayBranchName);
   const chatSuggestions = useMemo(
     () => ui.chatSuggestions(displayBranchShortName),
@@ -979,6 +1133,109 @@ export default function LandingPage({
   }, [displayBranchName, landingConfig.seoTitle, locale]);
 
   useEffect(() => {
+    if (typeof window === "undefined" || !branches.length) {
+      return;
+    }
+
+    const branchCandidates = branches.filter(
+      (item) =>
+        item?.isActive !== false &&
+        Number.isFinite(Number(item.latitude)) &&
+        Number.isFinite(Number(item.longitude))
+    );
+
+    if (!branchCandidates.length) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const applyNearestBranch = (coords, source) => {
+      const scoredBranches = branchCandidates
+        .map((branch) => ({
+          branch,
+          distanceKm: calculateDistanceKm(coords, branch)
+        }))
+        .filter((item) => item.distanceKm !== null)
+        .sort((a, b) => a.distanceKm - b.distanceKm);
+
+      const nearest = scoredBranches[0];
+      if (!nearest || cancelled) {
+        return;
+      }
+
+      setAutoDetectState({
+        source,
+        distanceKm: nearest.distanceKm,
+        label: getBranchExperiencePreset(nearest.branch, locale).branchLabel
+      });
+
+      if (initialBranchCode !== MAIN_BRANCH_CODE || nearest.branch.id === selectedBranchId) {
+        return;
+      }
+
+      setSelectedBranchId(nearest.branch.id);
+      const nextPath = getBranchLandingPath(nearest.branch);
+      router.replace(locale === "vi" ? nextPath : `${nextPath}?lang=${locale}`);
+    };
+
+    const fallbackToIp = async () => {
+      try {
+        const response = await fetch("https://ipwho.is/");
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+        if (!data?.success) {
+          return;
+        }
+
+        applyNearestBranch(
+          {
+            latitude: Number(data.latitude),
+            longitude: Number(data.longitude)
+          },
+          "ip"
+        );
+      } catch {
+        // noop
+      }
+    };
+
+    if (!navigator.geolocation) {
+      fallbackToIp();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        applyNearestBranch(
+          {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          },
+          "gps"
+        );
+      },
+      () => {
+        fallbackToIp();
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 7000,
+        maximumAge: 300000
+      }
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, [branches, initialBranchCode, locale, router, selectedBranchId]);
+
+  useEffect(() => {
     setChatReply(ui.chatReply(displayBranchName));
   }, [displayBranchName, ui]);
 
@@ -990,6 +1247,7 @@ export default function LandingPage({
     const handleOutsideClick = (event) => {
       const localeDropdown = document.querySelector("[data-locale-dropdown]");
       const branchDropdown = document.querySelector("[data-branch-dropdown]");
+      const heroBranchDropdown = document.querySelector("[data-hero-branch-dropdown]");
 
       if (localeDropdown && !localeDropdown.contains(event.target)) {
         setLocaleMenuOpen(false);
@@ -997,6 +1255,10 @@ export default function LandingPage({
 
       if (branchDropdown && !branchDropdown.contains(event.target)) {
         setBranchMenuOpen(false);
+      }
+
+      if (heroBranchDropdown && !heroBranchDropdown.contains(event.target)) {
+        setHeroBranchMenuOpen(false);
       }
     };
 
@@ -1335,6 +1597,7 @@ export default function LandingPage({
     setSelectedBranchId(nextBranch.id);
     setSelectedVoucherCampaignId("");
     setBranchMenuOpen(false);
+    setHeroBranchMenuOpen(false);
     const nextPath = getBranchLandingPath(nextBranch);
     router.push(locale === "vi" ? nextPath : `${nextPath}?lang=${locale}`);
   };
@@ -1569,6 +1832,16 @@ export default function LandingPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
+      <div
+        className={`landing-shell theme-${branchTheme}`}
+        style={{
+          "--landing-page-background": branchThemeVars.pageBackground,
+          "--landing-hero-overlay": branchThemeVars.heroOverlay,
+          "--brand": branchThemeVars.brand,
+          "--brand-deep": branchThemeVars.brandDeep,
+          "--ocean": branchThemeVars.accent
+        }}
+      >
       <header className="site-header" id="top">
         <div className="container header-inner">
           <a className="brand brand-lockup" href="#top" aria-label={displayBranchName}>
@@ -1755,10 +2028,69 @@ export default function LandingPage({
                   </span>
                 ))}
               </p>
+              <div className="hero-branch-card">
+                <span className="hero-branch-kicker">{ui.currentBranch}</span>
+                <div className="hero-branch-row">
+                  <div className="hero-branch-meta">
+                    <strong>{displayBranchName}</strong>
+                    <span>
+                      {autoDetectState.label || branchExperience.branchLabel}
+                      {autoDetectState.distanceKm
+                        ? ` • ${autoDetectState.distanceKm.toFixed(1)} km`
+                        : ""}
+                    </span>
+                  </div>
+                  {(branches || []).length > 1 ? (
+                    <div
+                      className={`hero-branch-dropdown${heroBranchMenuOpen ? " is-open" : ""}`}
+                      data-hero-branch-dropdown
+                    >
+                      <button
+                        type="button"
+                        className="hero-branch-trigger"
+                        aria-expanded={heroBranchMenuOpen}
+                        onClick={() => setHeroBranchMenuOpen((prev) => !prev)}
+                      >
+                        <span>{ui.selectBranch}</span>
+                        <ChevronDown className="size-4" />
+                      </button>
+                      {heroBranchMenuOpen ? (
+                        <div className="hero-branch-menu">
+                          {branches.map((branch) => {
+                            const active = branch.id === selectedBranchId;
+
+                            return (
+                              <button
+                                key={branch.id}
+                                type="button"
+                                className={`hero-branch-option${active ? " is-active" : ""}`}
+                                onClick={() => handleBranchSelect(branch.id)}
+                              >
+                                <span>{branch.name}</span>
+                                {active ? <Check className="size-4" /> : null}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
               <div className="hero-actions">
                 <button className="button button-primary" type="button" onClick={() => focusReservation()}>
                   {primaryCtaLabel}
                 </button>
+                <a className="button button-secondary" href="#menu">
+                  {ui.nav.menu}
+                </a>
+                <a className="button button-secondary hero-directions-button" href={mapDirectionsUrl} target="_blank" rel="noreferrer">
+                  {getLocalizedText(locale, {
+                    vi: "Chỉ đường",
+                    en: "Directions",
+                    zh: "路线"
+                  })}
+                </a>
               </div>
               <div className="hero-scroll">
                 <span>{ui.heroScroll}</span>
@@ -2550,6 +2882,26 @@ export default function LandingPage({
         >
           <Phone className="size-5" />
         </a>
+        <a
+          className="contact-float contact-float-map"
+          href={mapDirectionsUrl}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`Chỉ đường tới ${displayBranchName}`}
+        >
+          <MapPin className="size-5" />
+        </a>
+        {messengerUrl ? (
+          <a
+            className="contact-float contact-float-messenger"
+            href={messengerUrl}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={`Nhắn Messenger tới ${displayBranchName}`}
+          >
+            <MessageCircle className="size-5" />
+          </a>
+        ) : null}
         <button
           className="contact-float chat-toggle"
           type="button"
@@ -2622,6 +2974,7 @@ export default function LandingPage({
           </div>
         </div>
       ) : null}
+      </div>
     </>
   );
 }
