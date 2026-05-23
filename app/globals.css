@@ -206,7 +206,7 @@ p {
 }
 
 .site-header .brand-lockup {
-  max-width: min(196px, 15vw);
+  max-width: min(92px, 8vw);
 }
 
 .brand-lockup img {
@@ -219,7 +219,7 @@ p {
 }
 
 .site-header .brand-lockup img {
-  max-height: 72px;
+  max-height: 84px;
 }
 
 .brand-mark {
@@ -1545,7 +1545,7 @@ p {
 }
 
 .footer-brand.brand-lockup {
-  max-width: min(280px, 100%);
+  max-width: min(132px, 100%);
 }
 
 .footer-text {
@@ -2272,11 +2272,11 @@ p {
   }
 
   .site-header .brand-lockup {
-    max-width: 126px;
+    max-width: 76px;
   }
 
   .site-header .brand-lockup img {
-    max-height: 50px;
+    max-height: 58px;
   }
 
   .header-actions {
@@ -2445,11 +2445,11 @@ p {
   }
 
   .site-header .brand-lockup {
-    max-width: 108px;
+    max-width: 68px;
   }
 
   .site-header .brand-lockup img {
-    max-height: 44px;
+    max-height: 52px;
   }
 
   .site-nav {

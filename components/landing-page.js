@@ -224,8 +224,7 @@ const LANDING_COPY = {
     footerQuickOffer: "Ưu đãi nhanh",
     footerVoucherPlaceholder: "Nhập SĐT để nhận ưu đãi",
     footerVoucherButton: "Nhận voucher",
-    footerCopyright: (branchName) => `© 2024 Nhà hàng ${branchName}. All rights reserved.`,
-    footerCredit: "Thiết kế bởi Web Designer",
+    footerCopyright: (branchName) => `© 2026 ${branchName}. All rights reserved.`,
     stickyBook: "Đặt bàn ngay",
     bookWithOffer: "Đặt bàn với ưu đãi này",
     viewMoreCombos: "Xem thêm combo",
@@ -337,8 +336,7 @@ const LANDING_COPY = {
     footerQuickOffer: "Quick offer",
     footerVoucherPlaceholder: "Enter phone number for the offer",
     footerVoucherButton: "Get voucher",
-    footerCopyright: (branchName) => `© 2024 ${branchName} restaurant. All rights reserved.`,
-    footerCredit: "Designed by Web Designer",
+    footerCopyright: (branchName) => `© 2026 ${branchName}. All rights reserved.`,
     stickyBook: "Book now",
     bookWithOffer: "Book with this offer",
     viewMoreCombos: "View more combos",
@@ -449,8 +447,7 @@ const LANDING_COPY = {
     footerQuickOffer: "快速优惠",
     footerVoucherPlaceholder: "输入手机号领取优惠",
     footerVoucherButton: "领取优惠券",
-    footerCopyright: (branchName) => `© 2024 ${branchName}。保留所有权利。`,
-    footerCredit: "由 Web Designer 设计",
+    footerCopyright: (branchName) => `© 2026 ${branchName}。保留所有权利。`,
     stickyBook: "立即订位",
     bookWithOffer: "用此优惠订位",
     viewMoreCombos: "查看更多套餐",
@@ -2863,7 +2860,6 @@ export default function LandingPage({
         <div className="footer-bar">
           <div className="container footer-bar-inner">
             <span>{ui.footerCopyright(displayBranchName)}</span>
-            <span>{ui.footerCredit}</span>
           </div>
         </div>
       </footer>
