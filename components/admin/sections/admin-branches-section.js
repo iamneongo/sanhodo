@@ -516,6 +516,65 @@ export default function AdminBranchesSection({
                     <Input type="text" value={landingPageUrl} readOnly />
                   </label>
                   <label>
+                    <span>Theme chi nhánh</span>
+                    <FormSelect
+                      value={branchEdit.landingConfig?.themeKey || "hotram"}
+                      onValueChange={(value) => updateLandingConfig("themeKey", value)}
+                      options={[
+                        { value: "hotram", label: "Hồ Tràm / biển / sunset" },
+                        { value: "dalat", label: "Đà Lạt / villa / vườn" }
+                      ]}
+                    />
+                  </label>
+                  <label>
+                    <span>Thành phố / khu vực</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.cityLabel || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("cityLabel", event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Tagline trải nghiệm</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.experienceTagline || ""}
+                      disabled={!permissions.canManageBranches}
+                      onChange={(event) => updateLandingConfig("experienceTagline", event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Messenger URL</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.messengerUrl || ""}
+                      disabled={!permissions.canManageBranches}
+                      placeholder="https://m.me/..."
+                      onChange={(event) => updateLandingConfig("messengerUrl", event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Latitude</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.latitude || ""}
+                      disabled={!permissions.canManageBranches}
+                      placeholder="10.4786"
+                      onChange={(event) => updateLandingConfig("latitude", event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    <span>Longitude</span>
+                    <Input
+                      type="text"
+                      value={branchEdit.landingConfig?.longitude || ""}
+                      disabled={!permissions.canManageBranches}
+                      placeholder="107.3754"
+                      onChange={(event) => updateLandingConfig("longitude", event.target.value)}
+                    />
+                  </label>
+                  <label>
                     <span>SEO title</span>
                     <Input
                       type="text"
