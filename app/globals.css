@@ -37,7 +37,6 @@ body {
   font-family: var(--font-montserrat), sans-serif;
   overflow-x: clip;
   color: var(--ink);
-  padding-bottom: 96px;
   background:
     linear-gradient(rgba(248, 240, 230, 0.92), rgba(248, 240, 230, 0.92)),
     url("/assets/paper-texture.png") center top / 820px auto repeat,
@@ -2257,10 +2256,6 @@ p {
 }
 
 @media (max-width: 560px) {
-  body {
-    padding-bottom: 148px;
-  }
-
   .header-inner {
     min-height: 82px;
     gap: 8px;
