@@ -2212,58 +2212,57 @@ export default function LandingPage({
                       <span>{directionsLabel}</span>
                     </a>
                   </div>
-                </div>
-
-                <div className="hero-branch-card">
-                  <span className="hero-branch-kicker">{ui.currentBranch}</span>
-                  <div className="hero-branch-row">
-                    <div className="hero-branch-meta">
-                      <strong>{displayBranchName}</strong>
-                      <span>
-                        {autoDetectState.label || branchExperience.branchLabel}
-                        {autoDetectState.distanceKm
-                          ? ` • ${autoDetectState.distanceKm.toFixed(1)} km`
-                          : ""}
-                      </span>
-                    </div>
-                    {(branches || []).length > 1 ? (
-                      <div
-                        className={`hero-branch-dropdown${heroBranchMenuOpen ? " is-open" : ""}`}
-                        data-hero-branch-dropdown
-                      >
-                        <button
-                          type="button"
-                          className="hero-branch-trigger"
-                          aria-expanded={heroBranchMenuOpen}
-                          onClick={() => setHeroBranchMenuOpen((prev) => !prev)}
-                        >
-                          <span>{ui.selectBranch}</span>
-                          <ChevronDown className="size-4" />
-                        </button>
-                        {heroBranchMenuOpen ? (
-                          <div className="hero-branch-menu">
-                            {branches.map((branch) => {
-                              const active = branch.id === selectedBranchId;
-
-                              return (
-                                <button
-                                  key={branch.id}
-                                  type="button"
-                                  className={`hero-branch-option${active ? " is-active" : ""}`}
-                                  onClick={() => handleBranchSelect(branch.id)}
-                                >
-                                  <span>{branch.name}</span>
-                                  {active ? <Check className="size-4" /> : null}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        ) : null}
+                  <div className="hero-branch-card">
+                    <span className="hero-branch-kicker">{ui.currentBranch}</span>
+                    <div className="hero-branch-row">
+                      <div className="hero-branch-meta">
+                        <strong>{displayBranchName}</strong>
+                        <span>
+                          {autoDetectState.label || branchExperience.branchLabel}
+                          {autoDetectState.distanceKm
+                            ? ` • ${autoDetectState.distanceKm.toFixed(1)} km`
+                            : ""}
+                        </span>
                       </div>
-                    ) : null}
+                      {(branches || []).length > 1 ? (
+                        <div
+                          className={`hero-branch-dropdown${heroBranchMenuOpen ? " is-open" : ""}`}
+                          data-hero-branch-dropdown
+                        >
+                          <button
+                            type="button"
+                            className="hero-branch-trigger"
+                            aria-expanded={heroBranchMenuOpen}
+                            onClick={() => setHeroBranchMenuOpen((prev) => !prev)}
+                          >
+                            <span>{ui.selectBranch}</span>
+                            <ChevronDown className="size-4" />
+                          </button>
+                          {heroBranchMenuOpen ? (
+                            <div className="hero-branch-menu">
+                              {branches.map((branch) => {
+                                const active = branch.id === selectedBranchId;
+
+                                return (
+                                  <button
+                                    key={branch.id}
+                                    type="button"
+                                    className={`hero-branch-option${active ? " is-active" : ""}`}
+                                    onClick={() => handleBranchSelect(branch.id)}
+                                  >
+                                    <span>{branch.name}</span>
+                                    {active ? <Check className="size-4" /> : null}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </div>
+                    {heroBranchTag ? <span className="hero-branch-tag">{heroBranchTag}</span> : null}
+                    {heroBranchStory ? <p className="hero-branch-story">{heroBranchStory}</p> : null}
                   </div>
-                  {heroBranchTag ? <span className="hero-branch-tag">{heroBranchTag}</span> : null}
-                  {heroBranchStory ? <p className="hero-branch-story">{heroBranchStory}</p> : null}
                 </div>
               </div>
 
@@ -2347,18 +2346,12 @@ export default function LandingPage({
                     </div>
                     <div className="branch-card-actions">
                       <button
-                        className="button button-secondary"
+                        className="button button-primary"
                         type="button"
                         onClick={() => handleBranchSelect(branch.id)}
                       >
-                        {branchViewLabel}
-                      </button>
-                      <button
-                        className="button button-primary"
-                        type="button"
-                        onClick={() => switchBranchAndBook(branch.id)}
-                      >
-                        {branchBookLabel}
+                        <span>{branch.isCurrent ? branchBookLabel : branchViewLabel}</span>
+                        <ArrowRight className="size-4" />
                       </button>
                     </div>
                   </div>
