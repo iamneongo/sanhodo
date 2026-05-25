@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ChevronDown, MapPin, MessageCircle, Phone, X } from "lucide-react";
+import MenuFlipbook from "./menu-flipbook";
 import {
   DEFAULT_BRANCHES,
   MAIN_BRANCH_CODE,
@@ -31,6 +32,7 @@ const hotlineDisplay = "0814 645 999";
 const secondaryHotlineDisplay = "0522 282 229";
 const reservationMinDate = getTodayDateInput();
 const DEFAULT_BRAND_NAME = "San Hô Đỏ";
+const BRANCH_MENU_PDF_URL = "/assets/menu/sanhodo-hotram-seafood-2026.pdf";
 const LANDING_LOCALES = ["vi", "en", "zh"];
 const BRANCH_THEME_PRESETS = {
   hotram: {
@@ -1172,8 +1174,8 @@ export default function LandingPage({
       }
 
       setSelectedBranchId(nearest.branch.id);
-      const nextPath = getBranchLandingPath(nearest.branch);
-      router.replace(locale === "vi" ? nextPath : `${nextPath}?lang=${locale}`);
+      const nextPath = getBranchLandingPath(nearest.branch, { lang: locale });
+      router.replace(nextPath);
     };
 
     const fallbackToIp = async () => {
@@ -1595,8 +1597,8 @@ export default function LandingPage({
     setSelectedVoucherCampaignId("");
     setBranchMenuOpen(false);
     setHeroBranchMenuOpen(false);
-    const nextPath = getBranchLandingPath(nextBranch);
-    router.push(locale === "vi" ? nextPath : `${nextPath}?lang=${locale}`);
+    const nextPath = getBranchLandingPath(nextBranch, { lang: locale });
+    router.push(nextPath);
   };
 
   const addDishToOrder = (dish) => {
@@ -2343,7 +2345,15 @@ export default function LandingPage({
               </div>
             </div>
 
-            <div className="menu-slider reveal">
+            <MenuFlipbook
+              locale={locale}
+              pdfUrl={BRANCH_MENU_PDF_URL}
+              branchName={displayBranchName}
+            />
+          </div>
+
+          <div className="container menu-showcase reveal">
+            <div className="menu-slider">
               <div className="menu-track">
                 {featuredDishes.map((dish, index) => (
                   <article className={`dish-card${index === 0 ? " is-current" : ""}`} key={dish.name}>

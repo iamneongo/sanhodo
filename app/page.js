@@ -1,5 +1,11 @@
 import LandingPage from "../components/landing-page";
-import { DEFAULT_BRANCHES, MAIN_BRANCH_CODE, MAIN_BRANCH_ID } from "../lib/branches";
+import {
+  DEFAULT_BRANCHES,
+  MAIN_BRANCH_CODE,
+  MAIN_BRANCH_ID,
+  getBranchByCode,
+  normalizeBranchCode
+} from "../lib/branches";
 import { normalizeLandingPageConfig } from "../lib/landing-page-config";
 import { isSupabaseSchemaMissingError, listBranches } from "../lib/restaurant-db";
 import { createClient } from "../lib/supabase/server";
@@ -18,10 +24,22 @@ async function loadActiveBranches() {
   }
 }
 
-export async function generateMetadata() {
+function resolveRequestedBranch(branches, branchCode) {
+  return (
+    getBranchByCode(branches, branchCode) ||
+    branches.find((item) => item.id === MAIN_BRANCH_ID) ||
+    branches.find((item) => item.code === MAIN_BRANCH_CODE) ||
+    branches[0]
+  );
+}
+
+export async function generateMetadata({ searchParams }) {
+  const resolvedSearchParams = await searchParams;
   const branches = await loadActiveBranches();
-  const selectedBranch =
-    branches.find((item) => item.id === MAIN_BRANCH_ID) || branches.find((item) => item.code === MAIN_BRANCH_CODE) || branches[0];
+  const selectedBranch = resolveRequestedBranch(
+    branches,
+    normalizeBranchCode(resolvedSearchParams?.branch)
+  );
   const landingConfig = normalizeLandingPageConfig(selectedBranch?.landingConfig || {});
 
   return {
@@ -30,12 +48,17 @@ export async function generateMetadata() {
       `${selectedBranch?.name || "San Hô Đỏ Hồ Tràm"} | Hải sản cao cấp, đặt bàn nhanh, combo tiết kiệm`,
     description:
       landingConfig.seoDescription ||
-      "Landing page chính của San Hô Đỏ. Xem menu, nhận voucher và gửi đặt bàn trực tiếp cho chi nhánh mặc định."
+      `Landing page chính của ${selectedBranch?.name || "San Hô Đỏ"}. Xem menu, nhận voucher và gửi đặt bàn trực tiếp cho đúng chi nhánh.`
   };
 }
 
-export default async function Page() {
+export default async function Page({ searchParams }) {
+  const resolvedSearchParams = await searchParams;
   const branches = await loadActiveBranches();
+  const selectedBranch = resolveRequestedBranch(
+    branches,
+    normalizeBranchCode(resolvedSearchParams?.branch)
+  );
 
-  return <LandingPage initialBranches={branches} initialBranchCode={MAIN_BRANCH_CODE} />;
+  return <LandingPage initialBranches={branches} initialBranchCode={selectedBranch?.code || MAIN_BRANCH_CODE} />;
 }

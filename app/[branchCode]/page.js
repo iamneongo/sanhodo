@@ -1,5 +1,4 @@
 import { notFound, redirect } from "next/navigation";
-import LandingPage from "../../components/landing-page";
 import {
   DEFAULT_BRANCHES,
   MAIN_BRANCH_CODE,
@@ -7,7 +6,6 @@ import {
   getBranchLandingPath,
   normalizeBranchCode
 } from "../../lib/branches";
-import { normalizeLandingPageConfig } from "../../lib/landing-page-config";
 import { isSupabaseSchemaMissingError, listBranches } from "../../lib/restaurant-db";
 import { createClient } from "../../lib/supabase/server";
 
@@ -25,35 +23,13 @@ async function loadActiveBranches() {
   }
 }
 
-export async function generateMetadata({ params }) {
-  const resolvedParams = await params;
-  const branchCode = normalizeBranchCode(resolvedParams?.branchCode);
-
-  if (!branchCode || branchCode === MAIN_BRANCH_CODE) {
-    return {};
-  }
-
-  const branches = await loadActiveBranches();
-  const selectedBranch = getBranchByCode(branches, branchCode);
-
-  if (!selectedBranch) {
-    return {};
-  }
-
-  const landingConfig = normalizeLandingPageConfig(selectedBranch.landingConfig || {});
-
-  return {
-    title:
-      landingConfig.seoTitle ||
-      `${selectedBranch.name} | Hải sản cao cấp, đặt bàn nhanh, combo tiết kiệm`,
-    description:
-      landingConfig.seoDescription ||
-      `Landing page riêng cho chi nhánh ${selectedBranch.name}. Xem menu, nhận voucher và gửi đặt bàn trực tiếp cho đúng chi nhánh.`
-  };
+export async function generateMetadata() {
+  return {};
 }
 
-export default async function BranchLandingPage({ params }) {
+export default async function BranchLandingPage({ params, searchParams }) {
   const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
   const branchCode = normalizeBranchCode(resolvedParams?.branchCode);
 
   if (!branchCode) {
@@ -61,7 +37,11 @@ export default async function BranchLandingPage({ params }) {
   }
 
   if (branchCode === MAIN_BRANCH_CODE) {
-    redirect("/");
+    redirect(
+      getBranchLandingPath(MAIN_BRANCH_CODE, {
+        lang: resolvedSearchParams?.lang
+      })
+    );
   }
 
   const branches = await loadActiveBranches();
@@ -71,10 +51,9 @@ export default async function BranchLandingPage({ params }) {
     notFound();
   }
 
-  const canonicalPath = getBranchLandingPath(selectedBranch);
-  if (canonicalPath !== `/${branchCode}`) {
-    redirect(canonicalPath);
-  }
-
-  return <LandingPage initialBranches={branches} initialBranchCode={selectedBranch.code} />;
+  redirect(
+    getBranchLandingPath(selectedBranch, {
+      lang: resolvedSearchParams?.lang
+    })
+  );
 }
