@@ -904,11 +904,18 @@ export default function LandingPage({
       ? landingConfig.heroEyebrow
       : branchExperience.eyebrow;
   const heroTitle = landingConfig.heroTitle || displayBranchName;
-  const heroSubtitle =
+  const heroBranchTag =
+    displayBranchShortName ||
+    selectedBranch?.cityLabel ||
+    branchExperience.branchLabel ||
+    brandSecondaryLine;
+  const heroBranchStory = (
     landingConfig.heroSubtitle ||
     selectedBranch?.experienceTagline ||
     branchExperience.subtitle ||
-    brandSecondaryLine;
+    brandSecondaryLine ||
+    ""
+  ).trim();
   const heroDescriptionLines = String(
     !landingConfig.heroDescription ||
       landingConfig.heroDescription === DEFAULT_LANDING_PAGE_CONFIG.heroDescription
@@ -1845,6 +1852,7 @@ export default function LandingPage({
         <div className="container header-inner">
           <a className="brand brand-lockup" href="#top" aria-label={displayBranchName}>
             <img src="/assets/logo-full.png" alt={displayBranchName} />
+            <span className="brand-wordmark">{brandPrimaryLine}</span>
           </a>
 
           <nav className="site-nav" aria-label={ui.nav.home}>
@@ -2010,15 +2018,7 @@ export default function LandingPage({
           <div className="container hero-inner">
             <div className="hero-copy">
               <p className="eyebrow">{heroEyebrow}</p>
-              <h1>
-                {heroTitle}
-                {heroSubtitle ? (
-                  <>
-                    <br />
-                    {heroSubtitle}
-                  </>
-                ) : null}
-              </h1>
+              <h1>{heroTitle}</h1>
               <p className="hero-text">
                 {heroDescriptionLines.map((line, index) => (
                   <span key={`${line}-${index}`}>
@@ -2094,9 +2094,11 @@ export default function LandingPage({
               <div className="hero-scroll">
                 <span>{ui.heroScroll}</span>
                 <span className="hero-scroll-line" aria-hidden="true"></span>
+                  </div>
+                </div>
+                {heroBranchTag ? <span className="hero-branch-tag">{heroBranchTag}</span> : null}
+                {heroBranchStory ? <p className="hero-branch-story">{heroBranchStory}</p> : null}
               </div>
-            </div>
-          </div>
           <img className="hero-wave" src="/assets/wave-divider.svg" alt="" />
         </section>
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
-import { BookOpen, ChevronLeft, ChevronRight, Download, LoaderCircle } from "lucide-react";
+import { forwardRef, useEffect, useState } from "react";
+import { BookOpen, Download, LoaderCircle } from "lucide-react";
 import HTMLFlipBook from "react-pageflip";
 
 const MENU_COPY = {
@@ -10,10 +10,6 @@ const MENU_COPY = {
     title: "Lật từng trang menu như đang xem quyển thực đơn tại bàn",
     description:
       "Xem trực tiếp menu PDF của chi nhánh, lật từng trang để khách cảm nhận rõ bố cục, món và phong cách trình bày.",
-    prev: "Trang trước",
-    next: "Trang sau",
-    page: "Trang",
-    of: "trên",
     openPdf: "Mở PDF toàn màn hình",
     loading: "Đang tải menu PDF...",
     error: "Chưa render được menu ngay lúc này. Bạn vẫn có thể mở PDF gốc."
@@ -23,10 +19,6 @@ const MENU_COPY = {
     title: "Flip through the menu like a premium printed booklet",
     description:
       "Preview the actual PDF menu page by page so guests can feel the structure, dishes and visual style before booking.",
-    prev: "Previous page",
-    next: "Next page",
-    page: "Page",
-    of: "of",
     openPdf: "Open full PDF",
     loading: "Loading the PDF menu...",
     error: "The menu preview is unavailable right now. You can still open the original PDF."
@@ -36,10 +28,6 @@ const MENU_COPY = {
     title: "像翻阅餐桌菜单一样逐页查看",
     description:
       "直接预览分店菜单 PDF，逐页翻看整体排版、菜品内容与呈现风格。",
-    prev: "上一页",
-    next: "下一页",
-    page: "第",
-    of: "页，共",
     openPdf: "打开完整 PDF",
     loading: "正在加载菜单 PDF...",
     error: "暂时无法生成菜单预览，你仍可打开原始 PDF。"
@@ -67,9 +55,7 @@ export default function MenuFlipbook({
 }) {
   const activeLocale = resolveLocale(locale);
   const copy = MENU_COPY[activeLocale];
-  const bookRef = useRef(null);
   const [pages, setPages] = useState([]);
-  const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState({ width: 430, height: 610 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -128,7 +114,6 @@ export default function MenuFlipbook({
           if (nextPageSize) {
             setPageSize(nextPageSize);
           }
-          setPageIndex(0);
         }
       } catch (renderError) {
         if (!cancelled) {
@@ -150,29 +135,6 @@ export default function MenuFlipbook({
   }, [copy.error, pdfUrl]);
 
   const totalPages = pages.length;
-  const statusLabel = useMemo(() => {
-    if (!totalPages) {
-      return "";
-    }
-
-    return activeLocale === "zh"
-      ? `${copy.page}${pageIndex + 1}${copy.of}${totalPages}`
-      : `${copy.page} ${pageIndex + 1} ${copy.of} ${totalPages}`;
-  }, [activeLocale, copy.of, copy.page, pageIndex, totalPages]);
-
-  const flipPrev = () => {
-    if (!bookRef.current) {
-      return;
-    }
-    bookRef.current.pageFlip().flipPrev();
-  };
-
-  const flipNext = () => {
-    if (!bookRef.current) {
-      return;
-    }
-    bookRef.current.pageFlip().flipNext();
-  };
 
   return (
     <div className="menu-flipbook-shell reveal">
@@ -210,7 +172,6 @@ export default function MenuFlipbook({
         ) : totalPages ? (
           <div className="menu-flipbook-bookwrap">
             <HTMLFlipBook
-              ref={bookRef}
               width={pageSize.width}
               height={pageSize.height}
               size="stretch"
@@ -225,7 +186,6 @@ export default function MenuFlipbook({
               mobileScrollSupport={false}
               flippingTime={900}
               className="menu-flipbook-book"
-              onFlip={(event) => setPageIndex(event.data)}
             >
               {pages.map((page) => (
                 <FlipPage
@@ -237,30 +197,6 @@ export default function MenuFlipbook({
             </HTMLFlipBook>
           </div>
         ) : null}
-      </div>
-
-      <div className="menu-flipbook-controls">
-        <button
-          type="button"
-          className="menu-flipbook-nav"
-          onClick={flipPrev}
-          disabled={loading || pageIndex === 0}
-        >
-          <ChevronLeft className="size-4" />
-          <span>{copy.prev}</span>
-        </button>
-        <div className="menu-flipbook-status" aria-live="polite">
-          {statusLabel}
-        </div>
-        <button
-          type="button"
-          className="menu-flipbook-nav"
-          onClick={flipNext}
-          disabled={loading || pageIndex >= totalPages - 1}
-        >
-          <span>{copy.next}</span>
-          <ChevronRight className="size-4" />
-        </button>
       </div>
     </div>
   );

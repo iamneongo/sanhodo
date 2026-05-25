@@ -221,6 +221,20 @@ p {
   max-height: 84px;
 }
 
+.brand-wordmark {
+  display: none;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--brand), #dd604b);
+  color: #fff7f2;
+  font-size: 0.98rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  box-shadow: 0 14px 28px rgba(198, 71, 56, 0.22);
+}
+
 .brand-mark {
   display: inline-flex;
   width: 42px;
@@ -547,10 +561,10 @@ p {
 }
 
 .hero-branch-meta span {
-  color: var(--muted);
+  color: rgba(74, 68, 64, 0.88);
   font-size: 0.86rem;
   font-style: italic;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .hero-branch-dropdown {
@@ -608,6 +622,32 @@ p {
 .hero-branch-option.is-active {
   background: rgba(198, 71, 56, 0.1);
   color: var(--brand-deep);
+}
+
+.hero-branch-tag {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 14px;
+  background: rgba(232, 124, 91, 0.18);
+  color: rgba(68, 62, 58, 0.94);
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.hero-branch-story {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 243, 233, 0.88);
+  color: rgba(74, 68, 64, 0.94);
+  font-size: 0.9rem;
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1.7;
 }
 
 .about::before,
@@ -1215,46 +1255,6 @@ p {
   border-radius: 18px;
   max-width: 420px;
   line-height: 1.6;
-}
-
-.menu-flipbook-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-}
-
-.menu-flipbook-nav {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 0 14px;
-  border: 1px solid rgba(255, 235, 217, 0.18);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff6ee;
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background var(--ease), opacity var(--ease);
-}
-
-.menu-flipbook-nav:hover,
-.menu-flipbook-nav:focus-visible {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.menu-flipbook-nav:disabled {
-  opacity: 0.42;
-  cursor: not-allowed;
-}
-
-.menu-flipbook-status {
-  color: rgba(255, 241, 232, 0.82);
-  font-size: 0.84rem;
-  font-weight: 700;
-  text-align: center;
 }
 
 .slider-button {
@@ -2320,6 +2320,12 @@ p {
     max-height: 56px;
   }
 
+  .brand-wordmark {
+    display: inline-flex;
+    font-size: 0.92rem;
+    padding: 0 13px;
+  }
+
   .brand-mark {
     width: 28px;
     height: 28px;
@@ -2421,11 +2427,6 @@ p {
     min-height: 400px;
   }
 
-  .menu-flipbook-controls {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
   .dish-card {
     flex-basis: 100%;
   }
@@ -2494,6 +2495,13 @@ p {
     max-height: 58px;
   }
 
+  .brand-wordmark {
+    font-size: 0.9rem;
+    min-height: 34px;
+    padding: 0 12px;
+    border-radius: 11px;
+  }
+
   .header-actions {
     gap: 6px;
   }
@@ -2559,6 +2567,16 @@ p {
     font-size: 0.74rem;
   }
 
+  .hero-branch-tag {
+    min-height: 34px;
+    font-size: 0.88rem;
+  }
+
+  .hero-branch-story {
+    font-size: 0.88rem;
+    line-height: 1.64;
+  }
+
   .button {
     min-height: 48px;
     padding: 0 20px;
@@ -2621,17 +2639,6 @@ p {
 
   .menu-flipbook-page-inner {
     border-radius: 18px;
-  }
-
-  .menu-flipbook-nav {
-    flex: 1 1 0;
-    justify-content: center;
-    min-width: 0;
-  }
-
-  .menu-flipbook-status {
-    width: 100%;
-    order: -1;
   }
 
   .dish-card {
@@ -2707,6 +2714,11 @@ p {
 
   .site-header .brand-lockup img {
     max-height: 52px;
+  }
+
+  .brand-wordmark {
+    font-size: 0.86rem;
+    padding: 0 11px;
   }
 
   .site-nav {
