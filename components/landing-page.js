@@ -2,7 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronDown, MapPin, MessageCircle, Phone, X } from "lucide-react";
+import {
+  BookOpen,
+  CalendarDays,
+  Check,
+  ChevronDown,
+  LocateFixed,
+  MapPin,
+  MessageCircle,
+  Phone,
+  X
+} from "lucide-react";
 import MenuFlipbook from "./menu-flipbook";
 import {
   DEFAULT_BRANCHES,
@@ -739,6 +749,31 @@ function getBranchExperiencePreset(branch, locale = "vi") {
   return group[normalizeLocale(locale)] || group.vi;
 }
 
+function getBranchFallbackImage(branch) {
+  const themeKey = branch?.themeKey || "default";
+
+  switch (themeKey) {
+    case "dalat":
+      return "/assets/drive-space-private.webp";
+    case "hotram":
+      return "/assets/drive-hero-exterior.webp";
+    default:
+      return "/assets/drive-about-facade.webp";
+  }
+}
+
+function getBranchShowcaseImage(branch) {
+  const config = normalizeLandingPageConfig(branch?.landingConfig || {});
+
+  return (
+    config.heroImageUrl ||
+    config.aboutImageUrl ||
+    config.spaceImageOneUrl ||
+    config.newsImageOneUrl ||
+    getBranchFallbackImage(branch)
+  );
+}
+
 function toRadians(value) {
   return (Number(value) * Math.PI) / 180;
 }
@@ -838,6 +873,7 @@ export default function LandingPage({
   const [chatOpen, setChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatReply, setChatReply] = useState("");
+  const [visitorCoords, setVisitorCoords] = useState(null);
   const [autoDetectState, setAutoDetectState] = useState({
     source: "",
     distanceKm: null,
@@ -1092,7 +1128,6 @@ export default function LandingPage({
   const activeHotline = selectedBranch?.phone || hotline;
   const activeHotlineDisplay = selectedBranch?.phone || hotlineDisplay;
   const activeZaloLink = `https://zalo.me/${String(activeHotline || hotline).replace(/[^\d]/g, "")}`;
-  const messengerUrl = selectedBranch?.messengerUrl || "";
   const mapDirectionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
     selectedBranch?.address || displayBranchName
   )}`;
@@ -1110,6 +1145,130 @@ export default function LandingPage({
       branchFallback
     );
   }, [selectedBranchId, selectedVoucherCampaignId, voucherCampaigns]);
+
+  const branchSectionKicker = getLocalizedText(locale, {
+    vi: "Hệ thống chi nhánh",
+    en: "Branch network",
+    zh: "门店系统"
+  });
+  const branchSectionTitle = getLocalizedText(locale, {
+    vi: "Chọn đúng chi nhánh cho đúng hành trình",
+    en: "Choose the right branch for the right journey",
+    zh: "为你的旅程选择合适的分店"
+  });
+  const branchSectionDescription = getLocalizedText(locale, {
+    vi: "Mỗi chi nhánh San Hô Đỏ đều có theme, thực đơn ưu tiên và trải nghiệm riêng cho khu vực đó.",
+    en: "Each San Hô Đỏ branch has its own theme, menu priority and local experience.",
+    zh: "每家 San Hô Đỏ 分店都有自己的主题、菜单重点与在地体验。"
+  });
+  const branchCurrentBadge = getLocalizedText(locale, {
+    vi: "Bạn đang ở đây",
+    en: "You're here",
+    zh: "你当前所在"
+  });
+  const branchNearestBadge = getLocalizedText(locale, {
+    vi: "Chi nhánh gần bạn",
+    en: "Nearest branch",
+    zh: "离你最近"
+  });
+  const branchViewLabel = getLocalizedText(locale, {
+    vi: "Xem chi nhánh",
+    en: "View branch",
+    zh: "查看分店"
+  });
+  const branchBookLabel = getLocalizedText(locale, {
+    vi: "Đặt bàn ngay",
+    en: "Book now",
+    zh: "立即订位"
+  });
+  const branchSeeAllLabel = getLocalizedText(locale, {
+    vi: "Xem tất cả",
+    en: "View all",
+    zh: "查看全部"
+  });
+  const featuredSectionKicker = getLocalizedText(locale, {
+    vi: "Món ngon nổi bật",
+    en: "Featured dishes",
+    zh: "招牌菜品"
+  });
+  const featuredSectionTitle = getLocalizedText(locale, {
+    vi: "Những món khách thường gọi đầu tiên",
+    en: "The dishes guests ask for first",
+    zh: "客人最常先点的菜品"
+  });
+  const featuredSectionLink = getLocalizedText(locale, {
+    vi: "Xem menu đầy đủ",
+    en: "View full menu",
+    zh: "查看完整菜单"
+  });
+  const directionsLabel = getLocalizedText(locale, {
+    vi: "Chỉ đường",
+    en: "Directions",
+    zh: "路线"
+  });
+  const branchHighlightsLabel = getLocalizedText(locale, {
+    vi: "Tính năng nổi bật",
+    en: "Signature highlights",
+    zh: "特色亮点"
+  });
+
+  const branchShowcaseCards = useMemo(() => {
+    return (branches || [])
+      .filter((branch) => branch?.isActive !== false)
+      .map((branch) => {
+        const experience = getBranchExperiencePreset(branch, locale);
+        const distanceKm = visitorCoords ? calculateDistanceKm(visitorCoords, branch) : null;
+        const detailLines = String(
+          branch.experienceTagline || experience.subtitle || branch.cityLabel || ""
+        )
+          .split(/\s*-\s*/)
+          .map((item) => item.trim())
+          .filter(Boolean)
+          .slice(0, 3);
+
+        const highlightChips = [...detailLines, featureServiceTitle].filter(Boolean).slice(0, 4);
+
+        return {
+          ...branch,
+          showcaseImage: getBranchShowcaseImage(branch),
+          distanceKm,
+          isCurrent: branch.id === selectedBranchId,
+          badge:
+            branch.id === selectedBranchId
+              ? branchCurrentBadge
+              : distanceKm !== null
+                ? branchNearestBadge
+                : "",
+          description: experience.description,
+          highlightChips
+        };
+      })
+      .sort((left, right) => {
+        if (left.isCurrent && !right.isCurrent) {
+          return -1;
+        }
+
+        if (!left.isCurrent && right.isCurrent) {
+          return 1;
+        }
+
+        if (left.distanceKm !== null && right.distanceKm !== null) {
+          return left.distanceKm - right.distanceKm;
+        }
+
+        return (left.sortOrder || 0) - (right.sortOrder || 0);
+      });
+  }, [
+    branchCurrentBadge,
+    branchNearestBadge,
+    branches,
+    featureServiceTitle,
+    locale,
+    selectedBranchId,
+    visitorCoords
+  ]);
+
+  const featuredSpotlightDishes = useMemo(() => featuredDishes.slice(0, 4), [featuredDishes]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -1157,6 +1316,7 @@ export default function LandingPage({
     let cancelled = false;
 
     const applyNearestBranch = (coords, source) => {
+      setVisitorCoords(coords);
       const scoredBranches = branchCandidates
         .map((branch) => ({
           branch,
@@ -1588,12 +1748,6 @@ export default function LandingPage({
     updateLocaleUrl(normalizedLocale);
   };
 
-  const cycleLocale = () => {
-    const currentIndex = LANDING_LOCALES.indexOf(locale);
-    const nextLocale = LANDING_LOCALES[(currentIndex + 1) % LANDING_LOCALES.length];
-    switchLocale(nextLocale);
-  };
-
   const handleBranchSelect = (branchId) => {
     const nextBranch = branches.find((item) => item.id === branchId);
     if (!nextBranch) {
@@ -1606,6 +1760,13 @@ export default function LandingPage({
     setHeroBranchMenuOpen(false);
     const nextPath = getBranchLandingPath(nextBranch, { lang: locale });
     router.push(nextPath);
+  };
+
+  const switchBranchAndBook = (branchId) => {
+    handleBranchSelect(branchId);
+    window.setTimeout(() => {
+      focusReservation();
+    }, 90);
   };
 
   const addDishToOrder = (dish) => {
@@ -1852,7 +2013,10 @@ export default function LandingPage({
         <div className="container header-inner">
           <a className="brand brand-lockup" href="#top" aria-label={displayBranchName}>
             <img src="/assets/logo-full.png" alt={displayBranchName} />
-            <span className="brand-wordmark">{brandPrimaryLine}</span>
+            <span className="brand-copy">
+              <span className="brand-title">{brandPrimaryLine}</span>
+              <span className="brand-subtitle">{brandSecondaryLine}</span>
+            </span>
           </a>
 
           <nav className="site-nav" aria-label={ui.nav.home}>
@@ -2008,101 +2172,229 @@ export default function LandingPage({
 
       <main>
         <section className="hero">
-          <div
-            className="hero-scene"
-            aria-hidden="true"
-            style={{ backgroundImage: `url("${heroImageUrl}")` }}
-          ></div>
-          <div className="hero-overlay"></div>
-          <img className="hero-coral hero-coral-left" src="/assets/coral-pattern.png" alt="" />
-          <div className="container hero-inner">
-            <div className="hero-copy">
-              <p className="eyebrow">{heroEyebrow}</p>
-              <h1>{heroTitle}</h1>
-              <p className="hero-text">
-                {heroDescriptionLines.map((line, index) => (
-                  <span key={`${line}-${index}`}>
-                    {index > 0 ? <br /> : null}
-                    {line}
-                  </span>
-                ))}
-              </p>
-              <div className="hero-branch-card">
-                <span className="hero-branch-kicker">{ui.currentBranch}</span>
-                <div className="hero-branch-row">
-                  <div className="hero-branch-meta">
-                    <strong>{displayBranchName}</strong>
-                    <span>
-                      {autoDetectState.label || branchExperience.branchLabel}
-                      {autoDetectState.distanceKm
-                        ? ` • ${autoDetectState.distanceKm.toFixed(1)} km`
-                        : ""}
-                    </span>
-                  </div>
-                  {(branches || []).length > 1 ? (
-                    <div
-                      className={`hero-branch-dropdown${heroBranchMenuOpen ? " is-open" : ""}`}
-                      data-hero-branch-dropdown
+          <div className="container hero-shell">
+            <article className="hero-card">
+              <div
+                className="hero-scene"
+                aria-hidden="true"
+                style={{ backgroundImage: `url("${heroImageUrl}")` }}
+              ></div>
+              <div className="hero-overlay"></div>
+              <img className="hero-coral hero-coral-left" src="/assets/coral-pattern.png" alt="" />
+              <div className="hero-inner">
+                <div className="hero-copy">
+                  <p className="eyebrow">{heroEyebrow}</p>
+                  <h1>{heroTitle}</h1>
+                  <p className="hero-text">
+                    {heroDescriptionLines.map((line, index) => (
+                      <span key={`${line}-${index}`}>
+                        {index > 0 ? <br /> : null}
+                        {line}
+                      </span>
+                    ))}
+                  </p>
+                  <div className="hero-actions">
+                    <button className="button button-primary" type="button" onClick={() => focusReservation()}>
+                      <CalendarDays className="size-4" />
+                      <span>{primaryCtaLabel}</span>
+                    </button>
+                    <a className="button button-secondary" href="#menu">
+                      <BookOpen className="size-4" />
+                      <span>{ui.nav.menu}</span>
+                    </a>
+                    <a
+                      className="button button-secondary hero-directions-button"
+                      href={mapDirectionsUrl}
+                      target="_blank"
+                      rel="noreferrer"
                     >
-                      <button
-                        type="button"
-                        className="hero-branch-trigger"
-                        aria-expanded={heroBranchMenuOpen}
-                        onClick={() => setHeroBranchMenuOpen((prev) => !prev)}
-                      >
-                        <span>{ui.selectBranch}</span>
-                        <ChevronDown className="size-4" />
-                      </button>
-                      {heroBranchMenuOpen ? (
-                        <div className="hero-branch-menu">
-                          {branches.map((branch) => {
-                            const active = branch.id === selectedBranchId;
-
-                            return (
-                              <button
-                                key={branch.id}
-                                type="button"
-                                className={`hero-branch-option${active ? " is-active" : ""}`}
-                                onClick={() => handleBranchSelect(branch.id)}
-                              >
-                                <span>{branch.name}</span>
-                                {active ? <Check className="size-4" /> : null}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-              <div className="hero-actions">
-                <button className="button button-primary" type="button" onClick={() => focusReservation()}>
-                  {primaryCtaLabel}
-                </button>
-                <a className="button button-secondary" href="#menu">
-                  {ui.nav.menu}
-                </a>
-                <a className="button button-secondary hero-directions-button" href={mapDirectionsUrl} target="_blank" rel="noreferrer">
-                  {getLocalizedText(locale, {
-                    vi: "Chỉ đường",
-                    en: "Directions",
-                    zh: "路线"
-                  })}
-                </a>
-              </div>
-              <div className="hero-scroll">
-                <span>{ui.heroScroll}</span>
-                <span className="hero-scroll-line" aria-hidden="true"></span>
+                      <LocateFixed className="size-4" />
+                      <span>{directionsLabel}</span>
+                    </a>
                   </div>
                 </div>
-                {heroBranchTag ? <span className="hero-branch-tag">{heroBranchTag}</span> : null}
-                {heroBranchStory ? <p className="hero-branch-story">{heroBranchStory}</p> : null}
+
+                <div className="hero-branch-card">
+                  <span className="hero-branch-kicker">{ui.currentBranch}</span>
+                  <div className="hero-branch-row">
+                    <div className="hero-branch-meta">
+                      <strong>{displayBranchName}</strong>
+                      <span>
+                        {autoDetectState.label || branchExperience.branchLabel}
+                        {autoDetectState.distanceKm
+                          ? ` • ${autoDetectState.distanceKm.toFixed(1)} km`
+                          : ""}
+                      </span>
+                    </div>
+                    {(branches || []).length > 1 ? (
+                      <div
+                        className={`hero-branch-dropdown${heroBranchMenuOpen ? " is-open" : ""}`}
+                        data-hero-branch-dropdown
+                      >
+                        <button
+                          type="button"
+                          className="hero-branch-trigger"
+                          aria-expanded={heroBranchMenuOpen}
+                          onClick={() => setHeroBranchMenuOpen((prev) => !prev)}
+                        >
+                          <span>{ui.selectBranch}</span>
+                          <ChevronDown className="size-4" />
+                        </button>
+                        {heroBranchMenuOpen ? (
+                          <div className="hero-branch-menu">
+                            {branches.map((branch) => {
+                              const active = branch.id === selectedBranchId;
+
+                              return (
+                                <button
+                                  key={branch.id}
+                                  type="button"
+                                  className={`hero-branch-option${active ? " is-active" : ""}`}
+                                  onClick={() => handleBranchSelect(branch.id)}
+                                >
+                                  <span>{branch.name}</span>
+                                  {active ? <Check className="size-4" /> : null}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                  {heroBranchTag ? <span className="hero-branch-tag">{heroBranchTag}</span> : null}
+                  {heroBranchStory ? <p className="hero-branch-story">{heroBranchStory}</p> : null}
+                </div>
               </div>
-          <img className="hero-wave" src="/assets/wave-divider.svg" alt="" />
+
+              <div className="feature-strip reveal">
+                <article className="feature-item">
+                  <span className="feature-icon">✺</span>
+                  <div>
+                    <h3>{featureSeafoodTitle}</h3>
+                    <p>{featureSeafoodDescription}</p>
+                  </div>
+                </article>
+                <article className="feature-item">
+                  <span className="feature-icon">⌘</span>
+                  <div>
+                    <h3>{featureChefTitle}</h3>
+                    <p>{featureChefDescription}</p>
+                  </div>
+                </article>
+                <article className="feature-item">
+                  <span className="feature-icon">◌</span>
+                  <div>
+                    <h3>{featureSpaceTitle}</h3>
+                    <p>{featureSpaceDescription}</p>
+                  </div>
+                </article>
+                <article className="feature-item">
+                  <span className="feature-icon">♡</span>
+                  <div>
+                    <h3>{featureServiceTitle}</h3>
+                    <p>{featureServiceDescription}</p>
+                  </div>
+                </article>
+              </div>
+            </article>
+          </div>
         </section>
 
-        <section className="about section" id="about">
+        <section className="branch-network section" id="about">
+          <div className="container">
+            <div className="section-heading align-left section-heading-inline reveal">
+              <div>
+                <p className="section-kicker">{branchSectionKicker}</p>
+                <h2>{branchSectionTitle}</h2>
+              </div>
+              <span className="section-inline-link">{branchSeeAllLabel}</span>
+            </div>
+            <p className="section-support-copy reveal">{branchSectionDescription}</p>
+            <div className="branch-network-grid">
+              {branchShowcaseCards.map((branch) => (
+                <article
+                  className={`branch-card reveal${branch.isCurrent ? " is-current" : ""}`}
+                  key={branch.id}
+                >
+                  <div className="branch-card-media">
+                    <img
+                      src={branch.showcaseImage}
+                      alt={branch.name}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    {branch.badge ? <span className="branch-card-badge">{branch.badge}</span> : null}
+                  </div>
+                  <div className="branch-card-body">
+                    <h3>{branch.name}</h3>
+                    <p className="branch-card-address">
+                      <MapPin className="size-4" />
+                      <span>{branch.address || branch.cityLabel || branch.name}</span>
+                    </p>
+                    <div className="branch-card-distance">
+                      <LocateFixed className="size-4" />
+                      <span>
+                        {branch.distanceKm !== null
+                          ? `${branch.distanceKm.toFixed(1)} km`
+                          : branch.cityLabel || branch.shortName}
+                      </span>
+                    </div>
+                    <div className="branch-card-highlights" aria-label={branchHighlightsLabel}>
+                      {branch.highlightChips.map((chip) => (
+                        <span key={`${branch.id}-${chip}`}>{chip}</span>
+                      ))}
+                    </div>
+                    <div className="branch-card-actions">
+                      <button
+                        className="button button-secondary"
+                        type="button"
+                        onClick={() => handleBranchSelect(branch.id)}
+                      >
+                        {branchViewLabel}
+                      </button>
+                      <button
+                        className="button button-primary"
+                        type="button"
+                        onClick={() => switchBranchAndBook(branch.id)}
+                      >
+                        {branchBookLabel}
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="signature-dishes section" id="menu">
+          <div className="container">
+            <div className="section-heading align-left section-heading-inline reveal">
+              <div>
+                <p className="section-kicker">{featuredSectionKicker}</p>
+                <h2>{featuredSectionTitle}</h2>
+              </div>
+              <a className="section-inline-link" href="#menu-album">
+                {featuredSectionLink}
+              </a>
+            </div>
+            <div className="signature-dish-grid">
+              {featuredSpotlightDishes.map((dish) => (
+                <article className="signature-dish-card reveal" key={dish.name}>
+                  <img src={dish.image} alt={dish.name} loading="lazy" decoding="async" />
+                  <div className="signature-dish-body">
+                    <span className="signature-dish-category">{dish.category}</span>
+                    <h3>{dish.name}</h3>
+                    <strong>{dish.price}</strong>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="about section" id="story">
           <div className="container about-grid">
             <div className="about-copy reveal">
               <p className="section-kicker">{ui.aboutKicker}</p>
@@ -2123,36 +2415,6 @@ export default function LandingPage({
             </div>
           </div>
 
-          <div className="container feature-strip reveal">
-            <article className="feature-item">
-              <span className="feature-icon">✺</span>
-              <div>
-                <h3>{featureSeafoodTitle}</h3>
-                <p>{featureSeafoodDescription}</p>
-              </div>
-            </article>
-            <article className="feature-item">
-              <span className="feature-icon">⌘</span>
-              <div>
-                <h3>{featureChefTitle}</h3>
-                <p>{featureChefDescription}</p>
-              </div>
-            </article>
-            <article className="feature-item">
-              <span className="feature-icon">◌</span>
-              <div>
-                <h3>{featureSpaceTitle}</h3>
-                <p>{featureSpaceDescription}</p>
-              </div>
-            </article>
-            <article className="feature-item">
-              <span className="feature-icon">♡</span>
-              <div>
-                <h3>{featureServiceTitle}</h3>
-                <p>{featureServiceDescription}</p>
-              </div>
-            </article>
-          </div>
         </section>
 
         <section className="reservation section" id="reservation">
@@ -2303,7 +2565,7 @@ export default function LandingPage({
           </div>
         </section>
 
-        <section className="menu section" id="menu">
+        <section className="menu section" id="menu-album">
           <div className="menu-backdrop" aria-hidden="true"></div>
           <div className="container menu-layout">
             <div className="menu-copy reveal">
@@ -2877,9 +3139,22 @@ export default function LandingPage({
       </footer>
 
       <div className="sticky-cta-bar">
+        <a className="sticky-cta-item" href={`tel:${activeHotline}`}>
+          <Phone className="size-4" />
+          <span>{ui.callNow}</span>
+        </a>
+        <a className="sticky-cta-item" href={mapDirectionsUrl} target="_blank" rel="noreferrer">
+          <MapPin className="size-4" />
+          <span>{directionsLabel}</span>
+        </a>
         <button className="sticky-cta-item sticky-cta-book" type="button" onClick={() => focusReservation()}>
-          {ui.stickyBook}
+          <CalendarDays className="size-4" />
+          <span>{ui.stickyBook}</span>
         </button>
+        <a className="sticky-cta-item" href={activeZaloLink} target="_blank" rel="noreferrer">
+          <MessageCircle className="size-4" />
+          <span>{ui.zaloLabel}</span>
+        </a>
       </div>
 
       <div className="floating-contact-actions">
@@ -2899,17 +3174,6 @@ export default function LandingPage({
         >
           <MapPin className="size-5" />
         </a>
-        {messengerUrl ? (
-          <a
-            className="contact-float contact-float-messenger"
-            href={messengerUrl}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={`Nhắn Messenger tới ${displayBranchName}`}
-          >
-            <MessageCircle className="size-5" />
-          </a>
-        ) : null}
         <button
           className="contact-float chat-toggle"
           type="button"
