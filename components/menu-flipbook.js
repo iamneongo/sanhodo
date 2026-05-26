@@ -1,8 +1,12 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { forwardRef, useEffect, useState } from "react";
 import { BookOpen, Download, LoaderCircle } from "lucide-react";
-import HTMLFlipBook from "react-pageflip";
+
+const HTMLFlipBook = dynamic(() => import("react-pageflip"), {
+  ssr: false
+});
 
 const MENU_COPY = {
   vi: {
@@ -59,6 +63,11 @@ export default function MenuFlipbook({
   const [pageSize, setPageSize] = useState({ width: 430, height: 610 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -69,12 +78,10 @@ export default function MenuFlipbook({
 
       try {
         const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
-        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-          "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
-          import.meta.url
-        ).toString();
-
-        const documentTask = pdfjsLib.getDocument(pdfUrl);
+        const documentTask = pdfjsLib.getDocument({
+          url: pdfUrl,
+          disableWorker: true
+        });
         const pdf = await documentTask.promise;
         const nextPages = [];
         let nextPageSize = null;
@@ -169,7 +176,7 @@ export default function MenuFlipbook({
             <BookOpen className="size-5" />
             <span>{error}</span>
           </div>
-        ) : totalPages ? (
+        ) : totalPages && mounted ? (
           <div className="menu-flipbook-bookwrap">
             <HTMLFlipBook
               width={pageSize.width}

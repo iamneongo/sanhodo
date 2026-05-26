@@ -3133,10 +3133,6 @@ export default function LandingPage({
       </footer>
 
       <div className="sticky-cta-bar">
-        <a className="sticky-cta-item" href={`tel:${activeHotline}`}>
-          <Phone className="size-4" />
-          <span>{ui.callNow}</span>
-        </a>
         <a className="sticky-cta-item" href={mapDirectionsUrl} target="_blank" rel="noreferrer">
           <MapPin className="size-4" />
           <span>{directionsLabel}</span>
