@@ -278,9 +278,7 @@ p {
 
 .hero-overlay {
   inset: 0;
-  background:
-    linear-gradient(90deg, rgba(254, 248, 240, 0.88) 0%, rgba(254, 248, 240, 0.52) 43%, rgba(13, 9, 5, 0.1) 100%),
-    linear-gradient(180deg, rgba(255, 243, 228, 0.15), rgba(255, 253, 251, 0.25));
+  background: none;
 }
 
 .hero-coral-left {
@@ -943,12 +941,6 @@ p {
 
   .hero {
     min-height: 780px;
-  }
-
-  .hero-overlay {
-    background:
-      linear-gradient(180deg, rgba(255, 246, 236, 0.78) 0%, rgba(255, 248, 241, 0.34) 44%, rgba(13, 9, 5, 0.22) 100%),
-      linear-gradient(180deg, rgba(255, 243, 228, 0.15), rgba(255, 253, 251, 0.25));
   }
 
   .hero-copy {

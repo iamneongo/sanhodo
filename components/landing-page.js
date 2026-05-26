@@ -2004,7 +2004,6 @@ export default function LandingPage({
         className={`landing-shell theme-${branchTheme}`}
         style={{
           "--landing-page-background": branchThemeVars.pageBackground,
-          "--landing-hero-overlay": branchThemeVars.heroOverlay,
           "--brand": branchThemeVars.brand,
           "--brand-deep": branchThemeVars.brandDeep,
           "--ocean": branchThemeVars.accent
@@ -2213,83 +2212,88 @@ export default function LandingPage({
                       <span>{directionsLabel}</span>
                     </a>
                   </div>
-                  <div className="hero-branch-card">
-                    <span className="hero-branch-kicker">{ui.currentBranch}</span>
-                    <div className="hero-branch-row">
-                      <div className="hero-branch-meta">
-                        <strong>{displayBranchName}</strong>
-                        <span>
-                          {autoDetectState.label || branchExperience.branchLabel}
-                          {autoDetectState.distanceKm
-                            ? ` • ${autoDetectState.distanceKm.toFixed(1)} km`
-                            : ""}
-                        </span>
-                      </div>
-                      {(branches || []).length > 1 ? (
-                        <div
-                          className={`hero-branch-dropdown${heroBranchMenuOpen ? " is-open" : ""}`}
-                          data-hero-branch-dropdown
-                        >
-                          <button
-                            type="button"
-                            className="hero-branch-trigger"
-                            aria-expanded={heroBranchMenuOpen}
-                            onClick={() => setHeroBranchMenuOpen((prev) => !prev)}
-                          >
-                            <span>{ui.selectBranch}</span>
-                            <ChevronDown className="size-4" />
-                          </button>
-                          {heroBranchMenuOpen ? (
-                            <div className="hero-branch-menu">
-                              {branches.map((branch) => {
-                                const active = branch.id === selectedBranchId;
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
 
-                                return (
-                                  <button
-                                    key={branch.id}
-                                    type="button"
-                                    className={`hero-branch-option${active ? " is-active" : ""}`}
-                                    onClick={() => handleBranchSelect(branch.id)}
-                                  >
-                                    <span>{branch.name}</span>
-                                    {active ? <Check className="size-4" /> : null}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          ) : null}
+        <section className="branch-spotlight section">
+          <div className="container">
+            <div className="branch-spotlight-shell reveal">
+              <div className="branch-spotlight-card branch-spotlight-card-main">
+                <div className="branch-spotlight-heading">
+                  <p className="branch-spotlight-kicker">{ui.currentBranch}</p>
+                  <h3 className="branch-spotlight-title">{displayBranchName}</h3>
+                  <p className="branch-spotlight-meta">
+                    {autoDetectState.label || branchExperience.branchLabel}
+                    {autoDetectState.distanceKm ? ` • ${autoDetectState.distanceKm.toFixed(1)} km` : ""}
+                  </p>
+                </div>
+                <div className="branch-spotlight-controls">
+                  {(branches || []).length > 1 ? (
+                    <div
+                      className={`hero-branch-dropdown branch-spotlight-dropdown${heroBranchMenuOpen ? " is-open" : ""}`}
+                      data-hero-branch-dropdown
+                    >
+                      <button
+                        type="button"
+                        className="hero-branch-trigger branch-spotlight-trigger"
+                        aria-expanded={heroBranchMenuOpen}
+                        onClick={() => setHeroBranchMenuOpen((prev) => !prev)}
+                      >
+                        <span>{ui.selectBranch}</span>
+                        <ChevronDown className="size-4" />
+                      </button>
+                      {heroBranchMenuOpen ? (
+                        <div className="hero-branch-menu">
+                          {branches.map((branch) => {
+                            const active = branch.id === selectedBranchId;
+
+                            return (
+                              <button
+                                key={branch.id}
+                                type="button"
+                                className={`hero-branch-option${active ? " is-active" : ""}`}
+                                onClick={() => handleBranchSelect(branch.id)}
+                              >
+                                <span>{branch.name}</span>
+                                {active ? <Check className="size-4" /> : null}
+                              </button>
+                            );
+                          })}
                         </div>
                       ) : null}
                     </div>
-                    {heroBranchTag ? <span className="hero-branch-tag">{heroBranchTag}</span> : null}
-                    {heroBranchStory ? <p className="hero-branch-story">{heroBranchStory}</p> : null}
-                  </div>
+                  ) : null}
+                  {heroBranchTag ? <span className="branch-spotlight-chip">{heroBranchTag}</span> : null}
                 </div>
+                {heroBranchStory ? <p className="branch-spotlight-story">{heroBranchStory}</p> : null}
               </div>
 
-              <div className="feature-strip reveal">
-                <article className="feature-item">
+              <div className="branch-spotlight-card branch-spotlight-card-features">
+                <article className="branch-spotlight-feature">
                   <span className="feature-icon">✺</span>
                   <div>
                     <h3>{featureSeafoodTitle}</h3>
                     <p>{featureSeafoodDescription}</p>
                   </div>
                 </article>
-                <article className="feature-item">
+                <article className="branch-spotlight-feature">
                   <span className="feature-icon">⌘</span>
                   <div>
                     <h3>{featureChefTitle}</h3>
                     <p>{featureChefDescription}</p>
                   </div>
                 </article>
-                <article className="feature-item">
+                <article className="branch-spotlight-feature">
                   <span className="feature-icon">◌</span>
                   <div>
                     <h3>{featureSpaceTitle}</h3>
                     <p>{featureSpaceDescription}</p>
                   </div>
                 </article>
-                <article className="feature-item">
+                <article className="branch-spotlight-feature">
                   <span className="feature-icon">♡</span>
                   <div>
                     <h3>{featureServiceTitle}</h3>
@@ -2297,7 +2301,7 @@ export default function LandingPage({
                   </div>
                 </article>
               </div>
-            </article>
+            </div>
           </div>
         </section>
 

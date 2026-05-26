@@ -438,11 +438,7 @@ p {
 
 .hero-overlay {
   inset: 0;
-  background: var(
-    --landing-hero-overlay,
-    linear-gradient(90deg, rgba(254, 248, 240, 0.88) 0%, rgba(254, 248, 240, 0.52) 43%, rgba(13, 9, 5, 0.1) 100%),
-      linear-gradient(180deg, rgba(255, 243, 228, 0.15), rgba(255, 253, 251, 0.25))
-  );
+  background: none;
 }
 
 .hero-coral-left {
@@ -650,6 +646,141 @@ p {
   line-height: 1.7;
 }
 
+.branch-spotlight {
+  position: relative;
+  z-index: 2;
+  padding-top: 0;
+  margin-top: -42px;
+}
+
+.branch-spotlight-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: 18px;
+}
+
+.branch-spotlight-card {
+  display: grid;
+  gap: 16px;
+  padding: 24px 24px 22px;
+  border: 1px solid rgba(198, 71, 56, 0.12);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(255, 251, 246, 0.96), rgba(255, 246, 238, 0.94)),
+    radial-gradient(circle at top right, rgba(232, 124, 91, 0.08), transparent 42%);
+  box-shadow: 0 18px 34px rgba(73, 39, 26, 0.08);
+}
+
+.branch-spotlight-card-main {
+  align-content: start;
+}
+
+.branch-spotlight-heading {
+  display: grid;
+  gap: 8px;
+}
+
+.branch-spotlight-kicker {
+  display: block;
+  margin: 0;
+  color: #8b6756;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.branch-spotlight-title {
+  margin: 0;
+  color: var(--brand-deep);
+  font-family: var(--font-cormorant), serif;
+  font-size: clamp(1.85rem, 3vw, 2.5rem);
+  line-height: 0.94;
+}
+
+.branch-spotlight-meta {
+  margin: 0;
+  color: rgba(91, 75, 66, 0.9);
+  font-size: 0.95rem;
+  font-style: italic;
+  font-weight: 700;
+}
+
+.branch-spotlight-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.branch-spotlight-dropdown {
+  min-width: min(320px, 100%);
+}
+
+.branch-spotlight-trigger {
+  min-height: 44px;
+  min-width: min(320px, 100%);
+  justify-content: space-between;
+  padding-inline: 16px;
+  background: rgba(255, 252, 247, 0.98);
+}
+
+.branch-spotlight-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: rgba(232, 124, 91, 0.16);
+  color: rgba(86, 48, 31, 0.94);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.branch-spotlight-story {
+  margin: 0;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: rgba(250, 236, 222, 0.9);
+  color: rgba(90, 73, 63, 0.96);
+  font-size: 0.95rem;
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1.72;
+}
+
+.branch-spotlight-card-features {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.branch-spotlight-feature {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: start;
+  padding: 16px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(198, 71, 56, 0.08);
+}
+
+.branch-spotlight-feature h3 {
+  margin-bottom: 6px;
+  font-family: var(--font-montserrat), sans-serif;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.branch-spotlight-feature p {
+  margin: 0;
+  color: rgba(79, 68, 61, 0.88);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
 .about::before,
 .space::before,
 .news::before {
@@ -843,9 +974,8 @@ p {
 }
 
 .hero-overlay {
-  background:
-    linear-gradient(90deg, rgba(15, 13, 11, 0.8) 0%, rgba(15, 13, 11, 0.52) 42%, rgba(15, 13, 11, 0.08) 100%),
-    var(--landing-hero-overlay, linear-gradient(180deg, rgba(9, 8, 7, 0.16), rgba(9, 8, 7, 0.22)));
+  border-radius: inherit;
+  background: none;
 }
 
 .hero-inner {
@@ -856,12 +986,26 @@ p {
   gap: 18px;
   align-content: end;
   min-height: 700px;
-  padding: 68px 56px 176px;
+  padding: 48px 44px 112px;
 }
 
 .hero-copy {
+  position: relative;
+  z-index: 1;
   width: min(520px, 100%);
   padding-top: 0;
+}
+
+.hero-copy::before {
+  content: "";
+  position: absolute;
+  inset: -10px -12px -12px -12px;
+  z-index: -1;
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(17, 13, 10, 0.12) 0%, rgba(17, 13, 10, 0.05) 52%, rgba(17, 13, 10, 0.01) 100%),
+    radial-gradient(circle at top left, rgba(255, 249, 241, 0.04), transparent 34%);
+  pointer-events: none;
 }
 
 .hero h1 {
@@ -872,7 +1016,7 @@ p {
 .hero-text {
   max-width: 580px;
   color: rgba(255, 243, 232, 0.92);
-  text-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
+  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.16);
 }
 
 .hero-actions {
@@ -903,6 +1047,10 @@ p {
   border-radius: 24px;
   background: rgba(255, 249, 242, 0.94);
   box-shadow: 0 22px 40px rgba(42, 21, 9, 0.18);
+}
+
+.hero-branch-card-mobile {
+  display: none;
 }
 
 .hero-branch-kicker {
@@ -2795,12 +2943,6 @@ p {
     min-height: 780px;
   }
 
-  .hero-overlay {
-    background:
-      linear-gradient(180deg, rgba(255, 246, 236, 0.78) 0%, rgba(255, 248, 241, 0.34) 44%, rgba(13, 9, 5, 0.22) 100%),
-      linear-gradient(180deg, rgba(255, 243, 228, 0.15), rgba(255, 253, 251, 0.25));
-  }
-
   .hero-copy {
     width: 100%;
     text-align: left;
@@ -3213,7 +3355,7 @@ p {
   .hero-inner {
     min-height: 760px;
     padding-inline: 40px;
-    padding-bottom: 170px;
+    padding-bottom: 124px;
   }
 
   .hero-copy {
@@ -3259,16 +3401,10 @@ p {
     border-radius: 28px;
   }
 
-  .hero-overlay {
-    background:
-      linear-gradient(180deg, rgba(12, 10, 9, 0.18) 0%, rgba(12, 10, 9, 0.24) 28%, rgba(12, 10, 9, 0.58) 100%),
-      var(--landing-hero-overlay, linear-gradient(180deg, rgba(9, 8, 7, 0.16), rgba(9, 8, 7, 0.22)));
-  }
-
   .hero-inner {
-    min-height: 620px;
-    padding: 34px 20px 138px;
-    gap: 18px;
+    min-height: 520px;
+    padding: 22px 18px 28px;
+    gap: 12px;
   }
 
   .hero-copy {
@@ -3276,15 +3412,17 @@ p {
   }
 
   .hero h1 {
-    font-size: clamp(2.8rem, 9.4vw, 4.1rem);
-    line-height: 0.94;
+    font-size: clamp(1.95rem, 7.1vw, 2.7rem);
+    line-height: 1;
   }
 
   .hero-text {
-    max-width: 300px;
-    margin-top: 16px;
-    font-size: 0.96rem;
-    line-height: 1.58;
+    max-width: 292px;
+    margin-top: 12px;
+    font-size: 0.78rem;
+    line-height: 1.46;
+    color: rgba(248, 241, 234, 0.94);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
   }
 
   .hero-actions {
@@ -3301,20 +3439,10 @@ p {
     display: none;
   }
 
-  .hero-branch-card {
-    max-width: 290px;
-    padding: 12px 12px 14px;
-    border-radius: 22px;
-  }
-
-  .hero-branch-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .hero-branch-trigger {
-    justify-content: space-between;
-    width: 100%;
+  .hero-coral-left {
+    left: -18px;
+    bottom: 62px;
+    width: 62px;
   }
 
   .hero-branch-menu {
@@ -3323,41 +3451,56 @@ p {
     min-width: 0;
   }
 
-  .hero-coral-left {
-    left: -18px;
-    bottom: 108px;
-    width: 86px;
+  .branch-spotlight {
+    margin-top: -34px;
   }
 
-  .feature-strip {
-    margin: -22px auto 0;
-    width: calc(100% - 20px);
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0;
-    padding: 12px 8px;
-    border-radius: 20px;
-  }
-
-  .feature-item {
+  .branch-spotlight-shell {
     grid-template-columns: 1fr;
-    justify-items: center;
-    text-align: center;
-    padding-inline: 6px;
+    gap: 12px;
   }
 
-  .feature-icon {
+  .branch-spotlight-card {
+    padding: 18px 16px;
+    border-radius: 24px;
+  }
+
+  .branch-spotlight-title {
+    font-size: 1.45rem;
+  }
+
+  .branch-spotlight-dropdown,
+  .branch-spotlight-trigger {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .branch-spotlight-card-features {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .branch-spotlight-feature {
+    grid-template-columns: 1fr;
+    justify-items: start;
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .branch-spotlight-feature .feature-icon {
     width: 42px;
     border-radius: 14px;
     font-size: 1rem;
   }
 
-  .feature-item h3 {
+  .branch-spotlight-feature h3 {
     font-size: 0.76rem;
     line-height: 1.35;
   }
 
-  .feature-item p {
-    display: none;
+  .branch-spotlight-feature p {
+    font-size: 0.76rem;
+    line-height: 1.5;
   }
 
   .branch-network {
@@ -3411,6 +3554,7 @@ p {
     gap: 6px;
     padding: 6px;
     border-radius: 20px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .sticky-cta-item {
@@ -3428,8 +3572,8 @@ p {
 
   .floating-contact-actions {
     right: 12px;
-    bottom: 116px;
-    gap: 8px;
+    bottom: 92px;
+    gap: 6px;
   }
 
   .contact-float {
@@ -3450,12 +3594,22 @@ p {
   }
 
   .hero h1 {
-    font-size: clamp(2.2rem, 10.2vw, 3.15rem);
+    font-size: clamp(1.68rem, 8vw, 2.15rem);
+    max-width: 228px;
+  }
+
+  .hero-copy::before {
+    inset: -4px -5px -6px -5px;
+    border-radius: 16px;
+    background:
+      linear-gradient(180deg, rgba(17, 13, 10, 0.07) 0%, rgba(17, 13, 10, 0.03) 56%, rgba(17, 13, 10, 0.01) 100%),
+      radial-gradient(circle at top left, rgba(255, 249, 241, 0.03), transparent 34%);
   }
 
   .hero-text {
-    max-width: 260px;
-    font-size: 0.9rem;
+    max-width: 224px;
+    font-size: 0.74rem;
+    line-height: 1.4;
   }
 
   .hero-branch-tag {
@@ -3467,9 +3621,15 @@ p {
     line-height: 1.48;
   }
 
-  .feature-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px 8px;
+  .branch-spotlight-story {
+    padding: 14px 14px 15px;
+    font-size: 0.84rem;
+    line-height: 1.55;
+  }
+
+  .branch-spotlight-card-features {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
 
   .branch-network-grid {
@@ -3478,5 +3638,59 @@ p {
 
   .signature-dish-grid {
     grid-auto-columns: minmax(34vw, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .hero {
+    min-height: 620px;
+  }
+
+  .hero-inner {
+    min-height: 480px;
+    padding: 20px 16px 24px;
+  }
+
+  .hero-copy::before {
+    inset: -3px -4px -5px -4px;
+    border-radius: 14px;
+  }
+
+  .hero h1 {
+    max-width: 206px;
+  }
+
+  .hero-text {
+    max-width: 200px;
+    font-size: 0.71rem;
+  }
+
+  .hero-coral-left {
+    left: -20px;
+    bottom: 52px;
+    width: 58px;
+  }
+
+  .branch-spotlight-card {
+    padding: 16px 14px;
+  }
+
+  .branch-spotlight-title {
+    font-size: 1.32rem;
+  }
+
+  .branch-spotlight-chip {
+    min-height: 36px;
+    padding-inline: 14px;
+    font-size: 0.8rem;
+  }
+
+  .sticky-cta-bar {
+    width: calc(100vw - 10px);
+    bottom: 8px;
+  }
+
+  .floating-contact-actions {
+    bottom: 88px;
   }
 }
