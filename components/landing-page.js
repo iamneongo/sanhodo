@@ -882,6 +882,8 @@ export default function LandingPage({
   });
   const [upsellModal, setUpsellModal] = useState(null);
   const [selectedOffer, setSelectedOffer] = useState("");
+  const [viewportWidth, setViewportWidth] = useState(1280);
+  const [dishCarouselIndex, setDishCarouselIndex] = useState(0);
 
   const menuCategories = useMemo(
     () => ["Tất cả", ...new Set(featuredDishes.map((item) => item.category || "Khác"))],
@@ -1147,46 +1149,6 @@ export default function LandingPage({
     );
   }, [selectedBranchId, selectedVoucherCampaignId, voucherCampaigns]);
 
-  const branchSectionKicker = getLocalizedText(locale, {
-    vi: "Hệ thống chi nhánh",
-    en: "Branch network",
-    zh: "门店系统"
-  });
-  const branchSectionTitle = getLocalizedText(locale, {
-    vi: "Chọn đúng chi nhánh cho đúng hành trình",
-    en: "Choose the right branch for the right journey",
-    zh: "为你的旅程选择合适的分店"
-  });
-  const branchSectionDescription = getLocalizedText(locale, {
-    vi: "Mỗi chi nhánh San Hô Đỏ đều có theme, thực đơn ưu tiên và trải nghiệm riêng cho khu vực đó.",
-    en: "Each San Hô Đỏ branch has its own theme, menu priority and local experience.",
-    zh: "每家 San Hô Đỏ 分店都有自己的主题、菜单重点与在地体验。"
-  });
-  const branchCurrentBadge = getLocalizedText(locale, {
-    vi: "Bạn đang ở đây",
-    en: "You're here",
-    zh: "你当前所在"
-  });
-  const branchNearestBadge = getLocalizedText(locale, {
-    vi: "Chi nhánh gần bạn",
-    en: "Nearest branch",
-    zh: "离你最近"
-  });
-  const branchViewLabel = getLocalizedText(locale, {
-    vi: "Xem chi nhánh",
-    en: "View branch",
-    zh: "查看分店"
-  });
-  const branchBookLabel = getLocalizedText(locale, {
-    vi: "Đặt bàn ngay",
-    en: "Book now",
-    zh: "立即订位"
-  });
-  const branchSeeAllLabel = getLocalizedText(locale, {
-    vi: "Xem tất cả",
-    en: "View all",
-    zh: "查看全部"
-  });
   const featuredSectionKicker = getLocalizedText(locale, {
     vi: "Món ngon nổi bật",
     en: "Featured dishes",
@@ -1207,69 +1169,9 @@ export default function LandingPage({
     en: "Directions",
     zh: "路线"
   });
-  const branchHighlightsLabel = getLocalizedText(locale, {
-    vi: "Tính năng nổi bật",
-    en: "Signature highlights",
-    zh: "特色亮点"
-  });
-
-  const branchShowcaseCards = useMemo(() => {
-    return (branches || [])
-      .filter((branch) => branch?.isActive !== false)
-      .map((branch) => {
-        const experience = getBranchExperiencePreset(branch, locale);
-        const distanceKm = visitorCoords ? calculateDistanceKm(visitorCoords, branch) : null;
-        const detailLines = String(
-          branch.experienceTagline || experience.subtitle || branch.cityLabel || ""
-        )
-          .split(/\s*-\s*/)
-          .map((item) => item.trim())
-          .filter(Boolean)
-          .slice(0, 3);
-
-        const highlightChips = [...detailLines, featureServiceTitle].filter(Boolean).slice(0, 4);
-
-        return {
-          ...branch,
-          showcaseImage: getBranchShowcaseImage(branch),
-          distanceKm,
-          isCurrent: branch.id === selectedBranchId,
-          badge:
-            branch.id === selectedBranchId
-              ? branchCurrentBadge
-              : distanceKm !== null
-                ? branchNearestBadge
-                : "",
-          description: experience.description,
-          highlightChips
-        };
-      })
-      .sort((left, right) => {
-        if (left.isCurrent && !right.isCurrent) {
-          return -1;
-        }
-
-        if (!left.isCurrent && right.isCurrent) {
-          return 1;
-        }
-
-        if (left.distanceKm !== null && right.distanceKm !== null) {
-          return left.distanceKm - right.distanceKm;
-        }
-
-        return (left.sortOrder || 0) - (right.sortOrder || 0);
-      });
-  }, [
-    branchCurrentBadge,
-    branchNearestBadge,
-    branches,
-    featureServiceTitle,
-    locale,
-    selectedBranchId,
-    visitorCoords
-  ]);
-
   const featuredSpotlightDishes = useMemo(() => featuredDishes.slice(0, 4), [featuredDishes]);
+  const dishCarouselPerView = viewportWidth <= 720 ? 2 : viewportWidth <= 1080 ? 3 : 4;
+  const dishCarouselMaxIndex = Math.max(0, featuredSpotlightDishes.length - dishCarouselPerView);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -1280,6 +1182,18 @@ export default function LandingPage({
     const storedLocale = window.localStorage.getItem("landing-locale");
     const nextLocale = normalizeLocale(params.get("lang") || storedLocale || "vi");
     setLocale(nextLocale);
+    setViewportWidth(window.innerWidth);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
+
+    const handleResize = () => setViewportWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
@@ -1297,6 +1211,22 @@ export default function LandingPage({
     const titleBase = locale === "vi" ? landingConfig.seoTitle || localizedTitle : localizedTitle;
     document.title = titleBase;
   }, [displayBranchName, landingConfig.seoTitle, locale]);
+
+  useEffect(() => {
+    setDishCarouselIndex((current) => Math.min(current, dishCarouselMaxIndex));
+  }, [dishCarouselMaxIndex]);
+
+  useEffect(() => {
+    if (dishCarouselMaxIndex <= 0) {
+      return undefined;
+    }
+
+    const timer = window.setInterval(() => {
+      setDishCarouselIndex((current) => (current >= dishCarouselMaxIndex ? 0 : current + 1));
+    }, 3600);
+
+    return () => window.clearInterval(timer);
+  }, [dishCarouselMaxIndex]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !branches.length) {
@@ -1666,10 +1596,13 @@ export default function LandingPage({
           }
         });
       },
-      { threshold: 0.18 }
+      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
     );
 
-    revealElements.forEach((element) => observer.observe(element));
+    revealElements.forEach((element, index) => {
+      element.style.setProperty("--reveal-delay", `${Math.min(index % 6, 5) * 70}ms`);
+      observer.observe(element);
+    });
 
     if (toggle && nav) {
       toggle.addEventListener("click", handleToggleClick);
@@ -2305,67 +2238,6 @@ export default function LandingPage({
           </div>
         </section>
 
-        <section className="branch-network section" id="about">
-          <div className="container">
-            <div className="section-heading align-left section-heading-inline reveal">
-              <div>
-                <p className="section-kicker">{branchSectionKicker}</p>
-                <h2>{branchSectionTitle}</h2>
-              </div>
-              <span className="section-inline-link">{branchSeeAllLabel}</span>
-            </div>
-            <p className="section-support-copy reveal">{branchSectionDescription}</p>
-            <div className="branch-network-grid">
-              {branchShowcaseCards.map((branch) => (
-                <article
-                  className={`branch-card reveal${branch.isCurrent ? " is-current" : ""}`}
-                  key={branch.id}
-                >
-                  <div className="branch-card-media">
-                    <img
-                      src={branch.showcaseImage}
-                      alt={branch.name}
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    {branch.badge ? <span className="branch-card-badge">{branch.badge}</span> : null}
-                  </div>
-                  <div className="branch-card-body">
-                    <h3>{branch.name}</h3>
-                    <p className="branch-card-address">
-                      <MapPin className="size-4" />
-                      <span>{branch.address || branch.cityLabel || branch.name}</span>
-                    </p>
-                    <div className="branch-card-distance">
-                      <LocateFixed className="size-4" />
-                      <span>
-                        {branch.distanceKm !== null
-                          ? `${branch.distanceKm.toFixed(1)} km`
-                          : branch.cityLabel || branch.shortName}
-                      </span>
-                    </div>
-                    <div className="branch-card-highlights" aria-label={branchHighlightsLabel}>
-                      {branch.highlightChips.map((chip) => (
-                        <span key={`${branch.id}-${chip}`}>{chip}</span>
-                      ))}
-                    </div>
-                    <div className="branch-card-actions">
-                      <button
-                        className="button button-primary"
-                        type="button"
-                        onClick={() => handleBranchSelect(branch.id)}
-                      >
-                        <span>{branch.isCurrent ? branchBookLabel : branchViewLabel}</span>
-                        <ArrowRight className="size-4" />
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
         <section className="signature-dishes section" id="menu">
           <div className="container">
             <div className="section-heading align-left section-heading-inline reveal">
@@ -2377,22 +2249,49 @@ export default function LandingPage({
                 {featuredSectionLink}
               </a>
             </div>
-            <div className="signature-dish-grid">
-              {featuredSpotlightDishes.map((dish) => (
-                <article className="signature-dish-card reveal" key={dish.name}>
-                  <img src={dish.image} alt={dish.name} loading="lazy" decoding="async" />
-                  <div className="signature-dish-body">
-                    <span className="signature-dish-category">{dish.category}</span>
-                    <h3>{dish.name}</h3>
-                    <strong>{dish.price}</strong>
-                  </div>
-                </article>
-              ))}
+            <div className="landing-carousel">
+              <div
+                className="landing-carousel-track signature-dish-grid"
+                style={{
+                  "--carousel-gap": "14px",
+                  "--per-view": dishCarouselPerView,
+                  transform: `translate3d(-${(dishCarouselIndex * 100) / dishCarouselPerView}%, 0, 0)`
+                }}
+              >
+                {featuredSpotlightDishes.map((dish, index) => (
+                  <article
+                    className="signature-dish-card"
+                    key={dish.name}
+                  >
+                    <div className="carousel-card-reveal reveal" style={{ "--reveal-delay": `${(index % 4) * 80}ms` }}>
+                      <img src={dish.image} alt={dish.name} loading="lazy" decoding="async" />
+                      <div className="signature-dish-body">
+                        <span className="signature-dish-category">{dish.category}</span>
+                        <h3>{dish.name}</h3>
+                        <strong>{dish.price}</strong>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              {dishCarouselMaxIndex > 0 ? (
+                <div className="landing-carousel-dots" aria-label="Dish carousel dots">
+                  {Array.from({ length: dishCarouselMaxIndex + 1 }, (_, index) => (
+                    <button
+                      key={`dish-dot-${index}`}
+                      type="button"
+                      className={`landing-carousel-dot${index === dishCarouselIndex ? " is-active" : ""}`}
+                      onClick={() => setDishCarouselIndex(index)}
+                      aria-label={`Chọn nhóm món ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              ) : null}
             </div>
           </div>
         </section>
 
-        <section className="about section" id="story">
+        <section className="about section" id="about">
           <div className="container about-grid">
             <div className="about-copy reveal">
               <p className="section-kicker">{ui.aboutKicker}</p>

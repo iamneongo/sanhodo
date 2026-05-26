@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { forwardRef, useEffect, useState } from "react";
-import { BookOpen, Download, LoaderCircle } from "lucide-react";
+import { BookOpen, LoaderCircle } from "lucide-react";
 
 const HTMLFlipBook = dynamic(() => import("react-pageflip"), {
   ssr: false
@@ -52,6 +52,8 @@ function resolveLocale(locale = "vi") {
   return MENU_COPY[locale] ? locale : "vi";
 }
 
+const MENU_MANIFEST_URL = "/assets/menu/sanhodo-hotram-seafood-2026/manifest.json";
+
 export default function MenuFlipbook({
   locale = "vi",
   pdfUrl,
@@ -72,59 +74,37 @@ export default function MenuFlipbook({
   useEffect(() => {
     let cancelled = false;
 
-    const renderPdf = async () => {
+    const loadManifest = async () => {
       setLoading(true);
       setError("");
 
       try {
-        const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
-        const documentTask = pdfjsLib.getDocument({
-          url: pdfUrl,
-          disableWorker: true
-        });
-        const pdf = await documentTask.promise;
-        const nextPages = [];
-        let nextPageSize = null;
+        const response = await fetch(MENU_MANIFEST_URL, { cache: "force-cache" });
+        if (!response.ok) {
+          throw new Error(`Manifest request failed: ${response.status}`);
+        }
+        const manifest = await response.json();
+        const nextPages = Array.isArray(manifest.pages)
+          ? manifest.pages.map((src, index) => ({
+              pageNumber: index + 1,
+              src
+            }))
+          : [];
 
-        for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-          const page = await pdf.getPage(pageNumber);
-          const baseViewport = page.getViewport({ scale: 1 });
-          const targetWidth = 880;
-          const scale = Math.min(1.5, targetWidth / baseViewport.width);
-          const viewport = page.getViewport({ scale });
-          const canvas = document.createElement("canvas");
-          const context = canvas.getContext("2d", { alpha: false });
-
-          canvas.width = Math.floor(viewport.width);
-          canvas.height = Math.floor(viewport.height);
-
-          await page.render({
-            canvasContext: context,
-            viewport
-          }).promise;
-
-          if (!nextPageSize) {
-            nextPageSize = {
-              width: Math.round(viewport.width),
-              height: Math.round(viewport.height)
-            };
-          }
-
-          nextPages.push({
-            pageNumber,
-            src: canvas.toDataURL("image/webp", 0.86)
-          });
+        if (!nextPages.length) {
+          throw new Error("Manifest contains no pages");
         }
 
         if (!cancelled) {
           setPages(nextPages);
-          if (nextPageSize) {
-            setPageSize(nextPageSize);
-          }
+          setPageSize({
+            width: Number(manifest.width) || 1072,
+            height: Number(manifest.height) || 1516
+          });
         }
-      } catch (renderError) {
+      } catch (manifestError) {
         if (!cancelled) {
-          console.error("Menu PDF preview failed:", renderError);
+          console.error("Menu flipbook manifest failed:", manifestError);
           setError(copy.error);
         }
       } finally {
@@ -134,7 +114,7 @@ export default function MenuFlipbook({
       }
     };
 
-    renderPdf();
+    loadManifest();
 
     return () => {
       cancelled = true;
@@ -145,26 +125,6 @@ export default function MenuFlipbook({
 
   return (
     <div className="menu-flipbook-shell reveal">
-      <div className="menu-flipbook-topline">
-        <div>
-          <p className="menu-flipbook-kicker">{copy.kicker}</p>
-          <h3>{copy.title}</h3>
-        </div>
-        <a
-          className="menu-flipbook-link"
-          href={pdfUrl}
-          target="_blank"
-          rel="noreferrer"
-          download
-        >
-          <Download className="size-4" />
-          <span>{copy.openPdf}</span>
-        </a>
-      </div>
-      <p className="menu-flipbook-description">
-        {copy.description} <strong>{branchName}</strong>.
-      </p>
-
       <div className="menu-flipbook-stage">
         {loading ? (
           <div className="menu-flipbook-loading" role="status" aria-live="polite">

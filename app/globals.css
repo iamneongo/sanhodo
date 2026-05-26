@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 :root {
+  --font-montserrat: "Aptos", "Segoe UI", sans-serif;
+  --font-cormorant: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --font-great-vibes: "Segoe Script", "Brush Script MT", cursive;
   --bg: #f8f0e6;
   --bg-soft: #fffaf4;
   --surface: rgba(255, 248, 240, 0.9);
@@ -1134,9 +1137,48 @@ p {
 }
 
 .branch-network-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
   gap: 20px;
+  transition: transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.landing-carousel {
+  display: grid;
+  gap: 18px;
+  overflow: hidden;
+}
+
+.landing-carousel-track > * {
+  flex: 0 0 calc((100% - (var(--per-view, 1) - 1) * var(--carousel-gap, 20px)) / var(--per-view, 1));
+  min-width: 0;
+}
+
+.carousel-card-reveal {
+  display: grid;
+  height: 100%;
+}
+
+.landing-carousel-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.landing-carousel-dot {
+  width: 9px;
+  height: 9px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(198, 71, 56, 0.18);
+  cursor: pointer;
+  transition: transform var(--ease), background var(--ease), width var(--ease);
+}
+
+.landing-carousel-dot.is-active {
+  width: 28px;
+  background: var(--brand);
 }
 
 .branch-card {
@@ -1154,7 +1196,7 @@ p {
 
 .branch-card-media {
   position: relative;
-  aspect-ratio: 0.98;
+  aspect-ratio: 1.24;
   overflow: hidden;
 }
 
@@ -1195,13 +1237,13 @@ p {
 
 .branch-card-body {
   display: grid;
-  gap: 10px;
-  padding: 16px 16px 18px;
+  gap: 8px;
+  padding: 14px 14px 16px;
 }
 
 .branch-card-body h3 {
-  font-size: 1.58rem;
-  line-height: 0.98;
+  font-size: 1.34rem;
+  line-height: 1;
   color: var(--brand-deep);
   text-transform: uppercase;
 }
@@ -1212,8 +1254,8 @@ p {
   align-items: flex-start;
   gap: 8px;
   color: #6d544a;
-  font-size: 0.92rem;
-  line-height: 1.55;
+  font-size: 0.84rem;
+  line-height: 1.42;
 }
 
 .branch-card-address svg,
@@ -1232,12 +1274,12 @@ p {
 .branch-card-highlights span {
   display: inline-flex;
   align-items: center;
-  min-height: 32px;
-  padding: 0 10px;
+  min-height: 28px;
+  padding: 0 9px;
   border-radius: 999px;
   background: rgba(198, 71, 56, 0.08);
   color: #714b3c;
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   font-weight: 700;
 }
 
@@ -1247,9 +1289,9 @@ p {
 }
 
 .branch-card-actions .button {
-  min-height: 46px;
-  padding-inline: 16px;
-  font-size: 0.8rem;
+  min-height: 42px;
+  padding-inline: 14px;
+  font-size: 0.74rem;
   gap: 8px;
 }
 
@@ -1258,9 +1300,10 @@ p {
 }
 
 .signature-dish-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
   gap: 14px;
+  transition: transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
 }
 
 .signature-dish-card {
@@ -1787,6 +1830,23 @@ p {
   place-items: center;
   min-height: 100%;
   margin: 0 auto;
+}
+
+.menu-flipbook-embed-wrap {
+  width: min(100%, 880px);
+  display: grid;
+  gap: 14px;
+}
+
+.menu-flipbook-embed {
+  width: 100%;
+  min-height: 560px;
+  border: 0;
+  border-radius: 22px;
+  background: #fffaf5;
+  box-shadow:
+    0 28px 54px rgba(5, 17, 29, 0.24),
+    inset 0 0 0 1px rgba(108, 69, 49, 0.08);
 }
 
 .menu-flipbook-book {
@@ -2581,13 +2641,19 @@ p {
 
 .reveal {
   opacity: 0;
-  transform: translateY(26px);
-  transition: opacity 640ms ease, transform 640ms ease;
+  filter: blur(8px);
+  transform: translate3d(0, 26px, 0) scale(0.985);
+  transition:
+    opacity 760ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 760ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 760ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
 }
 
 .reveal.is-visible {
   opacity: 1;
-  transform: translateY(0);
+  filter: blur(0);
+  transform: translate3d(0, 0, 0) scale(1);
 }
 
 @media (max-width: 1080px) {
@@ -3002,6 +3068,10 @@ p {
     min-height: 400px;
   }
 
+  .menu-flipbook-embed {
+    min-height: 420px;
+  }
+
   .dish-card {
     flex-basis: 100%;
   }
@@ -3208,6 +3278,15 @@ p {
     border-radius: 22px;
   }
 
+  .menu-flipbook-embed-wrap {
+    gap: 10px;
+  }
+
+  .menu-flipbook-embed {
+    min-height: 360px;
+    border-radius: 18px;
+  }
+
   .menu-flipbook-page-sheet {
     padding: 6px;
   }
@@ -3366,13 +3445,6 @@ p {
     max-width: 420px;
   }
 
-  .branch-network-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .signature-dish-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 860px) {
@@ -3520,28 +3592,57 @@ p {
     margin-bottom: 18px;
   }
 
-  .branch-network-grid {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(84vw, 1fr);
-    grid-template-columns: none;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    padding-bottom: 4px;
-  }
-
-  .signature-dish-grid {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(42vw, 1fr);
-    grid-template-columns: none;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    padding-bottom: 4px;
-  }
-
   .branch-card-body h3 {
     font-size: 1.34rem;
+  }
+
+  .branch-card-media {
+    aspect-ratio: 1.42;
+  }
+
+  .branch-card-body {
+    gap: 8px;
+    padding: 14px 14px 16px;
+  }
+
+  .branch-card-address,
+  .branch-card-distance {
+    font-size: 0.84rem;
+    line-height: 1.42;
+  }
+
+  .branch-card-highlights {
+    gap: 6px;
+  }
+
+  .branch-card-highlights span {
+    min-height: 28px;
+    padding: 0 8px;
+    font-size: 0.72rem;
+  }
+
+  .branch-card-actions .button {
+    min-height: 42px;
+    font-size: 0.74rem;
+    padding-inline: 14px;
+  }
+
+  .signature-dish-card img {
+    aspect-ratio: 1.22;
+  }
+
+  .signature-dish-body {
+    gap: 4px;
+    padding: 10px 10px 12px;
+  }
+
+  .signature-dish-category {
+    font-size: 0.68rem;
+  }
+
+  .signature-dish-body h3,
+  .signature-dish-body strong {
+    font-size: 0.8rem;
   }
 
   .branch-card-actions {
@@ -3632,12 +3733,63 @@ p {
     gap: 8px;
   }
 
-  .branch-network-grid {
-    grid-auto-columns: minmax(88vw, 1fr);
+  .landing-carousel {
+    gap: 14px;
   }
 
-  .signature-dish-grid {
-    grid-auto-columns: minmax(34vw, 1fr);
+  .branch-card {
+    border-radius: 22px;
+  }
+
+  .branch-card-media {
+    aspect-ratio: 1.6;
+  }
+
+  .branch-card-body {
+    gap: 7px;
+    padding: 12px 12px 14px;
+  }
+
+  .branch-card-body h3 {
+    font-size: 1.08rem;
+    line-height: 1;
+  }
+
+  .branch-card-address,
+  .branch-card-distance {
+    gap: 6px;
+    font-size: 0.78rem;
+    line-height: 1.36;
+  }
+
+  .branch-card-highlights span {
+    min-height: 26px;
+    font-size: 0.68rem;
+  }
+
+  .branch-card-actions .button {
+    width: 100%;
+  }
+
+  .signature-dish-card {
+    border-radius: 16px;
+  }
+
+  .signature-dish-card img {
+    aspect-ratio: 1.32;
+  }
+
+  .signature-dish-body {
+    padding: 9px 9px 10px;
+  }
+
+  .signature-dish-body h3 {
+    font-size: 0.74rem;
+    line-height: 1.28;
+  }
+
+  .signature-dish-body strong {
+    font-size: 0.76rem;
   }
 }
 
