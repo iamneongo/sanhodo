@@ -53,31 +53,26 @@ export default function MenuFlipbook({
   const [mounted, setMounted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const lastTapRef = useRef(0);
+  const fullscreenRef = useRef(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    if (!isFullscreen) {
-      return undefined;
-    }
-
-    const previousOverflow = document.body.style.overflow;
-    const handleEscape = (event) => {
-      if (event.key === "Escape") {
-        setIsFullscreen(false);
-      }
+    const handleFullscreenChange = () => {
+      const currentElement = document.fullscreenElement || document.webkitFullscreenElement || null;
+      setIsFullscreen(currentElement === fullscreenRef.current);
     };
 
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleEscape);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
 
     return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
     };
-  }, [isFullscreen]);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -132,8 +127,39 @@ export default function MenuFlipbook({
 
   const totalPages = pages.length;
 
-  const openFullscreen = () => setIsFullscreen(true);
-  const closeFullscreen = () => setIsFullscreen(false);
+  const openFullscreen = async () => {
+    const container = fullscreenRef.current;
+    if (!container) {
+      return;
+    }
+
+    try {
+      if (container.requestFullscreen) {
+        await container.requestFullscreen();
+      } else if (container.webkitRequestFullscreen) {
+        container.webkitRequestFullscreen();
+      }
+      setIsFullscreen(true);
+    } catch (fullscreenError) {
+      console.error("Unable to open fullscreen menu:", fullscreenError);
+    }
+  };
+
+  const closeFullscreen = async () => {
+    try {
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+    } catch (fullscreenError) {
+      console.error("Unable to close fullscreen menu:", fullscreenError);
+    } finally {
+      setIsFullscreen(false);
+    }
+  };
 
   const handleBookTouchEnd = () => {
     const now = Date.now();
@@ -143,9 +169,9 @@ export default function MenuFlipbook({
     lastTapRef.current = now;
   };
 
-  const renderBook = (fullscreen = false) => (
+  const renderBook = () => (
     <div
-      className={`menu-flipbook-bookwrap${fullscreen ? " is-fullscreen" : ""}`}
+      className={`menu-flipbook-bookwrap${isFullscreen ? " is-fullscreen" : ""}`}
       onDoubleClick={openFullscreen}
       onTouchEnd={handleBookTouchEnd}
       role="button"
@@ -162,9 +188,9 @@ export default function MenuFlipbook({
         width={pageSize.width}
         height={pageSize.height}
         size="stretch"
-        minWidth={fullscreen ? 320 : 260}
+        minWidth={isFullscreen ? 320 : 260}
         maxWidth={pageSize.width}
-        minHeight={fullscreen ? 460 : 360}
+        minHeight={isFullscreen ? 460 : 360}
         maxHeight={pageSize.height}
         maxShadowOpacity={0.28}
         showCover
@@ -172,11 +198,11 @@ export default function MenuFlipbook({
         useMouseEvents
         mobileScrollSupport={false}
         flippingTime={900}
-        className={`menu-flipbook-book${fullscreen ? " is-fullscreen" : ""}`}
+        className={`menu-flipbook-book${isFullscreen ? " is-fullscreen" : ""}`}
       >
         {pages.map((page) => (
           <FlipPage
-            key={`${fullscreen ? "fullscreen" : "inline"}-${page.pageNumber}`}
+            key={page.pageNumber}
             src={page.src}
             alt={`${branchName} menu page ${page.pageNumber}`}
           />
@@ -186,7 +212,7 @@ export default function MenuFlipbook({
   );
 
   return (
-    <div className="menu-flipbook-shell reveal">
+    <div className={`menu-flipbook-shell reveal${isFullscreen ? " is-fullscreen" : ""}`} ref={fullscreenRef}>
       <div className="menu-flipbook-stage">
         {loading ? (
           <div className="menu-flipbook-loading" role="status" aria-live="polite">
@@ -200,15 +226,12 @@ export default function MenuFlipbook({
           </div>
         ) : totalPages && mounted ? (
           <>
-            {renderBook(false)}
             {isFullscreen ? (
-              <div className="menu-flipbook-fullscreen" role="dialog" aria-modal="true" aria-label={`${branchName} menu fullscreen`}>
-                <button type="button" className="menu-flipbook-fullscreen-close" onClick={closeFullscreen} aria-label="Close fullscreen menu">
-                  <X className="size-5" />
-                </button>
-                <div className="menu-flipbook-fullscreen-stage">{renderBook(true)}</div>
-              </div>
+              <button type="button" className="menu-flipbook-fullscreen-close" onClick={closeFullscreen} aria-label="Close fullscreen menu">
+                <X className="size-5" />
+              </button>
             ) : null}
+            {renderBook()}
           </>
         ) : null}
       </div>
