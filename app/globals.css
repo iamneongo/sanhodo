@@ -52,6 +52,10 @@ body {
   background: var(--landing-page-background, transparent);
 }
 
+.landing-desktop-blocker {
+  display: none;
+}
+
 main {
   display: block;
   padding-top: var(--header-offset);
@@ -3871,5 +3875,78 @@ p {
 
   .floating-contact-actions {
     bottom: 88px;
+  }
+}
+
+@media (min-width: 768px) {
+  .landing-shell {
+    min-height: 100vh;
+    background:
+      linear-gradient(rgba(248, 240, 230, 0.94), rgba(248, 240, 230, 0.94)),
+      url("/assets/paper-texture.png") center top / 820px auto repeat,
+      var(--bg);
+  }
+
+  .landing-shell > :not(.landing-desktop-blocker) {
+    display: none !important;
+  }
+
+  .landing-desktop-blocker {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 32px;
+  }
+
+  .landing-desktop-blocker-card {
+    width: min(440px, 100%);
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    padding: 36px 32px;
+    border: 1px solid rgba(198, 71, 56, 0.14);
+    border-radius: 24px;
+    background: rgba(255, 250, 244, 0.92);
+    box-shadow: 0 28px 70px rgba(74, 31, 14, 0.14);
+    text-align: center;
+  }
+
+  .landing-desktop-blocker-card img {
+    width: 84px;
+    height: auto;
+  }
+
+  .landing-desktop-blocker-card span {
+    color: var(--brand-deep);
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .landing-desktop-blocker-card h1 {
+    color: var(--ink);
+    font-family: var(--font-montserrat), sans-serif;
+    font-size: 1.6rem;
+    line-height: 1.18;
+    text-transform: none;
+  }
+
+  .landing-desktop-blocker-card p {
+    max-width: 340px;
+    color: rgba(78, 62, 52, 0.86);
+    font-size: 0.96rem;
+    line-height: 1.7;
+  }
+
+  .landing-desktop-blocker-card a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 42px;
+    padding: 0 18px;
+    border-radius: 999px;
+    background: var(--brand);
+    color: #fff8f2;
+    font-size: 0.9rem;
+    font-weight: 800;
   }
 }

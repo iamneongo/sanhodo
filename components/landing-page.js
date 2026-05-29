@@ -1942,6 +1942,18 @@ export default function LandingPage({
           "--ocean": branchThemeVars.accent
         }}
       >
+      <section className="landing-desktop-blocker" aria-label="Mobile only notice">
+        <div className="landing-desktop-blocker-card">
+          <img src="/assets/logo-full.png" alt={DEFAULT_BRAND_NAME} />
+          <span>{DEFAULT_BRAND_NAME}</span>
+          <h1>Vui lòng mở trên điện thoại</h1>
+          <p>
+            Landing page San Hô Đỏ hiện được thiết kế riêng cho trải nghiệm đặt bàn,
+            xem menu và liên hệ nhanh trên màn hình điện thoại.
+          </p>
+          <a href="https://sanhodo.com">sanhodo.com</a>
+        </div>
+      </section>
       <header className="site-header" id="top">
         <div className="container header-inner">
           <a className="brand brand-lockup" href="#top" aria-label={displayBranchName}>
