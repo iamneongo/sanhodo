@@ -1,10 +1,4 @@
-import { Manrope } from "next/font/google";
 import AdminSidebarLayout from "../../components/admin/admin-sidebar-layout";
-
-const manrope = Manrope({
-  subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600", "700", "800"]
-});
 
 export const metadata = {
   title: "Admin Dashboard | San Hô Đỏ Hồ Tràm",
@@ -17,7 +11,7 @@ export default function AdminLayout({ children }) {
       padding-bottom: 0 !important;
       background: #f4f4f5 !important;
       color: #09090b !important;
-      --admin-font: ${manrope.style.fontFamily};
+      --admin-font: "Manrope", "Aptos", "Segoe UI", sans-serif;
       font-family: var(--admin-font), sans-serif !important;
     }
 
@@ -37,7 +31,7 @@ export default function AdminLayout({ children }) {
       color: #09090b;
       font-family: var(--admin-font), sans-serif;
       font-weight: 600;
-      letter-spacing: -0.02em;
+      letter-spacing: 0;
       text-transform: none;
       line-height: 1.2;
     }
@@ -86,7 +80,7 @@ export default function AdminLayout({ children }) {
       font-size: 1.5rem !important;
       font-weight: 700 !important;
       line-height: 1.2 !important;
-      letter-spacing: -0.02em !important;
+      letter-spacing: 0 !important;
       text-transform: none !important;
     }
 
