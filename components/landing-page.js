@@ -38,9 +38,11 @@ import {
   isValidVietnamPhone
 } from "../lib/business-rules";
 
-const hotline = "0814645999";
-const hotlineDisplay = "0814 645 999";
-const secondaryHotlineDisplay = "0522 282 229";
+const HOTRAM_PHONE = "0522282229";
+const HOTRAM_PHONE_DISPLAY = "052 2282229";
+const HOTRAM_MAP_URL = "https://maps.app.goo.gl/DBABeiaozYrPY2Dv5?g_st=iz";
+const hotline = HOTRAM_PHONE;
+const hotlineDisplay = HOTRAM_PHONE_DISPLAY;
 const reservationMinDate = getTodayDateInput();
 const DEFAULT_BRAND_NAME = "San Hô Đỏ";
 const BRANCH_MENU_PDF_URL = "/assets/menu/sanhodo-hotram-seafood-2026.pdf";
@@ -181,7 +183,7 @@ const LANDING_COPY = {
       timeSlot: "Khung giờ",
       referralCode: "Mã tài xế / giới thiệu (nếu có)",
       notes: "Ghi chú thêm",
-      phonePlaceholder: "Ví dụ: 0814 645 999",
+      phonePlaceholder: "Ví dụ: 052 2282229",
       referralPlaceholder: "Ví dụ: DRV-HOTRAM-01",
       notesPlaceholder: "Ví dụ: cần ghế em bé, bàn yên tĩnh, có sinh nhật..."
     },
@@ -293,7 +295,7 @@ const LANDING_COPY = {
       timeSlot: "Time slot",
       referralCode: "Driver / referral code",
       notes: "Notes",
-      phonePlaceholder: "Example: 0814 645 999",
+      phonePlaceholder: "Example: 052 2282229",
       referralPlaceholder: "Example: DRV-HOTRAM-01",
       notesPlaceholder: "Example: baby chair, quiet table, birthday setup..."
     },
@@ -405,7 +407,7 @@ const LANDING_COPY = {
       timeSlot: "时间段",
       referralCode: "司机 / 推荐码",
       notes: "备注",
-      phonePlaceholder: "例如：0814 645 999",
+      phonePlaceholder: "例如：052 2282229",
       referralPlaceholder: "例如：DRV-HOTRAM-01",
       notesPlaceholder: "例如：需要宝宝椅、安静位置、生日布置..."
     },
@@ -626,7 +628,7 @@ const QUICK_ANSWERS_BY_LOCALE = {
     {
       keywords: ["đường đi", "địa chỉ", "map"],
       answer:
-        "Nhà hàng ở Đường ven biển, Ấp Hồ Tràm, Xã Phước Thuận, H. Xuyên Mộc, Bà Rịa - Vũng Tàu. Nếu bạn muốn, mình có thể ưu tiên đặt bàn trước rồi gửi hướng dẫn ngay sau."
+        "Mình sẽ gửi đúng điểm Google Maps của chi nhánh để bạn mở chỉ đường trực tiếp. Nếu bạn muốn, mình có thể ưu tiên đặt bàn trước rồi gửi hướng dẫn ngay sau."
     },
     {
       keywords: ["combo", "set", "tiệc", "upsell"],
@@ -653,7 +655,7 @@ const QUICK_ANSWERS_BY_LOCALE = {
     {
       keywords: ["direction", "address", "map"],
       answer:
-        "The restaurant is on the coastal road in Ho Tram, Xuyen Moc, Ba Ria - Vung Tau. If you'd like, I can prioritize your reservation first and send directions right after."
+        "I can send the exact Google Maps location for this branch so you can open directions directly. I can also prioritize your reservation first."
     },
     {
       keywords: ["combo", "set", "party"],
@@ -680,7 +682,7 @@ const QUICK_ANSWERS_BY_LOCALE = {
     {
       keywords: ["路线", "地址", "map"],
       answer:
-        "餐厅位于 Hồ Tràm 沿海路，Xuyên Mộc，Bà Rịa - Vũng Tàu。如果你愿意，我可以先帮你优先订位，再发送路线。"
+        "我可以发送该分店的准确 Google Maps 位置，让你直接打开导航；也可以先帮你优先订位。"
     },
     {
       keywords: ["套餐", "combo", "set"],
@@ -748,6 +750,56 @@ function getBranchExperiencePreset(branch, locale = "vi") {
   const themeKey = branch?.themeKey || "default";
   const group = BRANCH_EXPERIENCE_BY_LOCALE[themeKey] || BRANCH_EXPERIENCE_BY_LOCALE.default;
   return group[normalizeLocale(locale)] || group.vi;
+}
+
+function isHoTramBranch(branch) {
+  const haystack = [
+    branch?.code,
+    branch?.name,
+    branch?.shortName,
+    branch?.address,
+    branch?.cityLabel
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    haystack.includes("hồ tràm") ||
+    haystack.includes("ho tram") ||
+    haystack.includes("hotram") ||
+    haystack.includes("xuyên mộc") ||
+    haystack.includes("xuyen moc")
+  );
+}
+
+function resolveBranchPhone(branch) {
+  if (isHoTramBranch(branch)) {
+    return {
+      phone: HOTRAM_PHONE,
+      display: HOTRAM_PHONE_DISPLAY
+    };
+  }
+
+  const phone = String(branch?.phone || hotline).replace(/[^\d+]/g, "");
+  return {
+    phone,
+    display: branch?.phone ? formatVietnamPhone(branch.phone) : hotlineDisplay
+  };
+}
+
+function resolveBranchDirectionsUrl(branch, branchName) {
+  if (isHoTramBranch(branch)) {
+    return HOTRAM_MAP_URL;
+  }
+
+  if (branch?.mapUrl) {
+    return branch.mapUrl;
+  }
+
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    branch?.address || branchName
+  )}`;
 }
 
 function getBranchFallbackImage(branch) {
@@ -1128,12 +1180,11 @@ export default function LandingPage({
       serves: landingConfig.comboThreeServes || DEFAULT_LANDING_PAGE_CONFIG.comboThreeServes
     }
   ];
-  const activeHotline = selectedBranch?.phone || hotline;
-  const activeHotlineDisplay = selectedBranch?.phone || hotlineDisplay;
+  const branchPhone = resolveBranchPhone(selectedBranch);
+  const activeHotline = branchPhone.phone;
+  const activeHotlineDisplay = branchPhone.display;
   const activeZaloLink = `https://zalo.me/${String(activeHotline || hotline).replace(/[^\d]/g, "")}`;
-  const mapDirectionsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    selectedBranch?.address || displayBranchName
-  )}`;
+  const mapDirectionsUrl = resolveBranchDirectionsUrl(selectedBranch, displayBranchName);
   const chatTitle = displayBranchShortName || displayBranchName || DEFAULT_BRAND_NAME;
   const chatSummary = ui.chatSummary(displayBranchName);
   const chatSuggestions = useMemo(
@@ -3018,7 +3069,6 @@ export default function LandingPage({
             <ul className="footer-meta">
               <li>{selectedBranch?.address || "Đường ven biển, Ấp Hồ Tràm, Xã Phước Thuận, H. Xuyên Mộc, Bà Rịa - Vũng Tàu"}</li>
               <li>{activeHotlineDisplay}</li>
-              <li>{secondaryHotlineDisplay}</li>
               <li>info@sanhodohotram.vn</li>
               <li>10:00 - 22:00 (Thứ 2 - Chủ nhật)</li>
             </ul>

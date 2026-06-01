@@ -31,7 +31,7 @@ values (
   'San Hô Đỏ Hồ Tràm',
   'Hồ Tràm',
   'Đường ven biển, Ấp Hồ Tràm, Xuyên Mộc, Bà Rịa - Vũng Tàu',
-  '0814645999',
+  '0522282229',
   true,
   1
 )
