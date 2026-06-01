@@ -6,14 +6,19 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-const SidebarContext = React.createContext(null);
+const noop = () => {};
+const defaultSidebarContext = {
+  open: true,
+  isMobile: false,
+  state: "expanded",
+  setOpen: noop,
+  toggleSidebar: noop
+};
+
+const SidebarContext = React.createContext(defaultSidebarContext);
 
 export function useSidebar() {
-  const context = React.useContext(SidebarContext);
-  if (!context) {
-    throw new Error("useSidebar must be used within SidebarProvider.");
-  }
-  return context;
+  return React.useContext(SidebarContext) || defaultSidebarContext;
 }
 
 export function SidebarProvider({ defaultOpen = true, children, className, style }) {
