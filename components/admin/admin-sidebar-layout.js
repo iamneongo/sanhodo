@@ -108,8 +108,24 @@ export default function AdminSidebarLayout({ children }) {
     router.refresh();
   };
 
-  if (isLoginRoute || !shellData) {
+  if (isLoginRoute) {
     return children;
+  }
+
+  if (!shellData) {
+    return (
+      <SidebarProvider
+        defaultOpen
+        style={{
+          "--sidebar-width": "17rem",
+          "--sidebar-width-collapsed": "4.5rem"
+        }}
+      >
+        <div className="flex min-h-svh w-full bg-zinc-50">
+          <SidebarInset className="w-full min-w-0 bg-zinc-50">{children}</SidebarInset>
+        </div>
+      </SidebarProvider>
+    );
   }
 
   return (
