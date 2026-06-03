@@ -2073,6 +2073,10 @@ export default function AdminDashboard({
     downloadAdminFile(withBranchQuery("/api/admin/menu-items/export", branchFilterId));
   };
 
+  const exportMenuPrint = () => {
+    window.open(withBranchQuery("/api/admin/menu-items/print", branchFilterId), "_blank", "noopener,noreferrer");
+  };
+
   const openMenuImportPicker = () => {
     menuImportInputRef.current?.click();
   };
@@ -3015,6 +3019,7 @@ export default function AdminDashboard({
             menuImportInputRef={menuImportInputRef}
             downloadMenuTemplate={downloadMenuTemplate}
             exportMenuCsv={exportMenuCsv}
+            exportMenuPrint={exportMenuPrint}
             openMenuImportPicker={openMenuImportPicker}
             importMenuCsv={importMenuCsv}
             menuSheetOpen={menuSheetOpen}

@@ -39,6 +39,7 @@ export default function AdminMenuSection({
   menuImportInputRef,
   downloadMenuTemplate,
   exportMenuCsv,
+  exportMenuPrint,
   openMenuImportPicker,
   importMenuCsv,
   menuSheetOpen,
@@ -92,6 +93,9 @@ export default function AdminMenuSection({
                 </Button>
                 <Button type="button" variant="outline" onClick={exportMenuCsv}>
                   Xuất CSV
+                </Button>
+                <Button type="button" variant="outline" onClick={exportMenuPrint}>
+                  In / Lưu PDF
                 </Button>
                 {permissions.canManageMenu ? (
                   <>
