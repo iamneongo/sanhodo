@@ -105,6 +105,9 @@ export default function AdminTablesSection({
               <Input type="text" placeholder="Khu vực" value={tableDraft.area} onChange={(event) => setTableDraft((prev) => ({ ...prev, area: event.target.value }))} />
               <div className={styles.inlineRow}>
                 <Input type="number" min="1" placeholder="Sức chứa" value={tableDraft.capacity} onChange={(event) => setTableDraft((prev) => ({ ...prev, capacity: Number(event.target.value) }))} />
+                <Input type="number" min="0" placeholder="Giá đặt tối thiểu" value={tableDraft.minSpend} onChange={(event) => setTableDraft((prev) => ({ ...prev, minSpend: Number(event.target.value) }))} />
+              </div>
+              <div className={styles.inlineRow}>
                 <FormSelect value={tableDraft.status} onValueChange={(value) => setTableDraft((prev) => ({ ...prev, status: value }))} options={tableStatuses} placeholder="Trạng thái" />
               </div>
               <Textarea placeholder="Ghi chú" rows={3} value={tableDraft.notes} onChange={(event) => setTableDraft((prev) => ({ ...prev, notes: event.target.value }))} />
@@ -118,16 +121,45 @@ export default function AdminTablesSection({
                 <TableHead>Bàn</TableHead>
                 <TableHead>Khu vực</TableHead>
                 <TableHead>Sức chứa</TableHead>
+                <TableHead>Giá tối thiểu</TableHead>
                 <TableHead>Trạng thái</TableHead>
+                <TableHead className="text-right">Hành động</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {pagination.pagedItems.map((item) => (
                 <TableRow key={item.id} className={styles.interactiveRow} onClick={() => openSectionDetail("tables", item.id)}>
-                  <TableCell data-label="Bàn"><strong>{item.name}</strong><span>{formatCurrency(item.minSpend)}</span></TableCell>
+                  <TableCell data-label="Bàn"><strong>{item.name}</strong><span>{item.notes || "Nhấn để xem chi tiết"}</span></TableCell>
                   <TableCell data-label="Khu vực">{item.area}</TableCell>
                   <TableCell data-label="Sức chứa">{item.capacity}</TableCell>
+                  <TableCell data-label="Giá tối thiểu">{formatCurrency(item.minSpend)}</TableCell>
                   <TableCell data-label="Trạng thái"><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{formatLabel(item.status)}</span></TableCell>
+                  <TableCell data-label="Hành động" className="text-right">
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openSectionDetail("tables", item.id);
+                        }}
+                      >
+                        Xem
+                      </Button>
+                      {permissions.canManageTables ? (
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            deleteTableEntry(item.id);
+                          }}
+                        >
+                          Xóa
+                        </Button>
+                      ) : null}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -148,6 +180,7 @@ export default function AdminTablesSection({
                 <label><span>Tên bàn</span><Input type="text" value={tableEdit.name} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, name: event.target.value }))} /></label>
                 <label><span>Khu vực</span><Input type="text" value={tableEdit.area} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, area: event.target.value }))} /></label>
                 <label><span>Sức chứa</span><Input type="number" min="1" value={tableEdit.capacity} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, capacity: Number(event.target.value) }))} /></label>
+                <label><span>Giá đặt tối thiểu</span><Input type="number" min="0" value={tableEdit.minSpend} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, minSpend: Number(event.target.value) }))} /></label>
                 <label><span>Trạng thái</span><FormSelect value={tableEdit.status} disabled={!permissions.canManageTables} onValueChange={(value) => setTableEdit((prev) => ({ ...prev, status: value }))} options={tableStatuses} placeholder="Trạng thái" /></label>
                 <label className={styles.fullWidth}><span>Ghi chú</span><Textarea rows={5} value={tableEdit.notes} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, notes: event.target.value }))} /></label>
               </div>

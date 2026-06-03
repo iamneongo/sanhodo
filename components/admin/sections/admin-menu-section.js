@@ -35,6 +35,11 @@ export default function AdminMenuSection({
   menuImageUploading,
   uploadMenuImage,
   clearMenuImage,
+  menuImportInputRef,
+  downloadMenuTemplate,
+  exportMenuCsv,
+  openMenuImportPicker,
+  importMenuCsv,
   filteredMenuItems,
   selectedMenuItem,
   openSectionDetail,
@@ -75,11 +80,31 @@ export default function AdminMenuSection({
         <AdminListShell>
           <AdminPageToolbar
             actions={
-              permissions.canManageMenu ? (
-                <Button type="button" variant="secondary" onClick={() => setMenuCreateOpen(true)}>
-                  Tạo món
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" onClick={downloadMenuTemplate}>
+                  Tải file mẫu
                 </Button>
-              ) : null
+                <Button type="button" variant="outline" onClick={exportMenuCsv}>
+                  Xuất CSV
+                </Button>
+                {permissions.canManageMenu ? (
+                  <>
+                    <input
+                      ref={menuImportInputRef}
+                      type="file"
+                      accept=".csv,text/csv"
+                      className="hidden"
+                      onChange={(event) => importMenuCsv(event.target.files?.[0])}
+                    />
+                    <Button type="button" variant="outline" onClick={openMenuImportPicker} disabled={menuSaving}>
+                      Import CSV
+                    </Button>
+                    <Button type="button" variant="secondary" onClick={() => setMenuCreateOpen(true)}>
+                      Tạo món
+                    </Button>
+                  </>
+                ) : null}
+              </div>
             }
             footer={
               <AdminActiveFilters

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminBranchesSection from "./admin/sections/admin-branches-section";
 import AdminHeader from "./admin/admin-header";
@@ -614,6 +614,15 @@ function withBranchQuery(url, branchId) {
   return `${url}${separator}branchId=${encodeURIComponent(branchId)}`;
 }
 
+function downloadAdminFile(url) {
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
 export default function AdminDashboard({
   activeSection = "overview",
   detailMode = false,
@@ -774,6 +783,7 @@ export default function AdminDashboard({
   const [orderSaving, setOrderSaving] = useState(false);
   const [menuSaving, setMenuSaving] = useState(false);
   const [menuImageUploading, setMenuImageUploading] = useState("");
+  const menuImportInputRef = useRef(null);
   const [tableSaving, setTableSaving] = useState(false);
   const [integrationSaving, setIntegrationSaving] = useState(false);
   const [partnerSaving, setPartnerSaving] = useState(false);
@@ -1812,6 +1822,49 @@ export default function AdminDashboard({
     setMenuEdit((prev) => ({ ...prev, imageUrl: "" }));
   };
 
+  const downloadMenuTemplate = () => {
+    downloadAdminFile("/api/admin/menu-items/template");
+  };
+
+  const exportMenuCsv = () => {
+    downloadAdminFile(withBranchQuery("/api/admin/menu-items/export", branchFilterId));
+  };
+
+  const openMenuImportPicker = () => {
+    menuImportInputRef.current?.click();
+  };
+
+  const importMenuCsv = async (file) => {
+    if (!file) {
+      return;
+    }
+
+    setMenuSaving(true);
+    setMessage("");
+    try {
+      const csvText = await file.text();
+      const data = await requestJson("/api/admin/menu-items/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ csvText, branchId: branchFilterId })
+      });
+      const created = data.data?.created || [];
+      const errors = data.data?.errors || [];
+      if (created.length) {
+        setMenuItems((prev) => sortByName([...created, ...prev]));
+      }
+      const errorSummary = errors.length ? ` Có ${errors.length} dòng lỗi/trùng dữ liệu.` : "";
+      setMessage(`Đã import ${created.length} món từ CSV.${errorSummary}`);
+    } catch (error) {
+      setMessage(error.message || "Không import được menu CSV.");
+    } finally {
+      setMenuSaving(false);
+      if (menuImportInputRef.current) {
+        menuImportInputRef.current.value = "";
+      }
+    }
+  };
+
   const uploadLandingImage = async (file, branchId) => {
     if (!file) {
       return "";
@@ -2559,6 +2612,11 @@ export default function AdminDashboard({
             menuImageUploading={menuImageUploading}
             uploadMenuImage={uploadMenuImage}
             clearMenuImage={clearMenuImage}
+            menuImportInputRef={menuImportInputRef}
+            downloadMenuTemplate={downloadMenuTemplate}
+            exportMenuCsv={exportMenuCsv}
+            openMenuImportPicker={openMenuImportPicker}
+            importMenuCsv={importMenuCsv}
             filteredMenuItems={filteredMenuItems}
             selectedMenuItem={selectedMenuItem}
             openSectionDetail={openSectionDetail}
