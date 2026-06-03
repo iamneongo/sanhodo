@@ -57,6 +57,7 @@ export default function AdminIntegrationsSection({
   patchIntegrationEvent,
   syncIntegrationEvent,
   syncIntegrationEventsBatch,
+  processIntegrationEventQueue,
   integrationSaving,
   formatDate
 }) {
@@ -317,15 +318,27 @@ export default function AdminIntegrationsSection({
           title="Hàng đợi event đồng bộ"
           description="Theo dõi event đang chờ, đã đồng bộ hoặc lỗi để chuẩn bị bật worker đồng bộ đa hệ thống."
           actions={
-            permissions.canSyncIntegrations && syncableEventIds.length ? (
-              <Button
-                type="button"
-                variant="outline"
-                disabled={integrationSaving}
-                onClick={() => syncIntegrationEventsBatch(syncableEventIds)}
-              >
-                Đồng bộ tối đa 10 event
-              </Button>
+            permissions.canSyncIntegrations ? (
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={integrationSaving}
+                  onClick={processIntegrationEventQueue}
+                >
+                  Chạy worker
+                </Button>
+                {syncableEventIds.length ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={integrationSaving}
+                    onClick={() => syncIntegrationEventsBatch(syncableEventIds)}
+                  >
+                    Đồng bộ tối đa 10 event
+                  </Button>
+                ) : null}
+              </div>
             ) : null
           }
           className={styles.subsectionCard}

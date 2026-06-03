@@ -9,3 +9,21 @@ Landing page cho nhà hàng San Hô Đỏ được chuyển sang `Next.js`, gi�
 - form nhận voucher
 - chatbot GOECO demo
 - API nhận lead để nối CRM / Google Sheet / Zalo webhook
+
+## Integration worker
+
+Hệ thống có route xử lý hàng đợi đồng bộ UVFL/GOECO:
+
+```txt
+POST /api/admin/integrations/events/process?limit=10
+GET  /api/admin/integrations/events/process?limit=10&secret=<INTEGRATION_WORKER_SECRET>
+```
+
+Khi gọi bằng cron/server bên ngoài, cấu hình:
+
+```env
+SUPABASE_SERVICE_ROLE_KEY=
+INTEGRATION_WORKER_SECRET=
+```
+
+Không bật cron công khai nếu chưa cấu hình endpoint UVFL/GOECO thật trong admin.

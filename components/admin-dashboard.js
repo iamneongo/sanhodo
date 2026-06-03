@@ -2483,6 +2483,26 @@ export default function AdminDashboard({
     }
   };
 
+  const processIntegrationEventQueue = async () => {
+    setIntegrationSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(withBranchQuery("/api/admin/integrations/events/process?limit=10", branchFilterId), {
+        method: "POST"
+      });
+      const eventsData = await requestJson(withBranchQuery("/api/admin/integrations/events", branchFilterId)).catch(() => null);
+      if (eventsData?.data) {
+        setIntegrationEvents(sortByCreatedDesc(eventsData.data));
+      }
+      const summary = data.data || {};
+      setMessage(`Worker đã xử lý ${summary.processed || 0} event: ${summary.success || 0} thành công, ${summary.failed || 0} lỗi.`);
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setIntegrationSaving(false);
+    }
+  };
+
   const logout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
     router.push("/admin/login");
@@ -3119,6 +3139,7 @@ export default function AdminDashboard({
             patchIntegrationEvent={patchIntegrationEvent}
             syncIntegrationEvent={syncIntegrationEvent}
             syncIntegrationEventsBatch={syncIntegrationEventsBatch}
+            processIntegrationEventQueue={processIntegrationEventQueue}
             integrationSaving={integrationSaving}
             formatDate={formatDate}
           />

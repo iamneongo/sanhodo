@@ -146,7 +146,7 @@ Trang thai code hien tai:
 - Da co drivers, travel partners, orders, voucher redemption.
 - Da co `integration_events` outbox, API admin, UI event queue, thao tac skip/retry/manual delivery.
 - Da co migration cau hinh provider `uvfl` va `goeco` trong `integration_settings`.
-- Chua co worker auto retry nen hien dang sync thu cong tu admin.
+- Da co worker API xu ly batch pending/failed co the goi tu admin hoac cron co secret.
 
 De xuat trien khai:
 - Giai doan 1: Them bang/API sync events noi bo, log payload va status.
@@ -180,7 +180,7 @@ De xuat trien khai:
 - [ ] AI tao mo ta mon/dich ngon ngu/marketing.
 - [ ] GOECO driver flow day du.
 - [ ] AI forecast cong suat.
-- [ ] Auto retry worker cho integration events.
+- [x] Auto retry worker API cho integration events.
 
 ## 4. Pham Vi Trien Khai Dot Nay
 
@@ -217,7 +217,7 @@ Con lai:
 - Bang session audit cho tung luot ban va KPI realtime.
 - Export PDF menu, QR menu, Google Sheet sync.
 - AI generator/AI marketing/AI forecast.
-- GOECO driver flow day du va worker auto retry production.
+- GOECO driver flow day du va lich cron production neu muon tu dong hoa hoan toan.
 
 Danh gia tien do:
 - Neu tinh phan nen van hanh admin + media + sync: khoang 70-75% feedback PDF da co nen hoac chay duoc.
