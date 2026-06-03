@@ -50,8 +50,10 @@ Tinh nang P3:
 Trang thai code hien tai:
 - Da co upload anh mon an trong admin `Món ăn`.
 - Da co storage bucket `menu-images` trong migration.
-- Chua co Media Center rieng.
-- Chua co import/export menu hang loat.
+- Da co export/template/import CSV cho menu.
+- Da co Media Center rieng trong admin.
+- Da co upload media asset truc tiep va public API `/api/media-assets`.
+- Chua co export PDF menu, QR menu, Google Sheet sync va AI generator.
 
 De xuat trien khai:
 - Giai doan 1: Them export CSV, template CSV, import CSV cho menu.
@@ -76,8 +78,9 @@ Nang cap de xuat:
 
 Trang thai code hien tai:
 - `restaurant_tables` da co truong `minSpend`.
-- UI hien dang hien `minSpend` duoi ten ban.
+- UI da tach cot gia dat toi thieu, dinh dang tien te va co cot hanh dong.
 - Da co trang chi tiet ban, tao/sua/xoa.
+- Chua co so do ban truc quan va tracking thoi gian nhan/tra ban.
 
 De xuat trien khai:
 - Giai doan 1: Tach cot gia, them input gia toi thieu, them cot hanh dong.
@@ -107,6 +110,7 @@ Trang thai code hien tai:
 - Dang nhap admin qua Supabase Auth.
 - Local admin fallback dang co cho dev/server.
 - Chua co role picker/portal khach hang/tai xe/doi tac tach rieng.
+- Chua co audit log dang nhap va multi-role profile table.
 
 De xuat trien khai:
 - Giai doan 1: Chuan hoa role/permission, them audit log dang nhap, ho tro profile nhieu vai tro o DB.
@@ -137,7 +141,9 @@ Event bus de xuat:
 Trang thai code hien tai:
 - Da co integrations va sync logs.
 - Da co drivers, travel partners, orders, voucher redemption.
-- Chua co UVFL event outbox/API gateway.
+- Da co `integration_events` outbox, API admin, UI event queue, thao tac skip/retry/manual delivery.
+- Da co migration cau hinh provider `uvfl` va `goeco` trong `integration_settings`.
+- Chua co worker auto retry nen hien dang sync thu cong tu admin.
 
 De xuat trien khai:
 - Giai doan 1: Them bang/API sync events noi bo, log payload va status.
@@ -149,19 +155,19 @@ De xuat trien khai:
 ### P1 - Lam ngay
 
 - [x] Lap markdown plan tu 4 PDF.
-- [ ] Sua UI module Ban: tach ten ban/gia, them gia toi thieu vao form, them cot hanh dong.
-- [ ] Them export menu CSV.
-- [ ] Them template CSV menu.
-- [ ] Them import menu CSV co validate loi co ban.
-- [ ] Ghi migration/ke hoach DB cho Media Center va UVFL sync events.
+- [x] Sua UI module Ban: tach ten ban/gia, them gia toi thieu vao form, them cot hanh dong.
+- [x] Them export menu CSV.
+- [x] Them template CSV menu.
+- [x] Them import menu CSV co validate loi co ban.
+- [x] Ghi migration/ke hoach DB cho Media Center va UVFL sync events.
 
 ### P2 - Sau khi P1 on dinh
 
-- [ ] Them section Media Center trong admin.
-- [ ] Them danh sach media asset theo loai/danh muc.
+- [x] Them section Media Center trong admin.
+- [x] Them danh sach media asset theo loai/danh muc.
 - [ ] Them so do ban truc quan.
 - [ ] Them role selector sau login.
-- [ ] Them integration adapter UVFL.
+- [x] Them integration adapter UVFL/GOECO dang manual delivery.
 
 ### P3 - Giai doan mo rong
 
@@ -171,6 +177,7 @@ De xuat trien khai:
 - [ ] AI tao mo ta mon/dich ngon ngu/marketing.
 - [ ] GOECO driver flow day du.
 - [ ] AI forecast cong suat.
+- [ ] Auto retry worker cho integration events.
 
 ## 4. Pham Vi Trien Khai Dot Nay
 
@@ -195,3 +202,20 @@ Khong lam trong dot nay:
 - Template CSV co du cac cot can nhap.
 - Import CSV validate du lieu thieu ten, gia khong hop le, trung slug/ten co canh bao.
 - Khong anh huong landing page/mobile-only.
+
+## 6. Trang Thai Tong Hop Sau Trien Khai
+
+Da hoan tat:
+- P1 gan nhu day du: table UI, import/export/template CSV, migration nen Media + Integration Events.
+- P2 mot phan lon: Media Center, upload media, public media API, UVFL/GOECO event queue va manual delivery.
+
+Con lai:
+- Role selector va portal rieng cho customer/driver/partner.
+- So do ban truc quan, tracking thoi gian ban va KPI realtime.
+- Export PDF menu, QR menu, Google Sheet sync.
+- AI generator/AI marketing/AI forecast.
+- GOECO driver flow day du va worker auto retry production.
+
+Danh gia tien do:
+- Neu tinh phan nen van hanh admin + media + sync: khoang 70-75% feedback PDF da co nen hoac chay duoc.
+- Neu tinh toan bo vision PDF, bao gom AI, portal, QR, Google Sheet va worker tu dong: khoang 50-55%.
