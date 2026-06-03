@@ -68,8 +68,10 @@ export default function AppSidebar({
   branches,
   activeBranchId,
   canViewAllBranches,
+  roleSwitchOptions = [],
   selectedBranch,
   onBranchChange,
+  onRoleScopeChange,
   branchFilterId,
   onLogout
 }) {
@@ -80,6 +82,8 @@ export default function AppSidebar({
       setOpen(false);
     }
   };
+  const activeRoleScope =
+    roleSwitchOptions.find((option) => option.isCurrent)?.value || roleSwitchOptions[0]?.value || "profile";
 
   return (
     <Sidebar>
@@ -163,6 +167,24 @@ export default function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter>
+        {state === "expanded" && roleSwitchOptions.length > 1 ? (
+          <div className="grid gap-2 rounded-2xl border border-zinc-200 bg-white p-3 text-sm shadow-none">
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Vai trò</span>
+            <Select value={activeRoleScope} onValueChange={onRoleScopeChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Chọn vai trò" />
+              </SelectTrigger>
+              <SelectContent>
+                {roleSwitchOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {roleLabels[option.role] || option.role}
+                    {option.branchName ? ` - ${option.branchName}` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : null}
         {state === "expanded" ? (
           <Card className="rounded-2xl border-zinc-200 shadow-none">
             <CardContent className="grid gap-1.5 p-4 text-sm">

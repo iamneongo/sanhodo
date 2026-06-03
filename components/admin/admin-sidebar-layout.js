@@ -81,6 +81,27 @@ export default function AdminSidebarLayout({ children }) {
     router.refresh();
   };
 
+  const handleRoleScopeChange = async (scopeValue) => {
+    try {
+      const response = await fetch("/api/admin/session/scope", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scopeValue })
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Không đổi được vai trò làm việc");
+      }
+
+      const branchId = payload.data?.canViewAllBranches ? "" : payload.data?.branchId || "";
+      router.push(branchId ? `/admin/overview?branch=${encodeURIComponent(branchId)}` : "/admin/overview");
+      router.refresh();
+    } catch (error) {
+      window.alert(error.message || "Không đổi được vai trò làm việc");
+    }
+  };
+
   const handleLogout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
     router.push("/admin/login");
@@ -113,8 +134,10 @@ export default function AdminSidebarLayout({ children }) {
           branches={shellData.branches}
           activeBranchId={shellData.activeBranchId || "all"}
           canViewAllBranches={shellData.canViewAllBranches}
+          roleSwitchOptions={shellData.roleSwitchOptions || []}
           selectedBranch={shellData.selectedBranch}
           onBranchChange={handleBranchChange}
+          onRoleScopeChange={handleRoleScopeChange}
           canExport={shellData.canExport}
           branchFilterId={shellData.branchFilterId}
           onLogout={handleLogout}

@@ -113,7 +113,8 @@ Trang thai code hien tai:
 - Admin dashboard da co role: super_admin, admin, manager, branch_manager, staff, driver.
 - Dang nhap admin qua Supabase Auth.
 - Local admin fallback dang co cho dev/server.
-- Chua co role picker/portal khach hang/tai xe/doi tac tach rieng.
+- Da co role/branch scope switch trong admin sidebar theo phan cong chi nhanh hop le.
+- Chua co portal khach hang/tai xe/doi tac tach rieng.
 - Chua co audit log dang nhap va multi-role profile table.
 
 De xuat trien khai:
@@ -170,7 +171,7 @@ De xuat trien khai:
 - [x] Them section Media Center trong admin.
 - [x] Them danh sach media asset theo loai/danh muc.
 - [x] Them so do ban truc quan.
-- [ ] Them role selector sau login.
+- [x] Them role selector/scope switch trong admin sidebar.
 - [x] Them integration adapter UVFL/GOECO dang manual delivery.
 
 ### P3 - Giai doan mo rong
@@ -215,11 +216,12 @@ Da hoan tat:
 
 Con lai:
 - Role selector va portal rieng cho customer/driver/partner.
+- Portal rieng cho customer/driver/partner.
 - Bang session audit cho tung luot ban va KPI realtime.
 - Export PDF menu va QR menu nang cao.
 - AI generator/AI marketing/AI forecast.
 - GOECO driver flow day du va lich cron production neu muon tu dong hoa hoan toan.
 
 Danh gia tien do:
-- Neu tinh phan nen van hanh admin + media + sync: khoang 78-82% feedback PDF da co nen hoac chay duoc.
-- Neu tinh toan bo vision PDF, bao gom AI, portal, QR nang cao va worker tu dong: khoang 58-62%.
+- Neu tinh phan nen van hanh admin + media + sync: khoang 82-86% feedback PDF da co nen hoac chay duoc.
+- Neu tinh toan bo vision PDF, bao gom AI, portal, QR nang cao va worker tu dong: khoang 62-66%.
