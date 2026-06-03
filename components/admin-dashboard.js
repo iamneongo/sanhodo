@@ -2149,6 +2149,25 @@ export default function AdminDashboard({
     }
   };
 
+  const patchTableEntry = async (table, payload) => {
+    if (!table) return;
+    setTableSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(`/api/admin/tables/${table.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(attachBranchToPayload({ ...table, ...payload }))
+      });
+      setRestaurantTables((prev) => sortByName(prev.map((item) => (item.id === table.id ? data.data : item))));
+      setMessage("Đã cập nhật trạng thái bàn.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setTableSaving(false);
+    }
+  };
+
   const deleteTableEntry = async (id) => {
     if (!window.confirm("Xóa bàn này?")) return;
     try {
@@ -2868,6 +2887,7 @@ export default function AdminDashboard({
             formatLabel={formatLabel}
             detailHeaderActions={detailHeaderActions}
             deleteTableEntry={deleteTableEntry}
+            patchTableEntry={patchTableEntry}
             tableEdit={tableEdit}
             setTableEdit={setTableEdit}
             saveTableEdit={saveTableEdit}

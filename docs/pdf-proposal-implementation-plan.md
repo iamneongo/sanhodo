@@ -80,7 +80,8 @@ Trang thai code hien tai:
 - `restaurant_tables` da co truong `minSpend`.
 - UI da tach cot gia dat toi thieu, dinh dang tien te va co cot hanh dong.
 - Da co trang chi tiet ban, tao/sua/xoa.
-- Chua co so do ban truc quan va tracking thoi gian nhan/tra ban.
+- Da co so do ban truc quan theo khu vuc va doi nhanh trang thai ban.
+- Chua co tracking thoi gian nhan/tra ban.
 
 De xuat trien khai:
 - Giai doan 1: Tach cot gia, them input gia toi thieu, them cot hanh dong.
@@ -165,7 +166,7 @@ De xuat trien khai:
 
 - [x] Them section Media Center trong admin.
 - [x] Them danh sach media asset theo loai/danh muc.
-- [ ] Them so do ban truc quan.
+- [x] Them so do ban truc quan.
 - [ ] Them role selector sau login.
 - [x] Them integration adapter UVFL/GOECO dang manual delivery.
 
