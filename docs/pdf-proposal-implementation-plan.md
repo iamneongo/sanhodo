@@ -151,6 +151,7 @@ Trang thai code hien tai:
 - Da co `integration_events` outbox, API admin, UI event queue, thao tac skip/retry/manual delivery.
 - Da co migration cau hinh provider `uvfl` va `goeco` trong `integration_settings`.
 - Da co worker API xu ly batch pending/failed co the goi tu admin hoac cron co secret.
+- Da bo sung event outbox cho driver, referral, commission, travel partner va partner booking.
 
 De xuat trien khai:
 - Giai doan 1: Them bang/API sync events noi bo, log payload va status.
@@ -182,7 +183,7 @@ De xuat trien khai:
 - [x] QR menu co ban theo landing page chi nhanh.
 - [x] Google Sheet sync dang public CSV/import theo link Sheet.
 - [x] AI/generator noi bo tao mo ta mon va goi y upsell.
-- [ ] GOECO driver flow day du.
+- [x] GOECO/UVFL driver flow o muc event queue: driver, referral, commission, partner booking.
 - [ ] AI forecast cong suat.
 - [x] Auto retry worker API cho integration events.
 
@@ -221,8 +222,8 @@ Con lai:
 - KPI realtime/forecast nang cao cho cong suat ban.
 - QR menu nang cao.
 - AI marketing/video/forecast nang cao neu co provider/key rieng.
-- GOECO driver flow day du va lich cron production neu muon tu dong hoa hoan toan.
+- Lich cron production neu muon tu dong hoa event queue hoan toan.
 
 Danh gia tien do:
-- Neu tinh phan nen van hanh admin + media + sync: khoang 92-95% feedback PDF da co nen hoac chay duoc.
-- Neu tinh toan bo vision PDF, bao gom portal, QR nang cao va AI provider that: khoang 76-80%.
+- Neu tinh phan nen van hanh admin + media + sync: khoang 94-96% feedback PDF da co nen hoac chay duoc.
+- Neu tinh toan bo vision PDF, bao gom portal, QR nang cao va AI provider that: khoang 80-84%.
