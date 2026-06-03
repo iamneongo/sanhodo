@@ -8,6 +8,7 @@ import AdminSurfaceCard from "../admin-surface-card";
 import AdminTableFooter from "../admin-table-footer";
 import { AdminDetailShell, AdminListShell } from "../admin-panel-shell";
 import useTablePagination from "../use-table-pagination";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -53,6 +54,8 @@ export default function AdminIntegrationsSection({
   patchIntegration,
   syncLogs,
   integrationEvents = [],
+  patchIntegrationEvent,
+  integrationSaving,
   formatDate
 }) {
   const [query, setQuery] = useState("");
@@ -286,6 +289,7 @@ export default function AdminIntegrationsSection({
                   <TableHead>Retry</TableHead>
                   <TableHead>Trạng thái</TableHead>
                   <TableHead>Thời gian</TableHead>
+                  <TableHead>Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -311,6 +315,31 @@ export default function AdminIntegrationsSection({
                       {event.lastError ? <span>{event.lastError}</span> : null}
                     </TableCell>
                     <TableCell data-label="Thời gian">{formatDate(event.createdAt)}</TableCell>
+                    <TableCell data-label="Thao tác">
+                      {permissions.canSyncIntegrations && event.status === "failed" ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={integrationSaving}
+                          onClick={() => patchIntegrationEvent(event.id, { status: "pending", retryCount: event.retryCount + 1 })}
+                        >
+                          Chạy lại
+                        </Button>
+                      ) : null}
+                      {permissions.canSyncIntegrations && ["pending", "processing"].includes(event.status) ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={integrationSaving}
+                          onClick={() => patchIntegrationEvent(event.id, { status: "skipped", lastError: "Skipped manually by admin" })}
+                        >
+                          Bỏ qua
+                        </Button>
+                      ) : null}
+                      {!permissions.canSyncIntegrations || ["synced", "skipped"].includes(event.status) ? <span>-</span> : null}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

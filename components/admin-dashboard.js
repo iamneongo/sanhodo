@@ -768,7 +768,7 @@ export default function AdminDashboard({
   const [orders, setOrders] = useState(sortByCreatedDesc(initialOrders));
   const [integrations, setIntegrations] = useState(initialIntegrations);
   const [syncLogs, setSyncLogs] = useState(initialSyncLogs);
-  const [integrationEvents] = useState(sortByCreatedDesc(initialIntegrationEvents || []));
+  const [integrationEvents, setIntegrationEvents] = useState(sortByCreatedDesc(initialIntegrationEvents || []));
   const driverFeatureStatus = initialFeatureStatus?.drivers || { ready: true, message: "" };
 
   const [reservationQuery, setReservationQuery] = useState("");
@@ -2384,6 +2384,24 @@ export default function AdminDashboard({
     }
   };
 
+  const patchIntegrationEvent = async (eventId, payload) => {
+    setIntegrationSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(`/api/admin/integrations/events/${eventId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      setIntegrationEvents((prev) => sortByCreatedDesc(prev.map((item) => (item.id === eventId ? data.data : item))));
+      setMessage(payload.status === "skipped" ? "Đã bỏ qua event đồng bộ." : "Đã đưa event về hàng đợi.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setIntegrationSaving(false);
+    }
+  };
+
   const logout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
     router.push("/admin/login");
@@ -3016,6 +3034,8 @@ export default function AdminDashboard({
             patchIntegration={patchIntegration}
             syncLogs={syncLogs}
             integrationEvents={integrationEvents}
+            patchIntegrationEvent={patchIntegrationEvent}
+            integrationSaving={integrationSaving}
             formatDate={formatDate}
           />
         ) : null}
