@@ -2402,6 +2402,28 @@ export default function AdminDashboard({
     }
   };
 
+  const syncIntegrationEvent = async (eventId) => {
+    setIntegrationSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(`/api/admin/integrations/events/${eventId}`, {
+        method: "POST"
+      });
+      if (data.data?.event) {
+        setIntegrationEvents((prev) => sortByCreatedDesc(prev.map((item) => (item.id === eventId ? data.data.event : item))));
+      }
+      setMessage("Đã đồng bộ event thành công.");
+    } catch (error) {
+      setMessage(error.message);
+      const eventsData = await requestJson(withBranchQuery("/api/admin/integrations/events", branchFilterId)).catch(() => null);
+      if (eventsData?.data) {
+        setIntegrationEvents(sortByCreatedDesc(eventsData.data));
+      }
+    } finally {
+      setIntegrationSaving(false);
+    }
+  };
+
   const logout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
     router.push("/admin/login");
@@ -3035,6 +3057,7 @@ export default function AdminDashboard({
             syncLogs={syncLogs}
             integrationEvents={integrationEvents}
             patchIntegrationEvent={patchIntegrationEvent}
+            syncIntegrationEvent={syncIntegrationEvent}
             integrationSaving={integrationSaving}
             formatDate={formatDate}
           />

@@ -55,6 +55,7 @@ export default function AdminIntegrationsSection({
   syncLogs,
   integrationEvents = [],
   patchIntegrationEvent,
+  syncIntegrationEvent,
   integrationSaving,
   formatDate
 }) {
@@ -322,21 +323,32 @@ export default function AdminIntegrationsSection({
                           variant="outline"
                           size="sm"
                           disabled={integrationSaving}
-                          onClick={() => patchIntegrationEvent(event.id, { status: "pending", retryCount: event.retryCount + 1 })}
+                          onClick={() => syncIntegrationEvent(event.id)}
                         >
-                          Chạy lại
+                          Đồng bộ lại
                         </Button>
                       ) : null}
                       {permissions.canSyncIntegrations && ["pending", "processing"].includes(event.status) ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={integrationSaving}
-                          onClick={() => patchIntegrationEvent(event.id, { status: "skipped", lastError: "Skipped manually by admin" })}
-                        >
-                          Bỏ qua
-                        </Button>
+                        <>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={integrationSaving || event.status === "processing"}
+                            onClick={() => syncIntegrationEvent(event.id)}
+                          >
+                            Đồng bộ ngay
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={integrationSaving}
+                            onClick={() => patchIntegrationEvent(event.id, { status: "skipped", lastError: "Skipped manually by admin" })}
+                          >
+                            Bỏ qua
+                          </Button>
+                        </>
                       ) : null}
                       {!permissions.canSyncIntegrations || ["synced", "skipped"].includes(event.status) ? <span>-</span> : null}
                     </TableCell>
