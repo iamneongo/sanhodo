@@ -126,6 +126,12 @@ export default function AdminBranchesSection({
   const landingPageUrl = selectedManagedBranch
     ? getAbsoluteBranchLandingUrl(selectedManagedBranch, runtimeOrigin)
     : "";
+  const qrCodeUrl = landingPageUrl
+    ? `/api/qr?data=${encodeURIComponent(landingPageUrl)}&size=360&name=${encodeURIComponent(
+        `sanhodo-${selectedManagedBranch?.code || "branch"}`
+      )}`
+    : "";
+  const qrDownloadUrl = qrCodeUrl ? `${qrCodeUrl}&download=1` : "";
   const copyLandingPageUrl = async () => {
     if (!landingPageUrl || typeof navigator === "undefined" || !navigator.clipboard) {
       return;
@@ -515,6 +521,41 @@ export default function AdminBranchesSection({
                     <span>Link landing page theo domain hiện tại</span>
                     <Input type="text" value={landingPageUrl} readOnly />
                   </label>
+                  {qrCodeUrl ? (
+                    <div className={styles.fullWidth}>
+                      <div className="grid gap-4 rounded-3xl border border-zinc-200 bg-[#fffaf3] p-4 md:grid-cols-[180px_minmax(0,1fr)] md:items-center">
+                        <img
+                          src={qrCodeUrl}
+                          alt={`QR landing page ${selectedManagedBranch?.name || ""}`}
+                          className="mx-auto size-40 rounded-2xl border border-red-100 bg-white p-2 shadow-sm"
+                        />
+                        <div className="grid gap-2">
+                          <span className="text-sm font-semibold uppercase tracking-[0.12em] text-red-900">
+                            QR landing/menu
+                          </span>
+                          <p className="text-sm leading-6 text-zinc-600">
+                            In mã này để khách mở landing page chi nhánh, xem menu và đặt bàn bằng điện thoại.
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            <a
+                              className="inline-flex h-9 items-center justify-center rounded-lg border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+                              href={qrDownloadUrl}
+                            >
+                              Tải QR SVG
+                            </a>
+                            <a
+                              className="inline-flex h-9 items-center justify-center rounded-lg border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50"
+                              href={qrCodeUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              Mở QR
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
                   <label>
                     <span>Theme chi nhánh</span>
                     <FormSelect

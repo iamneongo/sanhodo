@@ -53,7 +53,8 @@ Trang thai code hien tai:
 - Da co export/template/import CSV cho menu.
 - Da co Media Center rieng trong admin.
 - Da co upload media asset truc tiep va public API `/api/media-assets`.
-- Chua co export PDF menu, QR menu, Google Sheet sync va AI generator.
+- Da co QR landing/menu co ban theo chi nhanh.
+- Chua co export PDF menu, Google Sheet sync va AI generator.
 
 De xuat trien khai:
 - Giai doan 1: Them export CSV, template CSV, import CSV cho menu.
@@ -174,7 +175,7 @@ De xuat trien khai:
 ### P3 - Giai doan mo rong
 
 - [ ] Export PDF menu.
-- [ ] QR menu.
+- [x] QR menu co ban theo landing page chi nhanh.
 - [ ] Google Sheet sync.
 - [ ] AI tao mo ta mon/dich ngon ngu/marketing.
 - [ ] GOECO driver flow day du.
