@@ -444,6 +444,13 @@ function createEmptyMediaDraft() {
   };
 }
 
+function inferAssetTypeFromMime(mimeType = "") {
+  if (mimeType.startsWith("image/")) return "image";
+  if (mimeType.startsWith("video/")) return "video";
+  if (mimeType === "application/pdf") return "pdf";
+  return "other";
+}
+
 function createEmptyTableDraft() {
   return {
     name: "",
@@ -650,6 +657,23 @@ async function uploadLandingImageFile(file, branchId = "") {
   return data.data?.url || "";
 }
 
+async function uploadMediaAssetFile(file, branchId = "") {
+  const formData = new FormData();
+  formData.append("file", file, file.name || "media-file");
+
+  const response = await fetch(withBranchQuery("/api/admin/media-assets/upload", branchId), {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || "Không upload được media");
+  }
+
+  return data.data || {};
+}
+
 function withBranchQuery(url, branchId) {
   if (!branchId) {
     return url;
@@ -837,6 +861,7 @@ export default function AdminDashboard({
   const [orderSaving, setOrderSaving] = useState(false);
   const [menuSaving, setMenuSaving] = useState(false);
   const [mediaSaving, setMediaSaving] = useState(false);
+  const [mediaUploading, setMediaUploading] = useState("");
   const [menuImageUploading, setMenuImageUploading] = useState("");
   const menuImportInputRef = useRef(null);
   const [tableSaving, setTableSaving] = useState(false);
@@ -1908,6 +1933,39 @@ export default function AdminDashboard({
     }
   };
 
+  const uploadMediaFile = async (target, file) => {
+    if (!file) {
+      return;
+    }
+
+    setMediaUploading(target);
+    setMessage("");
+    try {
+      const uploaded = await uploadMediaAssetFile(file, branchFilterId);
+      const patch = {
+        fileUrl: uploaded.url || "",
+        fileName: uploaded.fileName || file.name || "",
+        mimeType: uploaded.mimeType || file.type || "",
+        fileSize: uploaded.fileSize || file.size || 0,
+        assetType: inferAssetTypeFromMime(uploaded.mimeType || file.type || ""),
+        title: target === "draft" && !mediaDraft.title ? file.name?.replace(/\.[^.]+$/, "") || "" : undefined
+      };
+      const cleanPatch = Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined));
+
+      if (target === "edit") {
+        setMediaEdit((prev) => ({ ...prev, ...cleanPatch }));
+      } else {
+        setMediaDraft((prev) => ({ ...prev, ...cleanPatch }));
+      }
+
+      setMessage("Đã upload media lên storage. Kiểm tra thông tin rồi bấm lưu.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setMediaUploading("");
+    }
+  };
+
   const uploadMenuImage = async (target, file) => {
     if (!file) {
       return;
@@ -2790,6 +2848,8 @@ export default function AdminDashboard({
             mediaDraft={mediaDraft}
             setMediaDraft={setMediaDraft}
             mediaSaving={mediaSaving}
+            mediaUploading={mediaUploading}
+            uploadMediaFile={uploadMediaFile}
             filteredMediaAssets={filteredMediaAssets}
             selectedMediaAsset={selectedMediaAsset}
             openSectionDetail={openSectionDetail}

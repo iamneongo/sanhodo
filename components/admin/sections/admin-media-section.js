@@ -31,7 +31,17 @@ function MediaPreview({ asset }) {
   );
 }
 
-function MediaFields({ draft, setDraft, FormSelect, mediaTypeOptions, mediaStatusOptions, disabled = false }) {
+function MediaFields({
+  draft,
+  setDraft,
+  FormSelect,
+  mediaTypeOptions,
+  mediaStatusOptions,
+  disabled = false,
+  uploadTarget,
+  mediaUploading,
+  uploadMediaFile
+}) {
   return (
     <>
       <Input
@@ -65,6 +75,17 @@ function MediaFields({ draft, setDraft, FormSelect, mediaTypeOptions, mediaStatu
           disabled={disabled}
         />
       </div>
+      {uploadMediaFile ? (
+        <label className={styles.fullWidth}>
+          <span>Upload trực tiếp</span>
+          <Input
+            type="file"
+            accept="image/*,video/*,application/pdf"
+            disabled={disabled || mediaUploading === uploadTarget}
+            onChange={(event) => uploadMediaFile(uploadTarget, event.target.files?.[0])}
+          />
+        </label>
+      ) : null}
       <Input
         className={styles.fullWidth}
         type="url"
@@ -134,6 +155,8 @@ export default function AdminMediaSection({
   mediaDraft,
   setMediaDraft,
   mediaSaving,
+  mediaUploading,
+  uploadMediaFile,
   filteredMediaAssets,
   selectedMediaAsset,
   openSectionDetail,
@@ -211,8 +234,11 @@ export default function AdminMediaSection({
                   FormSelect={FormSelect}
                   mediaTypeOptions={mediaTypeOptions}
                   mediaStatusOptions={mediaStatusOptions}
+                  uploadTarget="draft"
+                  mediaUploading={mediaUploading}
+                  uploadMediaFile={uploadMediaFile}
                 />
-                <Button type="submit" loading={mediaSaving} loadingLabel="Đang lưu...">
+                <Button type="submit" loading={mediaSaving || mediaUploading === "draft"} loadingLabel={mediaUploading === "draft" ? "Đang upload..." : "Đang lưu..."}>
                   Lưu media
                 </Button>
               </form>
@@ -288,6 +314,9 @@ export default function AdminMediaSection({
                   FormSelect={FormSelect}
                   mediaTypeOptions={mediaTypeOptions}
                   mediaStatusOptions={mediaStatusOptions}
+                  uploadTarget="edit"
+                  mediaUploading={mediaUploading}
+                  uploadMediaFile={uploadMediaFile}
                   disabled={!permissions.canManageMedia}
                 />
               </div>
