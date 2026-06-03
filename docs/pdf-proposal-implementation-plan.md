@@ -81,7 +81,8 @@ Trang thai code hien tai:
 - UI da tach cot gia dat toi thieu, dinh dang tien te va co cot hanh dong.
 - Da co trang chi tiet ban, tao/sua/xoa.
 - Da co so do ban truc quan theo khu vuc va doi nhanh trang thai ban.
-- Chua co tracking thoi gian nhan/tra ban.
+- Da co tracking thoi gian theo lan cap nhat trang thai gan nhat.
+- Chua co bang session audit rieng cho tung luot nhan/tra ban.
 
 De xuat trien khai:
 - Giai doan 1: Tach cot gia, them input gia toi thieu, them cot hanh dong.
@@ -212,7 +213,7 @@ Da hoan tat:
 
 Con lai:
 - Role selector va portal rieng cho customer/driver/partner.
-- So do ban truc quan, tracking thoi gian ban va KPI realtime.
+- Bang session audit cho tung luot ban va KPI realtime.
 - Export PDF menu, QR menu, Google Sheet sync.
 - AI generator/AI marketing/AI forecast.
 - GOECO driver flow day du va worker auto retry production.

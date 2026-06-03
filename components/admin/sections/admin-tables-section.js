@@ -15,6 +15,55 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Textarea } from "@/components/ui/textarea";
 import styles from "../../admin.module.css";
 
+function formatElapsedSince(value) {
+  if (!value) return "-";
+  const timestamp = new Date(value).getTime();
+  if (Number.isNaN(timestamp)) return "-";
+
+  const minutes = Math.max(0, Math.floor((Date.now() - timestamp) / 60000));
+  if (minutes < 1) return "vừa cập nhật";
+  if (minutes < 60) return `${minutes} phút`;
+
+  const hours = Math.floor(minutes / 60);
+  const remainMinutes = minutes % 60;
+  if (hours < 24) {
+    return remainMinutes ? `${hours} giờ ${remainMinutes} phút` : `${hours} giờ`;
+  }
+
+  const days = Math.floor(hours / 24);
+  const remainHours = hours % 24;
+  return remainHours ? `${days} ngày ${remainHours} giờ` : `${days} ngày`;
+}
+
+function getTableTimingMeta(table) {
+  const baseTime = table.updatedAt || table.createdAt;
+  if (table.status === "reserved") {
+    return {
+      label: "Đang giữ",
+      value: formatElapsedSince(baseTime)
+    };
+  }
+
+  if (table.status === "occupied") {
+    return {
+      label: "Đang phục vụ",
+      value: formatElapsedSince(baseTime)
+    };
+  }
+
+  if (table.status === "cleaning") {
+    return {
+      label: "Đang dọn",
+      value: formatElapsedSince(baseTime)
+    };
+  }
+
+  return {
+    label: "Cập nhật",
+    value: formatElapsedSince(baseTime)
+  };
+}
+
 export default function AdminTablesSection({
   detailOnlyLayout,
   permissions,
@@ -69,6 +118,15 @@ export default function AdminTablesSection({
     cleaning: "border-sky-200 bg-sky-50 text-sky-900",
     inactive: "border-zinc-200 bg-zinc-100 text-zinc-500"
   };
+  const turnoverStats = useMemo(
+    () => ({
+      reserved: filteredTables.filter((item) => item.status === "reserved").length,
+      occupied: filteredTables.filter((item) => item.status === "occupied").length,
+      cleaning: filteredTables.filter((item) => item.status === "cleaning").length,
+      available: filteredTables.filter((item) => item.status === "available").length
+    }),
+    [filteredTables]
+  );
   const activeFilterItems = [
     {
       key: "query",
@@ -159,6 +217,19 @@ export default function AdminTablesSection({
           {viewMode === "floor" ? (
             filteredTables.length ? (
               <div className="grid gap-4">
+                <div className="grid gap-3 md:grid-cols-4">
+                  {[
+                    { key: "available", label: "Bàn trống", value: turnoverStats.available },
+                    { key: "reserved", label: "Đang giữ", value: turnoverStats.reserved },
+                    { key: "occupied", label: "Đang phục vụ", value: turnoverStats.occupied },
+                    { key: "cleaning", label: "Đang dọn", value: turnoverStats.cleaning }
+                  ].map((item) => (
+                    <div key={item.key} className={`rounded-3xl border p-4 shadow-sm ${statusTone[item.key] || "border-zinc-200 bg-white text-zinc-900"}`}>
+                      <span className="text-xs font-semibold uppercase tracking-[0.12em] opacity-70">{item.label}</span>
+                      <strong className="mt-2 block text-2xl">{item.value}</strong>
+                    </div>
+                  ))}
+                </div>
                 {tablesByArea.map((group) => {
                   const availableCount = group.items.filter((item) => item.status === "available").length;
                   return (
@@ -171,41 +242,50 @@ export default function AdminTablesSection({
                     >
                       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                         {group.items.map((item) => (
-                          <article
-                            key={item.id}
-                            className={`cursor-pointer rounded-3xl border p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${statusTone[item.status] || "border-zinc-200 bg-white text-zinc-900"}`}
-                            onClick={() => openSectionDetail("tables", item.id)}
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <strong className="block text-lg">{item.name}</strong>
-                                <span className="text-sm opacity-75">{item.capacity} khách • {formatCurrency(item.minSpend)}</span>
-                              </div>
-                              <span className="rounded-full bg-white/70 px-2.5 py-1 text-xs font-semibold shadow-sm">
-                                {formatLabel(item.status)}
-                              </span>
-                            </div>
-                            {item.notes ? <p className="mt-3 line-clamp-2 text-sm opacity-75">{item.notes}</p> : null}
-                            {permissions.canManageTables ? (
-                              <div className="mt-4 flex flex-wrap gap-2">
-                                {["available", "reserved", "occupied", "cleaning"].map((status) => (
-                                  <Button
-                                    key={status}
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    disabled={tableSaving || item.status === status}
-                                    onClick={(event) => {
-                                      event.stopPropagation();
-                                      patchTableEntry(item, { status });
-                                    }}
-                                  >
-                                    {formatLabel(status)}
-                                  </Button>
-                                ))}
-                              </div>
-                            ) : null}
-                          </article>
+                          (() => {
+                            const timing = getTableTimingMeta(item);
+                            return (
+                              <article
+                                key={item.id}
+                                className={`cursor-pointer rounded-3xl border p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${statusTone[item.status] || "border-zinc-200 bg-white text-zinc-900"}`}
+                                onClick={() => openSectionDetail("tables", item.id)}
+                              >
+                                <div className="flex items-start justify-between gap-3">
+                                  <div>
+                                    <strong className="block text-lg">{item.name}</strong>
+                                    <span className="text-sm opacity-75">{item.capacity} khách • {formatCurrency(item.minSpend)}</span>
+                                  </div>
+                                  <span className="rounded-full bg-white/70 px-2.5 py-1 text-xs font-semibold shadow-sm">
+                                    {formatLabel(item.status)}
+                                  </span>
+                                </div>
+                                <div className="mt-3 rounded-2xl bg-white/65 p-3 text-sm shadow-sm">
+                                  <span className="block text-xs font-semibold uppercase tracking-[0.12em] opacity-60">{timing.label}</span>
+                                  <strong className="mt-1 block">{timing.value}</strong>
+                                </div>
+                                {item.notes ? <p className="mt-3 line-clamp-2 text-sm opacity-75">{item.notes}</p> : null}
+                                {permissions.canManageTables ? (
+                                  <div className="mt-4 flex flex-wrap gap-2">
+                                    {["available", "reserved", "occupied", "cleaning"].map((status) => (
+                                      <Button
+                                        key={status}
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={tableSaving || item.status === status}
+                                        onClick={(event) => {
+                                          event.stopPropagation();
+                                          patchTableEntry(item, { status });
+                                        }}
+                                      >
+                                        {formatLabel(status)}
+                                      </Button>
+                                    ))}
+                                  </div>
+                                ) : null}
+                              </article>
+                            );
+                          })()
                         ))}
                       </div>
                     </AdminSurfaceCard>
@@ -224,17 +304,21 @@ export default function AdminTablesSection({
                     <TableHead>Khu vực</TableHead>
                     <TableHead>Sức chứa</TableHead>
                     <TableHead>Giá tối thiểu</TableHead>
+                    <TableHead>Thời gian</TableHead>
                     <TableHead>Trạng thái</TableHead>
                     <TableHead className="text-right">Hành động</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {pagination.pagedItems.map((item) => (
+                  {pagination.pagedItems.map((item) => {
+                    const timing = getTableTimingMeta(item);
+                    return (
                     <TableRow key={item.id} className={styles.interactiveRow} onClick={() => openSectionDetail("tables", item.id)}>
                       <TableCell data-label="Bàn"><strong>{item.name}</strong><span>{item.notes || "Nhấn để xem chi tiết"}</span></TableCell>
                       <TableCell data-label="Khu vực">{item.area}</TableCell>
                       <TableCell data-label="Sức chứa">{item.capacity}</TableCell>
                       <TableCell data-label="Giá tối thiểu">{formatCurrency(item.minSpend)}</TableCell>
+                      <TableCell data-label="Thời gian"><strong>{timing.value}</strong><span>{timing.label}</span></TableCell>
                       <TableCell data-label="Trạng thái"><span className={`${styles.statusBadge} ${styles[`status_${item.status}`] || styles.status_new}`}>{formatLabel(item.status)}</span></TableCell>
                       <TableCell data-label="Hành động" className="text-right">
                         <div className="flex flex-wrap justify-end gap-2">
@@ -263,7 +347,8 @@ export default function AdminTablesSection({
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  );
+                  })}
                 </TableBody>
               </Table>
               <AdminTableFooter {...pagination} />
@@ -280,6 +365,27 @@ export default function AdminTablesSection({
               actions={detailHeaderActions("tables", permissions.canManageTables ? <Button className={styles.deleteButton} variant="destructive" type="button" onClick={() => deleteTableEntry(selectedTable.id)}>Xóa bàn</Button> : null)}
               className={styles.subsectionCard}
             >
+              <div className="mb-5 grid gap-3 md:grid-cols-3">
+                {(() => {
+                  const timing = getTableTimingMeta(selectedTable);
+                  return (
+                    <>
+                      <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-4">
+                        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">Trạng thái</span>
+                        <strong className="mt-2 block text-lg">{formatLabel(selectedTable.status)}</strong>
+                      </div>
+                      <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-4">
+                        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">{timing.label}</span>
+                        <strong className="mt-2 block text-lg">{timing.value}</strong>
+                      </div>
+                      <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-4">
+                        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">Giá tối thiểu</span>
+                        <strong className="mt-2 block text-lg">{formatCurrency(selectedTable.minSpend)}</strong>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
               <div className={styles.editGrid}>
                 <label><span>Tên bàn</span><Input type="text" value={tableEdit.name} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, name: event.target.value }))} /></label>
                 <label><span>Khu vực</span><Input type="text" value={tableEdit.area} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, area: event.target.value }))} /></label>
@@ -287,7 +393,7 @@ export default function AdminTablesSection({
                 <label><span>Giá đặt tối thiểu</span><Input type="number" min="0" value={tableEdit.minSpend} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, minSpend: Number(event.target.value) }))} /></label>
                 <label><span>Trạng thái</span><FormSelect value={tableEdit.status} disabled={!permissions.canManageTables} onValueChange={(value) => setTableEdit((prev) => ({ ...prev, status: value }))} options={tableStatuses} placeholder="Trạng thái" /></label>
                 <label className={styles.fullWidth}><span>Ghi chú</span><Textarea rows={5} value={tableEdit.notes} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, notes: event.target.value }))} /></label>
-              </div>
+                              </div>
               {permissions.canManageTables ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveTableEdit} loading={tableSaving} loadingLabel="Đang lưu...">Lưu bàn</Button></div> : null}
             </AdminSurfaceCard>
           ) : (
