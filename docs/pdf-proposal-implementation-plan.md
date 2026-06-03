@@ -151,6 +151,7 @@ Trang thai code hien tai:
 - Da co `integration_events` outbox, API admin, UI event queue, thao tac skip/retry/manual delivery.
 - Da co migration cau hinh provider `uvfl` va `goeco` trong `integration_settings`.
 - Da co worker API xu ly batch pending/failed co the goi tu admin hoac cron co secret.
+- Da co `vercel.json` cron moi 10 phut cho integration worker, bao ve bang `CRON_SECRET`.
 - Da bo sung event outbox cho driver, referral, commission, travel partner va partner booking.
 
 De xuat trien khai:
@@ -185,7 +186,7 @@ De xuat trien khai:
 - [x] AI/generator noi bo tao mo ta mon va goi y upsell.
 - [x] GOECO/UVFL driver flow o muc event queue: driver, referral, commission, partner booking.
 - [ ] AI forecast cong suat.
-- [x] Auto retry worker API cho integration events.
+- [x] Auto retry worker API va Vercel Cron cho integration events.
 
 ## 4. Pham Vi Trien Khai Dot Nay
 
@@ -222,8 +223,8 @@ Con lai:
 - KPI realtime/forecast nang cao cho cong suat ban.
 - QR menu nang cao.
 - AI marketing/video/forecast nang cao neu co provider/key rieng.
-- Lich cron production neu muon tu dong hoa event queue hoan toan.
+- Can cau hinh `CRON_SECRET`, `SUPABASE_SERVICE_ROLE_KEY` va endpoint provider that tren production de cron dong bo hoan toan.
 
 Danh gia tien do:
-- Neu tinh phan nen van hanh admin + media + sync: khoang 94-96% feedback PDF da co nen hoac chay duoc.
-- Neu tinh toan bo vision PDF, bao gom portal, QR nang cao va AI provider that: khoang 80-84%.
+- Neu tinh phan nen van hanh admin + media + sync: khoang 95-97% feedback PDF da co nen hoac chay duoc.
+- Neu tinh toan bo vision PDF, bao gom portal, QR nang cao va AI provider that: khoang 82-86%.

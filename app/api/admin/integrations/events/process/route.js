@@ -11,14 +11,16 @@ function parseLimit(value) {
 }
 
 function hasWorkerSecret(request) {
-  const expected = process.env.INTEGRATION_WORKER_SECRET || process.env.CRON_SECRET || "";
-  if (!expected) return false;
+  const expectedSecrets = [process.env.INTEGRATION_WORKER_SECRET, process.env.CRON_SECRET]
+    .map((value) => String(value || "").trim())
+    .filter(Boolean);
+  if (!expectedSecrets.length) return false;
 
   const authHeader = request.headers.get("authorization") || "";
   const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
   const { searchParams } = new URL(request.url);
   const querySecret = searchParams.get("secret") || "";
-  return bearer === expected || querySecret === expected;
+  return expectedSecrets.includes(bearer) || expectedSecrets.includes(querySecret);
 }
 
 function createServiceRoleClient() {
