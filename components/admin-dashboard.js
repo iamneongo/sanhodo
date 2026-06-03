@@ -80,6 +80,10 @@ const valueLabels = {
   blocked: "Đã khóa",
   paused: "Tạm dừng",
   pending: "Đang chờ",
+  processing: "Đang xử lý",
+  synced: "Đã đồng bộ",
+  failed: "Thất bại",
+  skipped: "Bỏ qua",
   approved: "Đã duyệt",
   agency: "Đại lý",
   hdv: "Hướng dẫn viên",
@@ -713,6 +717,7 @@ export default function AdminDashboard({
   initialPartnerBookings,
   initialIntegrations,
   initialSyncLogs,
+  initialIntegrationEvents,
   initialMenuItems,
   initialMediaAssets,
   initialTables,
@@ -763,6 +768,7 @@ export default function AdminDashboard({
   const [orders, setOrders] = useState(sortByCreatedDesc(initialOrders));
   const [integrations, setIntegrations] = useState(initialIntegrations);
   const [syncLogs, setSyncLogs] = useState(initialSyncLogs);
+  const [integrationEvents] = useState(sortByCreatedDesc(initialIntegrationEvents || []));
   const driverFeatureStatus = initialFeatureStatus?.drivers || { ready: true, message: "" };
 
   const [reservationQuery, setReservationQuery] = useState("");
@@ -3009,6 +3015,7 @@ export default function AdminDashboard({
             FormSelect={FormSelect}
             patchIntegration={patchIntegration}
             syncLogs={syncLogs}
+            integrationEvents={integrationEvents}
             formatDate={formatDate}
           />
         ) : null}

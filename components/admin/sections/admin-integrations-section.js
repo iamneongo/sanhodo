@@ -52,6 +52,7 @@ export default function AdminIntegrationsSection({
   FormSelect,
   patchIntegration,
   syncLogs,
+  integrationEvents = [],
   formatDate
 }) {
   const [query, setQuery] = useState("");
@@ -264,6 +265,59 @@ export default function AdminIntegrationsSection({
           ) : (
             <div className="p-5">
               <AdminEmptyState title="Chưa có log đồng bộ." description="Các lần đồng bộ POS/PMS thành công hoặc lỗi sẽ xuất hiện ở đây." />
+            </div>
+          )}
+        </AdminSurfaceCard>
+
+        <AdminSurfaceCard
+          kicker="GOECO / UVFL"
+          title="Hàng đợi event đồng bộ"
+          description="Theo dõi event đang chờ, đã đồng bộ hoặc lỗi để chuẩn bị bật worker đồng bộ đa hệ thống."
+          className={styles.subsectionCard}
+          bodyClassName="p-0"
+        >
+          {integrationEvents.length ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Provider</TableHead>
+                  <TableHead>Event</TableHead>
+                  <TableHead>Nguồn</TableHead>
+                  <TableHead>Retry</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                  <TableHead>Thời gian</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {integrationEvents.slice(0, 12).map((event) => (
+                  <TableRow key={event.id}>
+                    <TableCell data-label="Provider">
+                      <strong>{String(event.provider || "-").toUpperCase()}</strong>
+                      <span>{event.sourceId || "Chưa có source id"}</span>
+                    </TableCell>
+                    <TableCell data-label="Event">{event.eventType || "-"}</TableCell>
+                    <TableCell data-label="Nguồn">{event.sourceTable || "-"}</TableCell>
+                    <TableCell data-label="Retry">{event.retryCount || 0}</TableCell>
+                    <TableCell data-label="Trạng thái">
+                      <span className={`${styles.statusBadge} ${
+                        event.status === "synced"
+                          ? styles.status_confirmed
+                          : event.status === "failed"
+                            ? styles.status_cancelled
+                            : styles.status_pending
+                      }`}>
+                        {formatLabel(event.status)}
+                      </span>
+                      {event.lastError ? <span>{event.lastError}</span> : null}
+                    </TableCell>
+                    <TableCell data-label="Thời gian">{formatDate(event.createdAt)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="p-5">
+              <AdminEmptyState title="Chưa có event đồng bộ." description="Khi app bắt đầu ghi event GOECO/UVFL, trạng thái pending/synced/failed sẽ nằm ở đây." />
             </div>
           )}
         </AdminSurfaceCard>
