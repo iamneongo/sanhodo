@@ -55,7 +55,8 @@ Trang thai code hien tai:
 - Da co Media Center rieng trong admin.
 - Da co upload media asset truc tiep va public API `/api/media-assets`.
 - Da co QR landing/menu co ban theo chi nhanh.
-- Chua co export PDF menu va AI generator.
+- Chua co export PDF menu.
+- Da co tro ly goi y mo ta mon noi bo trong admin, chua ket noi provider AI ngoai cho marketing/video.
 
 De xuat trien khai:
 - Giai doan 1: Them export CSV, template CSV, import CSV cho menu.
@@ -179,7 +180,7 @@ De xuat trien khai:
 - [ ] Export PDF menu.
 - [x] QR menu co ban theo landing page chi nhanh.
 - [x] Google Sheet sync dang public CSV/import theo link Sheet.
-- [ ] AI tao mo ta mon/dich ngon ngu/marketing.
+- [x] AI/generator noi bo tao mo ta mon va goi y upsell.
 - [ ] GOECO driver flow day du.
 - [ ] AI forecast cong suat.
 - [x] Auto retry worker API cho integration events.
@@ -215,13 +216,12 @@ Da hoan tat:
 - P2 mot phan lon: Media Center, upload media, public media API, UVFL/GOECO event queue va manual delivery.
 
 Con lai:
-- Role selector va portal rieng cho customer/driver/partner.
 - Portal rieng cho customer/driver/partner.
 - KPI realtime/forecast nang cao cho cong suat ban.
 - Export PDF menu va QR menu nang cao.
-- AI generator/AI marketing/AI forecast.
+- AI marketing/video/forecast nang cao neu co provider/key rieng.
 - GOECO driver flow day du va lich cron production neu muon tu dong hoa hoan toan.
 
 Danh gia tien do:
-- Neu tinh phan nen van hanh admin + media + sync: khoang 86-90% feedback PDF da co nen hoac chay duoc.
-- Neu tinh toan bo vision PDF, bao gom AI, portal, QR nang cao va worker tu dong: khoang 66-70%.
+- Neu tinh phan nen van hanh admin + media + sync: khoang 88-92% feedback PDF da co nen hoac chay duoc.
+- Neu tinh toan bo vision PDF, bao gom portal, QR/PDF nang cao va AI provider that: khoang 70-74%.

@@ -2031,6 +2031,40 @@ export default function AdminDashboard({
     setMenuEdit((prev) => ({ ...prev, imageUrl: "" }));
   };
 
+  const generateMenuSmartCopy = async (target) => {
+    const source = target === "edit" ? menuEdit : menuDraft;
+    if (!source.name?.trim()) {
+      setMessage("Nhập tên món trước khi tạo gợi ý mô tả.");
+      return;
+    }
+
+    setMenuSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson("/api/admin/menu-items/smart-copy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(source)
+      });
+      const patch = {
+        description: data.data?.description || source.description,
+        seasonNote: data.data?.seasonNote || source.seasonNote
+      };
+
+      if (target === "edit") {
+        setMenuEdit((prev) => ({ ...prev, ...patch }));
+      } else {
+        setMenuDraft((prev) => ({ ...prev, ...patch }));
+      }
+
+      setMessage("Đã tạo gợi ý mô tả món. Bạn có thể chỉnh lại trước khi lưu.");
+    } catch (error) {
+      setMessage(error.message || "Không tạo được gợi ý mô tả món.");
+    } finally {
+      setMenuSaving(false);
+    }
+  };
+
   const downloadMenuTemplate = () => {
     downloadAdminFile("/api/admin/menu-items/template");
   };
@@ -2977,6 +3011,7 @@ export default function AdminDashboard({
             menuImageUploading={menuImageUploading}
             uploadMenuImage={uploadMenuImage}
             clearMenuImage={clearMenuImage}
+            generateMenuSmartCopy={generateMenuSmartCopy}
             menuImportInputRef={menuImportInputRef}
             downloadMenuTemplate={downloadMenuTemplate}
             exportMenuCsv={exportMenuCsv}

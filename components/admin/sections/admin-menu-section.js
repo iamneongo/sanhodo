@@ -35,6 +35,7 @@ export default function AdminMenuSection({
   menuImageUploading,
   uploadMenuImage,
   clearMenuImage,
+  generateMenuSmartCopy,
   menuImportInputRef,
   downloadMenuTemplate,
   exportMenuCsv,
@@ -170,6 +171,15 @@ export default function AdminMenuSection({
               ) : null}
               <Input type="text" placeholder="Đường dẫn ảnh" value={menuDraft.imageUrl} onChange={(event) => setMenuDraft((prev) => ({ ...prev, imageUrl: event.target.value }))} />
               <Textarea placeholder="Ghi chú theo mùa / tồn kho" rows={2} value={menuDraft.seasonNote} onChange={(event) => setMenuDraft((prev) => ({ ...prev, seasonNote: event.target.value }))} />
+              <Button
+                type="button"
+                variant="outline"
+                className={styles.fullWidth}
+                disabled={!menuDraft.name?.trim() || menuSaving}
+                onClick={() => generateMenuSmartCopy("draft")}
+              >
+                Gợi ý mô tả thông minh
+              </Button>
               <Textarea placeholder="Mô tả" rows={3} value={menuDraft.description} onChange={(event) => setMenuDraft((prev) => ({ ...prev, description: event.target.value }))} />
               <Button
                 type="submit"
@@ -272,6 +282,17 @@ export default function AdminMenuSection({
                 <label><span>Mức cay</span><FormSelect value={menuEdit.spicyLevel} disabled={!permissions.canManageMenu} onValueChange={(value) => setMenuEdit((prev) => ({ ...prev, spicyLevel: value }))} options={spicyLevels} placeholder="Mức cay" /></label>
                 <label><span>Trạng thái món</span><FormSelect value={menuEdit.availabilityStatus || "available"} disabled={!permissions.canManageMenu} onValueChange={(value) => setMenuEdit((prev) => ({ ...prev, availabilityStatus: value }))} options={availabilityStatuses} placeholder="Trạng thái món" /></label>
                 <label className={styles.fullWidth}><span>Ghi chú theo mùa / tồn kho</span><Textarea rows={3} value={menuEdit.seasonNote || ""} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, seasonNote: event.target.value }))} /></label>
+                {permissions.canManageMenu ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={styles.fullWidth}
+                    disabled={!menuEdit.name?.trim() || menuSaving}
+                    onClick={() => generateMenuSmartCopy("edit")}
+                  >
+                    Gợi ý mô tả thông minh
+                  </Button>
+                ) : null}
                 <label className={styles.fullWidth}><span>Mô tả</span><Textarea rows={5} value={menuEdit.description} disabled={!permissions.canManageMenu} onChange={(event) => setMenuEdit((prev) => ({ ...prev, description: event.target.value }))} /></label>
               </div>
               {permissions.canManageMenu ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveMenuEdit} loading={menuSaving || menuImageUploading === "edit"} loadingLabel={menuImageUploading === "edit" ? "Đang xử lý ảnh..." : "Đang lưu..."}>Lưu món</Button></div> : null}
