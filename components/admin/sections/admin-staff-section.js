@@ -33,6 +33,7 @@ export default function AdminStaffSection({
   filteredProfiles,
   selectedStaff,
   selectedStaffAssignments,
+  selectedStaffLoginAudits = [],
   branchStaffAssignments,
   branches,
   openSectionDetail,
@@ -315,6 +316,38 @@ export default function AdminStaffSection({
                     </Button>
                   </div>
                 ) : null}
+              </AdminSurfaceCard>
+
+              <AdminSurfaceCard
+                kicker="Bảo mật"
+                title="Lịch sử đăng nhập admin"
+                description="Theo dõi các lần đăng nhập gần đây để kiểm tra tài khoản và thiết bị lạ."
+                className={styles.subsectionCard}
+              >
+                {selectedStaffLoginAudits.length ? (
+                  <div className={styles.lineItemList}>
+                    {selectedStaffLoginAudits.slice(0, 8).map((audit) => (
+                      <div key={audit.id} className={styles.lineItemRow}>
+                        <div>
+                          <strong>{audit.success ? "Đăng nhập thành công" : "Đăng nhập lỗi"}</strong>
+                          <span>
+                            {formatDate(audit.createdAt)}
+                            {audit.ipAddress ? ` • IP ${audit.ipAddress}` : ""}
+                          </span>
+                          {audit.userAgent ? <span className="line-clamp-1">{audit.userAgent}</span> : null}
+                        </div>
+                        <span className={`${styles.statusBadge} ${audit.success ? styles.status_confirmed : styles.status_cancelled}`}>
+                          {audit.loginMethod}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <AdminEmptyState
+                    title="Chưa có audit đăng nhập."
+                    description="Sau khi chạy migration 016, các lần đăng nhập admin mới sẽ được ghi ở đây."
+                  />
+                )}
               </AdminSurfaceCard>
 
               <AdminSurfaceCard

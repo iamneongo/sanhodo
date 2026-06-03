@@ -115,8 +115,9 @@ Trang thai code hien tai:
 - Dang nhap admin qua Supabase Auth.
 - Local admin fallback dang co cho dev/server.
 - Da co role/branch scope switch trong admin sidebar theo phan cong chi nhanh hop le.
+- Da co migration/UI audit lich su dang nhap admin trong chi tiet nhan su.
 - Chua co portal khach hang/tai xe/doi tac tach rieng.
-- Chua co audit log dang nhap va multi-role profile table.
+- Chua co portal rieng va device management/2FA nang cao.
 
 De xuat trien khai:
 - Giai doan 1: Chuan hoa role/permission, them audit log dang nhap, ho tro profile nhieu vai tro o DB.
@@ -223,5 +224,5 @@ Con lai:
 - GOECO driver flow day du va lich cron production neu muon tu dong hoa hoan toan.
 
 Danh gia tien do:
-- Neu tinh phan nen van hanh admin + media + sync: khoang 90-94% feedback PDF da co nen hoac chay duoc.
-- Neu tinh toan bo vision PDF, bao gom portal, QR nang cao va AI provider that: khoang 74-78%.
+- Neu tinh phan nen van hanh admin + media + sync: khoang 92-95% feedback PDF da co nen hoac chay duoc.
+- Neu tinh toan bo vision PDF, bao gom portal, QR nang cao va AI provider that: khoang 76-80%.

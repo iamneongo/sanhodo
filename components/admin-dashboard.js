@@ -703,6 +703,7 @@ export default function AdminDashboard({
   renderShell = true,
   initialBranches,
   initialProfiles,
+  initialAdminLoginAudits = [],
   initialBranchStaffAssignments,
   initialReservations,
   initialVouchers,
@@ -734,6 +735,7 @@ export default function AdminDashboard({
   const [message, setMessage] = useState("");
   const [branches, setBranches] = useState(sortBranches(initialBranches || []));
   const [profiles, setProfiles] = useState(sortByName(initialProfiles || [], "fullName"));
+  const [adminLoginAudits] = useState(sortByCreatedDesc(initialAdminLoginAudits || []));
   const [branchStaffAssignments, setBranchStaffAssignments] = useState(
     sortByCreatedDesc(initialBranchStaffAssignments || [])
   );
@@ -929,6 +931,7 @@ export default function AdminDashboard({
     (item) => item.branchId === selectedManagedBranchId
   );
   const selectedStaffAssignments = branchStaffAssignments.filter((item) => item.profileId === selectedStaffId);
+  const selectedStaffLoginAudits = adminLoginAudits.filter((item) => item.profileId === selectedStaffId);
   const availableProfilesForBranch = profiles.filter(
     (item) => !selectedBranchAssignments.some((assignment) => assignment.profileId === item.id)
   );
@@ -2858,6 +2861,7 @@ export default function AdminDashboard({
             filteredProfiles={filteredProfiles}
             selectedStaff={selectedStaff}
             selectedStaffAssignments={selectedStaffAssignments}
+            selectedStaffLoginAudits={selectedStaffLoginAudits}
             branchStaffAssignments={branchStaffAssignments}
             branches={branches}
             openSectionDetail={openSectionDetail}

@@ -13,7 +13,7 @@ import {
   LOCAL_ADMIN_COOKIE
 } from "../../../../lib/local-admin";
 import { hasDashboardAccess } from "../../../../lib/admin-permissions";
-import { isSupabaseSchemaMissingError } from "../../../../lib/restaurant-db";
+import { isSupabaseSchemaMissingError, logAdminLoginAudit } from "../../../../lib/restaurant-db";
 import {
   getSupabaseEnvMissingMessage,
   isSupabaseEnvMissingError
@@ -53,6 +53,15 @@ async function loadAdminProfile(supabase, userId) {
         is_active: true
       }
     : null;
+}
+
+function getClientIp(request) {
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0]?.trim() || "";
+  }
+
+  return request.headers.get("x-real-ip") || "";
 }
 
 export async function POST(request) {
@@ -129,6 +138,20 @@ export async function POST(request) {
     if (loginAuditError && !isSupabaseSchemaMissingError(loginAuditError)) {
       return NextResponse.json({ error: loginAuditError.message }, { status: 500 });
     }
+
+    await logAdminLoginAudit(supabase, {
+      profileId: user.id,
+      email: user.email,
+      role: profile.role,
+      branchId: profile.branch_id || "",
+      loginMethod: "password",
+      success: true,
+      ipAddress: getClientIp(request),
+      userAgent: request.headers.get("user-agent") || "",
+      metadata: {
+        source: "admin_login"
+      }
+    }).catch(() => null);
 
     const response = NextResponse.json({ ok: true, user: { id: user.id, email: user.email } });
     response.cookies.set(

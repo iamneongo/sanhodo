@@ -77,6 +77,7 @@ export default async function AdminSectionPage({ params, searchParams }) {
         activeSection={section}
         initialBranches={dashboardData.branches}
         initialProfiles={dashboardData.profiles}
+        initialAdminLoginAudits={dashboardData.adminLoginAudits}
         initialBranchStaffAssignments={dashboardData.branchStaffAssignments}
         initialReservations={dashboardData.reservations}
         initialVouchers={dashboardData.vouchers}
