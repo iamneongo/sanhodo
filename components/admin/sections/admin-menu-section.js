@@ -40,6 +40,11 @@ export default function AdminMenuSection({
   exportMenuCsv,
   openMenuImportPicker,
   importMenuCsv,
+  menuSheetOpen,
+  setMenuSheetOpen,
+  menuSheetUrl,
+  setMenuSheetUrl,
+  importMenuGoogleSheet,
   filteredMenuItems,
   selectedMenuItem,
   openSectionDetail,
@@ -98,6 +103,9 @@ export default function AdminMenuSection({
                     />
                     <Button type="button" variant="outline" onClick={openMenuImportPicker} disabled={menuSaving}>
                       Import CSV
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => setMenuSheetOpen(true)} disabled={menuSaving}>
+                      Import Google Sheet
                     </Button>
                     <Button type="button" variant="secondary" onClick={() => setMenuCreateOpen(true)}>
                       Tạo món
@@ -171,6 +179,34 @@ export default function AdminMenuSection({
                 Lưu món
               </Button>
             </form>
+            </AdminFormDialog>
+          ) : null}
+          {permissions.canManageMenu ? (
+            <AdminFormDialog
+              open={menuSheetOpen}
+              onOpenChange={setMenuSheetOpen}
+              title="Import menu từ Google Sheet"
+              description="Dùng link Google Sheet đã Share public hoặc Publish to web. Cột dữ liệu giống file mẫu CSV."
+              size="default"
+            >
+              <form className={styles.inlineForm} onSubmit={importMenuGoogleSheet}>
+                <label className={styles.fullWidth}>
+                  <span>Link Google Sheet</span>
+                  <Input
+                    type="url"
+                    placeholder="https://docs.google.com/spreadsheets/d/..."
+                    value={menuSheetUrl}
+                    onChange={(event) => setMenuSheetUrl(event.target.value)}
+                    required
+                  />
+                </label>
+                <p className={`${styles.fullWidth} text-sm text-zinc-500`}>
+                  Gợi ý: Google Sheet nên có các cột ten_mon, gia_ban, danh_muc, mo_ta, trang_thai, mon_noi_bat, duong_dan_anh.
+                </p>
+                <Button type="submit" loading={menuSaving} loadingLabel="Đang import...">
+                  Import từ Sheet
+                </Button>
+              </form>
             </AdminFormDialog>
           ) : null}
           <Table>

@@ -51,10 +51,11 @@ Trang thai code hien tai:
 - Da co upload anh mon an trong admin `Món ăn`.
 - Da co storage bucket `menu-images` trong migration.
 - Da co export/template/import CSV cho menu.
+- Da co import menu tu Google Sheet public CSV dung chung validator voi CSV upload.
 - Da co Media Center rieng trong admin.
 - Da co upload media asset truc tiep va public API `/api/media-assets`.
 - Da co QR landing/menu co ban theo chi nhanh.
-- Chua co export PDF menu, Google Sheet sync va AI generator.
+- Chua co export PDF menu va AI generator.
 
 De xuat trien khai:
 - Giai doan 1: Them export CSV, template CSV, import CSV cho menu.
@@ -176,7 +177,7 @@ De xuat trien khai:
 
 - [ ] Export PDF menu.
 - [x] QR menu co ban theo landing page chi nhanh.
-- [ ] Google Sheet sync.
+- [x] Google Sheet sync dang public CSV/import theo link Sheet.
 - [ ] AI tao mo ta mon/dich ngon ngu/marketing.
 - [ ] GOECO driver flow day du.
 - [ ] AI forecast cong suat.
@@ -215,10 +216,10 @@ Da hoan tat:
 Con lai:
 - Role selector va portal rieng cho customer/driver/partner.
 - Bang session audit cho tung luot ban va KPI realtime.
-- Export PDF menu, QR menu, Google Sheet sync.
+- Export PDF menu va QR menu nang cao.
 - AI generator/AI marketing/AI forecast.
 - GOECO driver flow day du va lich cron production neu muon tu dong hoa hoan toan.
 
 Danh gia tien do:
-- Neu tinh phan nen van hanh admin + media + sync: khoang 70-75% feedback PDF da co nen hoac chay duoc.
-- Neu tinh toan bo vision PDF, bao gom AI, portal, QR, Google Sheet va worker tu dong: khoang 50-55%.
+- Neu tinh phan nen van hanh admin + media + sync: khoang 78-82% feedback PDF da co nen hoac chay duoc.
+- Neu tinh toan bo vision PDF, bao gom AI, portal, QR nang cao va worker tu dong: khoang 58-62%.

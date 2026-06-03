@@ -850,6 +850,7 @@ export default function AdminDashboard({
   const [manualOpen, setManualOpen] = useState(false);
   const [orderCreateOpen, setOrderCreateOpen] = useState(false);
   const [menuCreateOpen, setMenuCreateOpen] = useState(false);
+  const [menuSheetOpen, setMenuSheetOpen] = useState(false);
   const [mediaCreateOpen, setMediaCreateOpen] = useState(false);
   const [tableCreateOpen, setTableCreateOpen] = useState(false);
   const [voucherCreateOpen, setVoucherCreateOpen] = useState(false);
@@ -900,6 +901,7 @@ export default function AdminDashboard({
   const [orderEdit, setOrderEdit] = useState(createEmptyOrderDraft());
   const [menuDraft, setMenuDraft] = useState(createEmptyMenuDraft());
   const [menuEdit, setMenuEdit] = useState(createEmptyMenuDraft());
+  const [menuSheetUrl, setMenuSheetUrl] = useState("");
   const [mediaDraft, setMediaDraft] = useState(createEmptyMediaDraft());
   const [mediaEdit, setMediaEdit] = useState(createEmptyMediaDraft());
   const [tableDraft, setTableDraft] = useState(createEmptyTableDraft());
@@ -2069,6 +2071,33 @@ export default function AdminDashboard({
     }
   };
 
+  const importMenuGoogleSheet = async (event) => {
+    event.preventDefault();
+
+    setMenuSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson("/api/admin/menu-items/import-sheet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sheetUrl: menuSheetUrl, branchId: branchFilterId })
+      });
+      const created = data.data?.created || [];
+      const errors = data.data?.errors || [];
+      if (created.length) {
+        setMenuItems((prev) => sortByName([...created, ...prev]));
+      }
+      const errorSummary = errors.length ? ` Có ${errors.length} dòng lỗi/trùng dữ liệu.` : "";
+      setMenuSheetOpen(false);
+      setMenuSheetUrl("");
+      setMessage(`Đã import ${created.length} món từ Google Sheet.${errorSummary}`);
+    } catch (error) {
+      setMessage(error.message || "Không import được menu từ Google Sheet.");
+    } finally {
+      setMenuSaving(false);
+    }
+  };
+
   const uploadLandingImage = async (file, branchId) => {
     if (!file) {
       return "";
@@ -2942,6 +2971,11 @@ export default function AdminDashboard({
             exportMenuCsv={exportMenuCsv}
             openMenuImportPicker={openMenuImportPicker}
             importMenuCsv={importMenuCsv}
+            menuSheetOpen={menuSheetOpen}
+            setMenuSheetOpen={setMenuSheetOpen}
+            menuSheetUrl={menuSheetUrl}
+            setMenuSheetUrl={setMenuSheetUrl}
+            importMenuGoogleSheet={importMenuGoogleSheet}
             filteredMenuItems={filteredMenuItems}
             selectedMenuItem={selectedMenuItem}
             openSectionDetail={openSectionDetail}
