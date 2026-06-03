@@ -2424,6 +2424,46 @@ export default function AdminDashboard({
     }
   };
 
+  const syncIntegrationEventsBatch = async (eventIds = []) => {
+    const targetIds = eventIds.filter(Boolean).slice(0, 10);
+    if (!targetIds.length) {
+      setMessage("Không có event phù hợp để đồng bộ.");
+      return;
+    }
+
+    setIntegrationSaving(true);
+    setMessage("");
+    let successCount = 0;
+    let failCount = 0;
+
+    try {
+      for (const eventId of targetIds) {
+        try {
+          const data = await requestJson(`/api/admin/integrations/events/${eventId}`, {
+            method: "POST"
+          });
+          if (data.data?.event) {
+            setIntegrationEvents((prev) =>
+              sortByCreatedDesc(prev.map((item) => (item.id === eventId ? data.data.event : item)))
+            );
+          }
+          successCount += 1;
+        } catch {
+          failCount += 1;
+        }
+      }
+
+      const eventsData = await requestJson(withBranchQuery("/api/admin/integrations/events", branchFilterId)).catch(() => null);
+      if (eventsData?.data) {
+        setIntegrationEvents(sortByCreatedDesc(eventsData.data));
+      }
+
+      setMessage(`Đã xử lý ${targetIds.length} event: ${successCount} thành công, ${failCount} lỗi.`);
+    } finally {
+      setIntegrationSaving(false);
+    }
+  };
+
   const logout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
     router.push("/admin/login");
@@ -3058,6 +3098,7 @@ export default function AdminDashboard({
             integrationEvents={integrationEvents}
             patchIntegrationEvent={patchIntegrationEvent}
             syncIntegrationEvent={syncIntegrationEvent}
+            syncIntegrationEventsBatch={syncIntegrationEventsBatch}
             integrationSaving={integrationSaving}
             formatDate={formatDate}
           />

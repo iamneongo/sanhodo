@@ -56,6 +56,7 @@ export default function AdminIntegrationsSection({
   integrationEvents = [],
   patchIntegrationEvent,
   syncIntegrationEvent,
+  syncIntegrationEventsBatch,
   integrationSaving,
   formatDate
 }) {
@@ -63,6 +64,9 @@ export default function AdminIntegrationsSection({
   const [statusFilter, setStatusFilter] = useState("all");
   const [syncModeFilter, setSyncModeFilter] = useState("all");
   const [sort, setSort] = useState("name_asc");
+  const [eventQuery, setEventQuery] = useState("");
+  const [eventProviderFilter, setEventProviderFilter] = useState("all");
+  const [eventStatusFilter, setEventStatusFilter] = useState("all");
 
   const filteredIntegrations = useMemo(() => {
     const nextItems = integrations
@@ -90,6 +94,41 @@ export default function AdminIntegrationsSection({
   }, [integrations, query, statusFilter, syncModeFilter, sort]);
 
   const pagination = useTablePagination(filteredIntegrations);
+  const eventProviderOptions = useMemo(() => {
+    const providers = [...new Set(integrationEvents.map((event) => event.provider).filter(Boolean))];
+    return providers.map((provider) => ({
+      value: provider,
+      label: String(provider).toUpperCase()
+    }));
+  }, [integrationEvents]);
+  const eventStatusOptions = [
+    { value: "pending", label: "Đang chờ" },
+    { value: "processing", label: "Đang xử lý" },
+    { value: "synced", label: "Đã đồng bộ" },
+    { value: "failed", label: "Thất bại" },
+    { value: "skipped", label: "Bỏ qua" }
+  ];
+  const filteredIntegrationEvents = useMemo(() => {
+    const normalizedQuery = eventQuery.trim().toLowerCase();
+    return integrationEvents.filter((event) => {
+      const providerMatch = eventProviderFilter === "all" || event.provider === eventProviderFilter;
+      const statusMatch = eventStatusFilter === "all" || event.status === eventStatusFilter;
+      const queryMatch = !normalizedQuery || [
+        event.provider,
+        event.eventType,
+        event.sourceTable,
+        event.sourceId,
+        event.lastError
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalizedQuery));
+      return providerMatch && statusMatch && queryMatch;
+    });
+  }, [integrationEvents, eventProviderFilter, eventQuery, eventStatusFilter]);
+  const syncableEventIds = filteredIntegrationEvents
+    .filter((event) => ["pending", "failed"].includes(event.status))
+    .map((event) => event.id)
+    .slice(0, 10);
 
   const activeFilterItems = [
     {
@@ -277,10 +316,43 @@ export default function AdminIntegrationsSection({
           kicker="GOECO / UVFL"
           title="Hàng đợi event đồng bộ"
           description="Theo dõi event đang chờ, đã đồng bộ hoặc lỗi để chuẩn bị bật worker đồng bộ đa hệ thống."
+          actions={
+            permissions.canSyncIntegrations && syncableEventIds.length ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={integrationSaving}
+                onClick={() => syncIntegrationEventsBatch(syncableEventIds)}
+              >
+                Đồng bộ tối đa 10 event
+              </Button>
+            ) : null
+          }
           className={styles.subsectionCard}
           bodyClassName="p-0"
         >
           {integrationEvents.length ? (
+            <>
+            <div className="grid gap-3 border-b border-zinc-100 p-5 md:grid-cols-3">
+              <Input
+                type="search"
+                placeholder="Tìm event, source, lỗi..."
+                value={eventQuery}
+                onChange={(event) => setEventQuery(event.target.value)}
+              />
+              <FormSelect
+                value={eventProviderFilter}
+                onValueChange={setEventProviderFilter}
+                options={[{ value: "all", label: "Tất cả provider" }, ...eventProviderOptions]}
+                placeholder="Provider"
+              />
+              <FormSelect
+                value={eventStatusFilter}
+                onValueChange={setEventStatusFilter}
+                options={[{ value: "all", label: "Tất cả trạng thái" }, ...eventStatusOptions]}
+                placeholder="Trạng thái"
+              />
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -294,7 +366,7 @@ export default function AdminIntegrationsSection({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {integrationEvents.slice(0, 12).map((event) => (
+                {filteredIntegrationEvents.slice(0, 12).map((event) => (
                   <TableRow key={event.id}>
                     <TableCell data-label="Provider">
                       <strong>{String(event.provider || "-").toUpperCase()}</strong>
@@ -356,6 +428,12 @@ export default function AdminIntegrationsSection({
                 ))}
               </TableBody>
             </Table>
+            {!filteredIntegrationEvents.length ? (
+              <div className="p-5">
+                <AdminEmptyState title="Không có event phù hợp bộ lọc." description="Thử đổi provider, trạng thái hoặc từ khóa tìm kiếm." />
+              </div>
+            ) : null}
+            </>
           ) : (
             <div className="p-5">
               <AdminEmptyState title="Chưa có event đồng bộ." description="Khi app bắt đầu ghi event GOECO/UVFL, trạng thái pending/synced/failed sẽ nằm ở đây." />
