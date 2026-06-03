@@ -721,6 +721,7 @@ export default function AdminDashboard({
   initialMenuItems,
   initialMediaAssets,
   initialTables,
+  initialTableSessionEvents = [],
   initialOrders,
   initialFeatureStatus,
   activeBranchId,
@@ -765,6 +766,7 @@ export default function AdminDashboard({
   const [menuItems, setMenuItems] = useState(sortByName(initialMenuItems));
   const [mediaAssets, setMediaAssets] = useState(sortByCreatedDesc(initialMediaAssets || []));
   const [restaurantTables, setRestaurantTables] = useState(sortByName(initialTables));
+  const [tableSessionEvents, setTableSessionEvents] = useState(sortByCreatedDesc(initialTableSessionEvents || []));
   const [orders, setOrders] = useState(sortByCreatedDesc(initialOrders));
   const [integrations, setIntegrations] = useState(initialIntegrations);
   const [syncLogs, setSyncLogs] = useState(initialSyncLogs);
@@ -942,6 +944,7 @@ export default function AdminDashboard({
   const selectedMenuItem = menuItems.find((item) => item.id === selectedMenuId) || null;
   const selectedMediaAsset = mediaAssets.find((item) => item.id === selectedMediaId) || null;
   const selectedTable = restaurantTables.find((item) => item.id === selectedTableId) || null;
+  const selectedTableEvents = tableSessionEvents.filter((item) => item.tableId === selectedTableId);
   const selectedIntegration = integrations.find((item) => item.id === selectedIntegrationId) || null;
   const permissions = useMemo(
     () => ({
@@ -2170,6 +2173,9 @@ export default function AdminDashboard({
         body: JSON.stringify(attachBranchToPayload(tableEdit))
       });
       setRestaurantTables((prev) => sortByName(prev.map((item) => (item.id === selectedTable.id ? data.data : item))));
+      if (data.event) {
+        setTableSessionEvents((prev) => sortByCreatedDesc([data.event, ...prev.filter((item) => item.id !== data.event.id)]));
+      }
       setMessage("Đã cập nhật bàn.");
     } catch (error) {
       setMessage(error.message);
@@ -2189,6 +2195,9 @@ export default function AdminDashboard({
         body: JSON.stringify(attachBranchToPayload({ ...table, ...payload }))
       });
       setRestaurantTables((prev) => sortByName(prev.map((item) => (item.id === table.id ? data.data : item))));
+      if (data.event) {
+        setTableSessionEvents((prev) => sortByCreatedDesc([data.event, ...prev.filter((item) => item.id !== data.event.id)]));
+      }
       setMessage("Đã cập nhật trạng thái bàn.");
     } catch (error) {
       setMessage(error.message);
@@ -2931,8 +2940,10 @@ export default function AdminDashboard({
             tableSaving={tableSaving}
             filteredTables={filteredTables}
             selectedTable={selectedTable}
+            selectedTableEvents={selectedTableEvents}
             openSectionDetail={openSectionDetail}
             formatCurrency={formatCurrency}
+            formatDate={formatDate}
             formatLabel={formatLabel}
             detailHeaderActions={detailHeaderActions}
             deleteTableEntry={deleteTableEntry}

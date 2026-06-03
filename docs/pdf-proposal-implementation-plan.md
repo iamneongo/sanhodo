@@ -84,7 +84,7 @@ Trang thai code hien tai:
 - Da co trang chi tiet ban, tao/sua/xoa.
 - Da co so do ban truc quan theo khu vuc va doi nhanh trang thai ban.
 - Da co tracking thoi gian theo lan cap nhat trang thai gan nhat.
-- Chua co bang session audit rieng cho tung luot nhan/tra ban.
+- Da co migration/session audit `table_session_events` cho tung lan doi trang thai ban va UI lich su trong chi tiet ban.
 
 De xuat trien khai:
 - Giai doan 1: Tach cot gia, them input gia toi thieu, them cot hanh dong.
@@ -217,11 +217,11 @@ Da hoan tat:
 Con lai:
 - Role selector va portal rieng cho customer/driver/partner.
 - Portal rieng cho customer/driver/partner.
-- Bang session audit cho tung luot ban va KPI realtime.
+- KPI realtime/forecast nang cao cho cong suat ban.
 - Export PDF menu va QR menu nang cao.
 - AI generator/AI marketing/AI forecast.
 - GOECO driver flow day du va lich cron production neu muon tu dong hoa hoan toan.
 
 Danh gia tien do:
-- Neu tinh phan nen van hanh admin + media + sync: khoang 82-86% feedback PDF da co nen hoac chay duoc.
-- Neu tinh toan bo vision PDF, bao gom AI, portal, QR nang cao va worker tu dong: khoang 62-66%.
+- Neu tinh phan nen van hanh admin + media + sync: khoang 86-90% feedback PDF da co nen hoac chay duoc.
+- Neu tinh toan bo vision PDF, bao gom AI, portal, QR nang cao va worker tu dong: khoang 66-70%.

@@ -62,6 +62,7 @@ export default async function AdminSectionDetailPage({ params, searchParams }) {
         initialMenuItems={dashboardData.menuItems}
         initialMediaAssets={dashboardData.mediaAssets}
         initialTables={dashboardData.restaurantTables}
+        initialTableSessionEvents={dashboardData.tableSessionEvents}
         initialOrders={dashboardData.orders}
         initialFeatureStatus={dashboardData.featureStatus}
         activeBranchId={branchScope.activeBranchId}

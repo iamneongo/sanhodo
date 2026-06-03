@@ -83,8 +83,10 @@ export default function AdminTablesSection({
   tableSaving,
   filteredTables,
   selectedTable,
+  selectedTableEvents = [],
   openSectionDetail,
   formatCurrency,
+  formatDate,
   formatLabel,
   detailHeaderActions,
   deleteTableEntry,
@@ -395,6 +397,43 @@ export default function AdminTablesSection({
                 <label className={styles.fullWidth}><span>Ghi chú</span><Textarea rows={5} value={tableEdit.notes} disabled={!permissions.canManageTables} onChange={(event) => setTableEdit((prev) => ({ ...prev, notes: event.target.value }))} /></label>
                               </div>
               {permissions.canManageTables ? <div className={styles.detailActions}><Button type="button" className={styles.saveButton} onClick={saveTableEdit} loading={tableSaving} loadingLabel="Đang lưu...">Lưu bàn</Button></div> : null}
+              <div className="mt-6 rounded-3xl border border-zinc-200 bg-zinc-50 p-4">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500">Audit bàn</span>
+                    <h3 className="mt-1 text-base font-semibold text-zinc-950">Lịch sử trạng thái</h3>
+                  </div>
+                  <span className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-semibold text-zinc-500">
+                    {selectedTableEvents.length} sự kiện
+                  </span>
+                </div>
+                {selectedTableEvents.length ? (
+                  <div className="grid gap-2">
+                    {selectedTableEvents.slice(0, 8).map((event) => (
+                      <article key={event.id} className="grid gap-2 rounded-2xl border border-zinc-200 bg-white p-3 shadow-sm md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+                        <div>
+                          <strong className="text-sm text-zinc-950">
+                            {event.fromStatus ? `${formatLabel(event.fromStatus)} -> ` : ""}
+                            {formatLabel(event.toStatus)}
+                          </strong>
+                          <p className="mt-1 text-sm text-zinc-500">
+                            {event.actorName || "Hệ thống"} cập nhật lúc {formatDate(event.createdAt)}
+                          </p>
+                        </div>
+                        {event.durationMinutes !== null ? (
+                          <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-600">
+                            Sau {event.durationMinutes} phút
+                          </span>
+                        ) : null}
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-zinc-500">
+                    Chưa có lịch sử đổi trạng thái. Sau khi chạy migration 015, mỗi lần đổi trạng thái bàn sẽ được ghi tại đây.
+                  </p>
+                )}
+              </div>
             </AdminSurfaceCard>
           ) : (
             <AdminEmptyState title="Không tìm thấy bàn." description="Bàn có thể đã bị xóa hoặc không thuộc chi nhánh đang xem." />
