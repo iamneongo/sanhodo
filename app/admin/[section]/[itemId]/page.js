@@ -59,6 +59,7 @@ export default async function AdminSectionDetailPage({ params, searchParams }) {
         initialIntegrations={dashboardData.integrations}
         initialSyncLogs={dashboardData.syncLogs}
         initialMenuItems={dashboardData.menuItems}
+        initialMediaAssets={dashboardData.mediaAssets}
         initialTables={dashboardData.restaurantTables}
         initialOrders={dashboardData.orders}
         initialFeatureStatus={dashboardData.featureStatus}

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import AdminBranchesSection from "./admin/sections/admin-branches-section";
 import AdminHeader from "./admin/admin-header";
 import AdminIntegrationsSection from "./admin/sections/admin-integrations-section";
+import AdminMediaSection from "./admin/sections/admin-media-section";
 import AdminMenuSection from "./admin/sections/admin-menu-section";
 import AdminOverviewSection from "./admin/sections/admin-overview-section";
 import AdminOrdersSection from "./admin/sections/admin-orders-section";
@@ -138,6 +139,22 @@ const menuSortOptions = [
   { value: "featured_first", label: "Ưu tiên món nổi bật" }
 ];
 
+const mediaTypeOptions = [
+  { value: "image", label: "Ảnh" },
+  { value: "banner", label: "Banner" },
+  { value: "logo", label: "Logo" },
+  { value: "video", label: "Video" },
+  { value: "pdf", label: "PDF" },
+  { value: "qr", label: "QR" },
+  { value: "other", label: "Khác" }
+];
+
+const mediaStatusOptions = [
+  { value: "active", label: "Đang dùng" },
+  { value: "draft", label: "Nháp" },
+  { value: "archived", label: "Lưu trữ" }
+];
+
 const driverSortOptions = [
   { value: "name_asc", label: "Tên A-Z" },
   { value: "commission_desc", label: "Hoa hồng cao nhất" },
@@ -213,6 +230,14 @@ function formatCurrency(value) {
   return `${new Intl.NumberFormat("vi-VN").format(Number(value || 0))}đ`;
 }
 
+function formatFileSize(value) {
+  const bytes = Number(value || 0);
+  if (!bytes) return "-";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 function formatLabel(value) {
   return valueLabels[value] || value;
 }
@@ -239,6 +264,7 @@ function getDetailTitle({
   selectedOrder,
   selectedTable,
   selectedMenuItem,
+  selectedMediaAsset,
   selectedVoucher,
   selectedDriver,
   selectedPartner,
@@ -252,6 +278,7 @@ function getDetailTitle({
   if (currentSection === "orders") return selectedOrder?.customerName || "Chi tiết";
   if (currentSection === "tables") return selectedTable?.name || "Chi tiết";
   if (currentSection === "menu") return selectedMenuItem?.name || "Chi tiết";
+  if (currentSection === "media") return selectedMediaAsset?.title || "Chi tiết";
   if (currentSection === "vouchers") return selectedVoucher?.voucherCode || selectedVoucher?.phone || "Chi tiết";
   if (currentSection === "drivers") return selectedDriver?.fullName || "Chi tiết";
   if (currentSection === "partners") return selectedPartner?.name || "Chi tiết";
@@ -396,6 +423,24 @@ function createEmptyMenuDraft() {
     availabilityStatus: "available",
     seasonNote: "",
     sortOrder: 0
+  };
+}
+
+function createEmptyMediaDraft() {
+  return {
+    assetType: "image",
+    category: "landing",
+    title: "",
+    fileName: "",
+    fileUrl: "",
+    thumbnailUrl: "",
+    mimeType: "",
+    fileSize: 0,
+    width: 0,
+    height: 0,
+    durationSeconds: 0,
+    status: "active",
+    notes: ""
   };
 }
 
@@ -645,6 +690,7 @@ export default function AdminDashboard({
   initialIntegrations,
   initialSyncLogs,
   initialMenuItems,
+  initialMediaAssets,
   initialTables,
   initialOrders,
   initialFeatureStatus,
@@ -688,6 +734,7 @@ export default function AdminDashboard({
     sortByCreatedDesc(initialPartnerBookings || [])
   );
   const [menuItems, setMenuItems] = useState(sortByName(initialMenuItems));
+  const [mediaAssets, setMediaAssets] = useState(sortByCreatedDesc(initialMediaAssets || []));
   const [restaurantTables, setRestaurantTables] = useState(sortByName(initialTables));
   const [orders, setOrders] = useState(sortByCreatedDesc(initialOrders));
   const [integrations, setIntegrations] = useState(initialIntegrations);
@@ -706,6 +753,9 @@ export default function AdminDashboard({
   const [menuQuery, setMenuQuery] = useState("");
   const [menuStatusFilter, setMenuStatusFilter] = useState("all");
   const [menuSort, setMenuSort] = useState("name_asc");
+  const [mediaQuery, setMediaQuery] = useState("");
+  const [mediaTypeFilter, setMediaTypeFilter] = useState("all");
+  const [mediaStatusFilter, setMediaStatusFilter] = useState("all");
   const [tableQuery, setTableQuery] = useState("");
   const [tableStatusFilter, setTableStatusFilter] = useState("all");
   const [tableSort, setTableSort] = useState("name_asc");
@@ -751,6 +801,9 @@ export default function AdminDashboard({
   const [selectedMenuId, setSelectedMenuId] = useState(
     activeSection === "menu" && detailId ? detailId : initialMenuItems[0]?.id || ""
   );
+  const [selectedMediaId, setSelectedMediaId] = useState(
+    activeSection === "media" && detailId ? detailId : initialMediaAssets?.[0]?.id || ""
+  );
   const [selectedTableId, setSelectedTableId] = useState(
     activeSection === "tables" && detailId ? detailId : initialTables[0]?.id || ""
   );
@@ -767,6 +820,7 @@ export default function AdminDashboard({
   const [manualOpen, setManualOpen] = useState(false);
   const [orderCreateOpen, setOrderCreateOpen] = useState(false);
   const [menuCreateOpen, setMenuCreateOpen] = useState(false);
+  const [mediaCreateOpen, setMediaCreateOpen] = useState(false);
   const [tableCreateOpen, setTableCreateOpen] = useState(false);
   const [voucherCreateOpen, setVoucherCreateOpen] = useState(false);
   const [campaignCreateOpen, setCampaignCreateOpen] = useState(false);
@@ -782,6 +836,7 @@ export default function AdminDashboard({
   const [voucherSaving, setVoucherSaving] = useState(false);
   const [orderSaving, setOrderSaving] = useState(false);
   const [menuSaving, setMenuSaving] = useState(false);
+  const [mediaSaving, setMediaSaving] = useState(false);
   const [menuImageUploading, setMenuImageUploading] = useState("");
   const menuImportInputRef = useRef(null);
   const [tableSaving, setTableSaving] = useState(false);
@@ -814,6 +869,8 @@ export default function AdminDashboard({
   const [orderEdit, setOrderEdit] = useState(createEmptyOrderDraft());
   const [menuDraft, setMenuDraft] = useState(createEmptyMenuDraft());
   const [menuEdit, setMenuEdit] = useState(createEmptyMenuDraft());
+  const [mediaDraft, setMediaDraft] = useState(createEmptyMediaDraft());
+  const [mediaEdit, setMediaEdit] = useState(createEmptyMediaDraft());
   const [tableDraft, setTableDraft] = useState(createEmptyTableDraft());
   const [tableEdit, setTableEdit] = useState(createEmptyTableDraft());
   const [voucherDraft, setVoucherDraft] = useState(createEmptyVoucherDraft());
@@ -850,6 +907,7 @@ export default function AdminDashboard({
   const selectedDriver = drivers.find((item) => item.id === selectedDriverId) || null;
   const selectedPartner = travelPartners.find((item) => item.id === selectedPartnerId) || null;
   const selectedMenuItem = menuItems.find((item) => item.id === selectedMenuId) || null;
+  const selectedMediaAsset = mediaAssets.find((item) => item.id === selectedMediaId) || null;
   const selectedTable = restaurantTables.find((item) => item.id === selectedTableId) || null;
   const selectedIntegration = integrations.find((item) => item.id === selectedIntegrationId) || null;
   const permissions = useMemo(
@@ -863,6 +921,8 @@ export default function AdminDashboard({
       canManageOrders: hasAdminPermission(currentRole, "orders.manage"),
       canManageTables: hasAdminPermission(currentRole, "tables.manage"),
       canManageMenu: hasAdminPermission(currentRole, "menu.manage"),
+      canViewMedia: hasAdminPermission(currentRole, "media.view"),
+      canManageMedia: hasAdminPermission(currentRole, "media.manage"),
       canManageVouchers: hasAdminPermission(currentRole, "vouchers.manage"),
       canViewDrivers: hasAdminPermission(currentRole, "drivers.view"),
       canManageDrivers: hasAdminPermission(currentRole, "drivers.manage"),
@@ -922,6 +982,7 @@ export default function AdminDashboard({
     if (currentSection === "orders") setSelectedOrderId(detailId);
     if (currentSection === "tables") setSelectedTableId(detailId);
     if (currentSection === "menu") setSelectedMenuId(detailId);
+    if (currentSection === "media") setSelectedMediaId(detailId);
     if (currentSection === "vouchers") setSelectedVoucherId(detailId);
     if (currentSection === "drivers") setSelectedDriverId(detailId);
     if (currentSection === "partners") setSelectedPartnerId(detailId);
@@ -966,6 +1027,10 @@ export default function AdminDashboard({
   useEffect(() => {
     setMenuEdit(selectedMenuItem ? { ...selectedMenuItem } : createEmptyMenuDraft());
   }, [selectedMenuId, selectedMenuItem]);
+
+  useEffect(() => {
+    setMediaEdit(selectedMediaAsset ? { ...selectedMediaAsset, notes: selectedMediaAsset.metadata?.notes || "" } : createEmptyMediaDraft());
+  }, [selectedMediaId, selectedMediaAsset]);
 
   useEffect(() => {
     setTableEdit(selectedTable ? { ...selectedTable } : createEmptyTableDraft());
@@ -1172,6 +1237,18 @@ export default function AdminDashboard({
         }
       ),
     [menuItems, menuQuery, menuStatusFilter, menuSort]
+  );
+
+  const filteredMediaAssets = useMemo(
+    () =>
+      sortByCreatedDesc(
+        mediaAssets.filter((item) => {
+          const typeMatch = mediaTypeFilter === "all" || item.assetType === mediaTypeFilter;
+          const statusMatch = mediaStatusFilter === "all" || item.status === mediaStatusFilter;
+          return typeMatch && statusMatch && matchesSearch(item, mediaQuery, ["title", "category", "fileName", "fileUrl"]);
+        })
+      ),
+    [mediaAssets, mediaQuery, mediaTypeFilter, mediaStatusFilter]
   );
 
   const filteredTables = useMemo(
@@ -1768,6 +1845,69 @@ export default function AdminDashboard({
     }
   };
 
+  const buildMediaPayload = (draft) =>
+    attachBranchToPayload({
+      ...draft,
+      metadata: {
+        ...(draft.metadata || {}),
+        notes: draft.notes || ""
+      }
+    });
+
+  const createMediaEntry = async (event) => {
+    event.preventDefault();
+    setMediaSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(withBranchQuery("/api/admin/media-assets", branchFilterId), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildMediaPayload(mediaDraft))
+      });
+      setMediaAssets((prev) => sortByCreatedDesc([data.data, ...prev]));
+      setSelectedMediaId(data.data.id);
+      setMediaDraft(createEmptyMediaDraft());
+      setMediaCreateOpen(false);
+      setMessage("Đã thêm media.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setMediaSaving(false);
+    }
+  };
+
+  const saveMediaEdit = async () => {
+    if (!selectedMediaAsset) return;
+    setMediaSaving(true);
+    setMessage("");
+    try {
+      const data = await requestJson(`/api/admin/media-assets/${selectedMediaAsset.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildMediaPayload(mediaEdit))
+      });
+      setMediaAssets((prev) => sortByCreatedDesc(prev.map((item) => (item.id === selectedMediaAsset.id ? data.data : item))));
+      setMessage("Đã cập nhật media.");
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setMediaSaving(false);
+    }
+  };
+
+  const deleteMediaEntry = async (id) => {
+    if (!window.confirm("Xóa media này?")) return;
+    try {
+      await requestJson(`/api/admin/media-assets/${id}`, { method: "DELETE" });
+      const next = mediaAssets.filter((item) => item.id !== id);
+      setMediaAssets(next);
+      setSelectedMediaId(next[0]?.id || "");
+      setMessage("Đã xóa media.");
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
+
   const uploadMenuImage = async (target, file) => {
     if (!file) {
       return;
@@ -2346,6 +2486,7 @@ export default function AdminDashboard({
     selectedOrder,
     selectedTable,
     selectedMenuItem,
+    selectedMediaAsset,
     selectedVoucher,
     selectedDriver,
     selectedPartner,
@@ -2627,6 +2768,38 @@ export default function AdminDashboard({
             menuEdit={menuEdit}
             setMenuEdit={setMenuEdit}
             saveMenuEdit={saveMenuEdit}
+            FormSelect={FormSelect}
+          />
+        ) : null}
+
+        {currentSection === "media" && permissions.canViewMedia ? (
+          <AdminMediaSection
+            detailOnlyLayout={detailOnlyLayout}
+            permissions={permissions}
+            mediaCreateOpen={mediaCreateOpen}
+            setMediaCreateOpen={setMediaCreateOpen}
+            mediaQuery={mediaQuery}
+            setMediaQuery={setMediaQuery}
+            mediaTypeFilter={mediaTypeFilter}
+            setMediaTypeFilter={setMediaTypeFilter}
+            mediaStatusFilter={mediaStatusFilter}
+            setMediaStatusFilter={setMediaStatusFilter}
+            mediaTypeOptions={mediaTypeOptions}
+            mediaStatusOptions={mediaStatusOptions}
+            createMediaEntry={createMediaEntry}
+            mediaDraft={mediaDraft}
+            setMediaDraft={setMediaDraft}
+            mediaSaving={mediaSaving}
+            filteredMediaAssets={filteredMediaAssets}
+            selectedMediaAsset={selectedMediaAsset}
+            openSectionDetail={openSectionDetail}
+            detailHeaderActions={detailHeaderActions}
+            deleteMediaEntry={deleteMediaEntry}
+            mediaEdit={mediaEdit}
+            setMediaEdit={setMediaEdit}
+            saveMediaEdit={saveMediaEdit}
+            formatDate={formatDate}
+            formatFileSize={formatFileSize}
             FormSelect={FormSelect}
           />
         ) : null}
