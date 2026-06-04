@@ -88,7 +88,9 @@ export async function GET(request) {
   const requestedBranchId = searchParams.get("branch") || "";
   const branches = await listBranches(context.supabase, { activeOnly: false });
   const branchStaffAssignments = await listBranchStaffAssignments(context.supabase);
-  const baseProfile = await loadBaseProfile(context.supabase, context.user.id, context.profile);
+  const baseProfile = context.isLocalAdmin
+    ? context.profile
+    : await loadBaseProfile(context.supabase, context.user.id, context.profile);
   const branchScope = resolveBranchScope({
     profile: context.profile,
     branches,
