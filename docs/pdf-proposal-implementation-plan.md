@@ -150,8 +150,8 @@ Trang thai code hien tai:
 - Da co drivers, travel partners, orders, voucher redemption.
 - Da co `integration_events` outbox, API admin, UI event queue, thao tac skip/retry/manual delivery.
 - Da co migration cau hinh provider `uvfl` va `goeco` trong `integration_settings`.
-- Da co worker API xu ly batch pending/failed co the goi tu admin hoac cron co secret.
-- Da co `vercel.json` cron moi 10 phut cho integration worker, bao ve bang `CRON_SECRET`.
+- Da co worker API xu ly batch pending/failed co the goi tu admin hoac Vercel Cron khong can secret rieng.
+- Da co `vercel.json` cron moi 10 phut cho integration worker, khong can secret/service-role rieng.
 - Da bo sung event outbox cho driver, referral, commission, travel partner va partner booking.
 
 De xuat trien khai:
@@ -223,7 +223,7 @@ Con lai:
 - KPI realtime/forecast nang cao cho cong suat ban.
 - QR menu nang cao.
 - AI marketing/video/forecast nang cao neu co provider/key rieng.
-- Can cau hinh `CRON_SECRET`, `SUPABASE_SERVICE_ROLE_KEY` va endpoint provider that tren production de cron dong bo hoan toan.
+- Can cau hinh endpoint provider that tren production de cron dong bo hoan toan.
 
 Danh gia tien do:
 - Neu tinh phan nen van hanh admin + media + sync: khoang 95-97% feedback PDF da co nen hoac chay duoc.

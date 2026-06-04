@@ -115,11 +115,7 @@ Da co nen:
 
 Can lam tiep:
 - Nhap endpoint/API key/secret/location/tenant that trong admin Integrations.
-- Set env production:
-  - `SUPABASE_SERVICE_ROLE_KEY`
-  - `CRON_SECRET`
-  - `INTEGRATION_WORKER_SECRET`
-- Test cron thuc te tren Vercel/server.
+- Test cron thuc te tren Vercel/server. Worker hien khong can `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET` hay `INTEGRATION_WORKER_SECRET`.
 - Doi soat response payload voi UVFL/GOECO.
 
 Can quyet dinh:

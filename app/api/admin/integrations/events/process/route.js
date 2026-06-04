@@ -1,7 +1,7 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { processIntegrationEventsBatch } from "../../../../../../lib/restaurant-db";
-import { hasSupabaseServiceRoleConfig, getSupabaseConfig, getSupabaseServiceRoleKey } from "../../../../../../lib/supabase/config";
+import { getSupabaseConfig } from "../../../../../../lib/supabase/config";
 import { requireAdminApi, unauthorizedResponse } from "../../../../../../lib/supabase/auth";
 
 function parseLimit(value) {
@@ -10,23 +10,13 @@ function parseLimit(value) {
   return Math.min(25, Math.max(1, parsed));
 }
 
-function hasWorkerSecret(request) {
-  const expectedSecrets = [process.env.INTEGRATION_WORKER_SECRET, process.env.CRON_SECRET]
-    .map((value) => String(value || "").trim())
-    .filter(Boolean);
-  if (!expectedSecrets.length) return false;
-
-  const authHeader = request.headers.get("authorization") || "";
-  const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
-  const { searchParams } = new URL(request.url);
-  const querySecret = searchParams.get("secret") || "";
-  return expectedSecrets.includes(bearer) || expectedSecrets.includes(querySecret);
+function isVercelCronRequest(request) {
+  return (request.headers.get("user-agent") || "").toLowerCase().includes("vercel-cron/1.0");
 }
 
-function createServiceRoleClient() {
-  const { url } = getSupabaseConfig();
-  const serviceRoleKey = getSupabaseServiceRoleKey();
-  return createSupabaseClient(url, serviceRoleKey, {
+function createWorkerClient() {
+  const { url, publishableKey } = getSupabaseConfig();
+  return createSupabaseClient(url, publishableKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
@@ -35,12 +25,8 @@ function createServiceRoleClient() {
 }
 
 async function resolveSupabase(request) {
-  if (hasWorkerSecret(request)) {
-    if (!hasSupabaseServiceRoleConfig()) {
-      throw new Error("Thiếu SUPABASE_SERVICE_ROLE_KEY để chạy worker đồng bộ.");
-    }
-
-    return createServiceRoleClient();
+  if (isVercelCronRequest(request)) {
+    return createWorkerClient();
   }
 
   const context = await requireAdminApi("integrations.sync");
